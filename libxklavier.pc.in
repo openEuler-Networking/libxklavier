@@ -8,4 +8,4 @@ Description: libxklavier library
 Requires: libxml-2.0
 Version: @VERSION@
 Libs: -L${libdir} -lxklavier
-Cflags: -I${includedir}/libxklavier
+Cflags: -I${includedir}
