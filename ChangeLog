@@ -6,6 +6,7 @@
 	libxklavier/xklavier_private.h,
 	libxklavier/xklavier_xmm.c: internal polish, 
 	secondary layouts are managed through the root window property.
+	* configure.in, NEWS: preparing 1.14
 
 2004-12-27 svu
 	
