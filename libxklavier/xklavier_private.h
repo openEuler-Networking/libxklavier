@@ -42,6 +42,8 @@ typedef struct
   XklPauseResumeListenHandler xklResumeListenHandler;
 } XklVTable;
 
+extern void _XklEnsureVTableInited( void );
+
 extern void _XklGetRealState( XklState * curState_return );
 extern void _XklAddAppWindow( Window win, Window parent, Bool force,
                               XklState * initState );

@@ -521,11 +521,13 @@ Bool XklConfigFindOption( const char *optionGroupName,
  */
 Bool XklConfigActivate( const XklConfigRecPtr data )
 {
+  _XklEnsureVTableInited();
   return (*xklVTable->xklConfigActivateHandler)( data );
 }
 
 Bool XklMultipleLayoutsSupported( void )
 {
+  _XklEnsureVTableInited();
   return (*xklVTable->xklConfigMultipleLayoutsSupportedHandler)();
 }
 
@@ -533,6 +535,7 @@ Bool XklConfigWriteFile( const char *fileName,
                          const XklConfigRecPtr data,
                          const Bool binary )
 {
+  _XklEnsureVTableInited();
   return (*xklVTable->xklConfigWriteFileHandler)( fileName, data, binary );
 }
 

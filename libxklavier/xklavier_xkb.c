@@ -398,7 +398,7 @@ int _XklXkbInit( void )
 
   xklVTable = &xklXkbVTable;
   
-  return _XklLoadAllInfo(  )? 0 : _xklLastErrorCode;
+  return _XklLoadAllInfo(  ) ? 0 : _xklLastErrorCode;
 #else
   XklDebug( 160,
             "NO XKB LIBS, display: %p, root: " WINID_FORMAT

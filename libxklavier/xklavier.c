@@ -37,7 +37,7 @@ int _xklDebugLevel = 0;
 
 Window _xklPrevAppWindow;
 
-XklVTable *xklVTable;
+XklVTable *xklVTable = NULL;
 
 XklConfigCallback _xklConfigCallback = NULL;
 void *_xklConfigCallbackData;
@@ -698,41 +698,58 @@ Bool _XklIsTransparentAppWindow( Window appWin )
   return False;
 }
 
+void _XklEnsureVTableInited( void )
+{
+  if ( xklVTable == NULL )
+  {
+    XklDebug( 0, "ERROR: XKL VTable is NOT initialized.\n" );
+    /* force the crash! */
+    char *p = NULL; *p = '\0';
+  }
+}
+
 /**
  * Calling through vtable
  */
 const char **XklGetGroupNames( void )
 {
+  _XklEnsureVTableInited();
   return (*xklVTable->xklGetGroupNamesHandler)();
 }
 
 unsigned XklGetNumGroups( void )
 {
+  _XklEnsureVTableInited();
   return (*xklVTable->xklGetNumGroupsHandler)();
 }
 
 void XklLockGroup( int group )
 {
+  _XklEnsureVTableInited();
   (*xklVTable->xklLockGroupHandler)( group );
 }
 
 int XklPauseListen( void )
 {
+  _XklEnsureVTableInited();
   return (*xklVTable->xklPauseListenHandler)();
 }
 
 int XklResumeListen( void )
 {
+  _XklEnsureVTableInited();
   return (*xklVTable->xklResumeListenHandler)();
 }
 
 Bool _XklLoadAllInfo( void )
 {
+  _XklEnsureVTableInited();
   return (*xklVTable->xklLoadAllInfoHandler)();
 }
 
 void _XklFreeAllInfo( void )
 {
+  _XklEnsureVTableInited();
   (*xklVTable->xklFreeAllInfoHandler)();
 }
 
