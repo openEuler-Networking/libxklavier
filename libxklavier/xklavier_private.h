@@ -9,6 +9,8 @@ typedef Bool ( *XklConfigActivateHandler )( const XklConfigRecPtr data );
 
 typedef void ( *XklConfigInitHandler )( void );
 
+typedef Bool ( *XklConfigLoadRegistryHandler )( void );
+
 typedef Bool ( *XklConfigMultipleLayoutsSupportedHandler )( void );
 
 typedef Bool ( *XklConfigWriteFileHandler )( const char *fileName,
@@ -45,6 +47,13 @@ typedef struct
    * TODO: xmodmap
    */
   XklConfigInitHandler xklConfigInitHandler; /* private */
+  /**
+   * Loads the registry tree into DOM (using whatever path(s))
+   * The XklConfigFreeRegistry is static - no virtualization necessary.
+   * xkb: loads xml from XKB_BASE+"/rules/"+ruleset+".xml"
+   * TODO: xmodmap
+   */
+  XklConfigLoadRegistryHandler xklConfigLoadRegistryHandler;
   /**
    * Can the system combine layouts in one configuration - or not?
    * xkb: checks the simple rule with 2 layouts

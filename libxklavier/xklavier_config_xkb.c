@@ -14,7 +14,6 @@
 #include "config.h"
 
 #include "xklavier_private.h"
-
 #include "xklavier_private_xkb.h"
 
 #ifdef XKB_HEADERS_PRESENT
@@ -107,7 +106,7 @@ void _XklXkbConfigInit( void )
 #endif
 }
 
-Bool XklConfigLoadRegistry( void )
+Bool _XklXkbConfigLoadRegistry( void )
 {
   struct stat statBuf;
   char fileName[MAXPATHLEN] = "";

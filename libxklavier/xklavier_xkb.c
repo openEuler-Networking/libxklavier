@@ -366,6 +366,7 @@ int _XklXkbInit( void )
   {
     _XklXkbConfigActivate,
     _XklXkbConfigInit,
+    _XklXkbConfigLoadRegistry,
     _XklXkbConfigMultipleLayoutsSupported,
     _XklXkbConfigWriteFile,
     _XklXkbEventHandler,

@@ -1,5 +1,16 @@
 2004-11-04 19:00  svu
 
+	* libxklavier/Makefile.am,
+	libxklavier/xklavier.c,
+	libxklavier/xklavier_config_xkb.c,
+	libxklavier/xklavier_config_xmm.c,
+	libxklavier/xklavier_evt_xmm.c,
+	libxklavier/xklavier_private_xkb.h,
+	libxklavier/xklavier_private_xmm.h,
+	libxklavier/xklavier_xmm.c: going xmodmappy
+
+2004-11-04 19:00  svu
+
 	* libxklavier/xklavier_config_i18n.c,
 	tests/Makefile.am,
 	tests/test_config.c,

@@ -24,6 +24,8 @@ extern Bool _XklXkbConfigActivate( const XklConfigRecPtr data );
 
 extern void _XklXkbConfigInit( void );
 
+extern Bool _XklXkbConfigLoadRegistry( void );
+
 extern Bool _XklXkbConfigMultipleLayoutsSupported( void );
 
 extern Bool _XklXkbConfigWriteFile( const char *fileName,
@@ -42,7 +44,9 @@ extern Bool _XklXkbLoadAllInfo( void );
 
 extern void _XklXkbLockGroup( int group );
 
-extern int _XklXkbPauseResumeListen( void );
+extern int _XklXkbPauseListen( void );
+
+extern int _XklXkbResumeListen( void );
 
 extern void _XklXkbSetIndicators( const XklState *windowState );
 

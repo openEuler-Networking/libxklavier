@@ -750,8 +750,3 @@ void _XklFreeAllInfo( void )
   _XklEnsureVTableInited();
   (*xklVTable->xklFreeAllInfoHandler)();
 }
-
-int _XklXmmInit( void )
-{
-  return -1;
-}
