@@ -139,6 +139,16 @@ static Bool _XklConfigPrepareBeforeKbd( const XklConfigRecPtr data )
     _xklLastErrorMsg = "Could not translate rules into components";
     return False;
   }
+
+  if ( _xklDebugLevel >= 200 )
+  {
+    XklDebug( 200, "keymap: %s\n", componentNames.keymap );
+    XklDebug( 200, "keycodes: %s\n", componentNames.keycodes );
+    XklDebug( 200, "compat: %s\n", componentNames.compat );
+    XklDebug( 200, "types: %s\n", componentNames.types );
+    XklDebug( 200, "symbols: %s\n", componentNames.symbols );
+    XklDebug( 200, "geometry: %s\n", componentNames.geometry );
+  }
 #endif
   return True;
 }
