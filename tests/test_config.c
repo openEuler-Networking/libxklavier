@@ -58,6 +58,21 @@ int main( int argc, const char * argv[] )
       dump( &r2 );
     }
 
+    if ( XklConfigActivate( &r2, NULL ) )
+    {
+      XklDebug( 0, "The backup configuration restored\n" );
+      if ( XklConfigActivate( &r1, NULL ) )
+      {
+        XklDebug( 0, "Reverting the configuration change\n" );
+      } else
+      {
+        XklDebug( 0, "The configuration could not be reverted: %s\n", XklGetLastError() );
+      }
+    } else
+    {
+      XklDebug( 0, "The backup configuration could not be restored: %s\n", XklGetLastError() );
+    }
+
     XklConfigRecDestroy( &r2 );
     XklConfigRecDestroy( &r1 );
 
