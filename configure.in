@@ -65,7 +65,7 @@ fi
 AC_DEFINE_UNQUOTED(XKB_BASE,"${xkb_base}",Base for XKB configuration)
 
 AC_ARG_WITH( xkb_rules_set,
-             [  --with-xkb-rules-set=set        Set of XKB rules: xfree86, xorg, ... (by default it is xfree86)],
+             [  --with-xkb-rules-set=SET        Set of XKB rules: xfree86, xorg, ... (by default it is xfree86)],
              xkb_rules_set="$withval", 
              xkb_rules_set="xfree86" )
 
