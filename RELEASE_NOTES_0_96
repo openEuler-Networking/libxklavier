@@ -1,2 +1,6 @@
 "Аленушка"
-Mostly bugfix release. Some compile-time bugfixes (including related to portability), some minor runtime logic bugfixes. Better doxygen handling at build time.
+Mostly bugfix release. 
+Some compile-time bugfixes (including related to portability), 
+some minor runtime logic bugfixes. 
+Better doxygen handling at build time. 
+xfree86.xml is now in CVS so the whole thing is buildable from CVS.
