@@ -2,8 +2,8 @@
  * @file xklavier_config.h
  */
 
-#ifndef __XKLABIER_CONFIG_H__
-#define __XKLABIER_CONFIG_H__
+#ifndef __XKLAVIER_CONFIG_H__
+#define __XKLAVIER_CONFIG_H__
 
 #include <libxklavier/xklavier.h>
 
