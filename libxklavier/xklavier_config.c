@@ -18,6 +18,9 @@
 
 #define XML_CFG_PATH ( XKB_BASE "/rules/xfree86.xml" )
 
+// For "bad" X servers we hold our own copy
+#define XML_CFG_FALLBACK_PATH ( DATA_DIR "/xfree86.xml" )
+
 #define MULTIPLE_LAYOUTS_CHECK_PATH ( XKB_BASE "/symbols/pc/en_US" )
 
 #define XK_XKB_KEYS
@@ -452,7 +455,13 @@ void XklConfigTerm( void )
 
 Bool XklConfigLoadRegistry( void )
 {
-  theRegistry.doc = xmlParseFile( XML_CFG_PATH );
+  struct stat statBuf;
+
+  const char* fileName = XML_CFG_PATH; 
+  if ( stat( XML_CFG_PATH, &statBuf ) != 0 )
+     fileName = XML_CFG_FALLBACK_PATH;
+
+  theRegistry.doc = xmlParseFile( fileName );
   if( theRegistry.doc == NULL )
   {
     theRegistry.xpathContext = NULL;

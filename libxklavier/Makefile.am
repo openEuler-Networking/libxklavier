@@ -1,4 +1,4 @@
-INCLUDES = -I. -I$(includedir) $(XML_CFLAGS)
+CFLAGS = -DDATA_DIR=\"$(datadir)/$(PACKAGE)\" -I. -I$(includedir) $(XML_CFLAGS)
 
 lib_LTLIBRARIES = libxklavier.la
 noinst_HEADERS = xklavier_private.h 

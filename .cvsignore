@@ -24,4 +24,10 @@ libxklavier.pc
 autom4te.cache
 .tm_project.cache
 stamp-h2
+COPYING
+INSTALL
+depcomp
+install-sh
+missing
+mkinstalldirs
 
