@@ -97,8 +97,7 @@ void _XklStdXkbHandler( int grp, XklStateChange changeType, unsigned inds,
 
   if( focusedApp != _xklCurClient )
   {
-    _xklCurState.group = grp;
-    _xklCurState.indicators = inds;
+    _XklUpdateCurState( grp, inds );
 
     _XklAddAppWindow( focusedApp, ( Window ) NULL, False, &_xklCurState );
     _xklCurClient = focusedApp;
@@ -111,8 +110,8 @@ void _XklStdXkbHandler( int grp, XklStateChange changeType, unsigned inds,
 
   if( setGroup || haveState )
   {
-    _xklCurState.group = setGroup ? grp : oldState.group;
-    _xklCurState.indicators = setInds ? inds : oldState.indicators;
+    _XklUpdateCurState( setGroup ? grp : oldState.group,
+                        setInds ? inds : oldState.indicators );
   }
 
   if( haveState )
@@ -147,8 +146,15 @@ void _XklXkbEvHandler( XkbEvent * kev )
       if( kev->state.changed & GROUP_CHANGE_MASK )
         _XklStdXkbHandler( kev->state.locked_group, GROUP_CHANGED, 0, False );
       else
+      {
         XklDebug( 200,
                   "This type of state notification is not regarding groups\n" );
+        if ( kev->state.locked_group != _xklCurState.group )
+          XklDebug( 0, 
+                    "ATTENTION! Currently cached group %d is not equal to the current group from the event: %d\n!",
+                    _xklCurState.group,
+                    kev->state.locked_group );
+      }
 
       break;
 
@@ -244,10 +250,10 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
       /**
        *  For fast mouse movements - the state is probably not updated yet
        *  (because of the group change notification being late).
-       *  so we'll enforce the update.
+       *  so we'll enforce the update. But this should only happen in GPA mode
        */
-      if( XklGetState( _xklCurClient, &tmpState ) )
-        _xklCurState = tmpState;
+      if( XklIsGroupPerApp() && XklGetState( _xklCurClient, &tmpState ) )
+        _XklUpdateCurState( tmpState.group, tmpState.indicators );
 
       _xklCurClient = appWin;
       XklDebug( 150, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
