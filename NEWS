@@ -1,3 +1,6 @@
+1.12	First version with real xmodmap support. Sure, bugs are possible.
+	I did it again - broke API. Really hope no API changes in 1.1x 
+	series any more.
 1.11	A lot of internal changes. VTable introduced (so now at some 
 	point there can be implemented xmodmap backend). Some bugs were 
 	fixed.
