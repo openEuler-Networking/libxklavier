@@ -335,13 +335,24 @@ void _XklConfigRecSplitByComma( char ***array,
     while( ( npc = strchr( pc, ',' ) ) != NULL )
     {
       int len = npc - pc;
-      *ppc = ( char * ) strndup( pc, len );
+      //*ppc = ( char * ) strndup( pc, len );
+      *ppc = ( char * ) malloc( len + 1 );
+      if ( *ppc != NULL )
+      {
+        strncpy( *ppc, pc, len );
+        (*ppc)[len] = '\0';
+      }
+
       ppc++;
       pc = npc + 1;
     }
 
-    len = npc - pc;
-    *ppc = ( char * ) strndup( pc, len );
+    //len = npc - pc;
+    len = strlen( pc );
+    //*ppc = ( char * ) strndup( pc, len );
+    *ppc = ( char * ) malloc( len + 1 );
+    if ( *ppc != NULL )
+      strcpy( *ppc, pc );
   }
 }
 
