@@ -460,8 +460,16 @@ extern "C"
  * @param format is a format (like in printf)
  * @see _XklDebug
  */
+#ifdef G_HAVE_ISO_VARARGS
+#define XklDebug( level, ... ) \
+  _XklDebug( __FILE__, __func__, level, __VA_ARGS__ )
+#elif defined(G_HAVE_GNUC_VARARGS)
 #define XklDebug( level, format, args... ) \
-  _XklDebug( __FILE__, __func__, level, format, ## args )
+   _XklDebug( __FILE__, __func__, level, format, ## args )
+#else
+#define XklDebug( level, ... ) \
+  _XklDebug( __FILE__, __func__, level, __VA_ARGS__ )
+#endif
 
 /** @} */
 
