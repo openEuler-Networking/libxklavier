@@ -36,6 +36,7 @@ static char *locale;
 
 static char* _XklGetRulesSet( void )
 {
+#ifdef XKB_HEADERS_PRESENT
   static char rulesSet[_XKB_RF_NAMES_PROP_MAXLEN] = "";
   if ( !rulesSet[0] )
   {
@@ -47,6 +48,9 @@ static char* _XklGetRulesSet( void )
   }
   XklDebug( 100, "Rules set: [%s]\n", rulesSet );
   return rulesSet;
+#else
+  return NULL;
+#endif
 }
 
 Bool XklConfigLoadRegistry( void )
