@@ -5,6 +5,29 @@
 
 #include <libxklavier/xklavier_config.h>
 
+typedef void (*XklFreeAllInfoHandler)( void );
+
+typedef const char **(*XklGetGroupNamesHandler)( void );
+
+typedef unsigned (*XklGetNumGroupsHandler)( void );
+
+typedef Bool (*XklLoadAllInfoHandler)( void );
+
+typedef void (*XklLockGroupHandler)( int group );
+
+typedef int (*XklPauseResumeListenHandler)( void );
+
+typedef struct
+{
+  XklFreeAllInfoHandler xklFreeAllInfoHandler;
+  XklGetGroupNamesHandler xklGetGroupNamesHandler;
+  XklGetNumGroupsHandler xklGetNumGroupsHandler;
+  XklLoadAllInfoHandler xklLoadAllInfoHandler;
+  XklLockGroupHandler xklLockGroupHandler;
+  XklPauseResumeListenHandler xklPauseListenHandler;
+  XklPauseResumeListenHandler xklResumeListenHandler;
+} XklVTable;
+
 extern void _XklGetRealState( XklState * curState_return );
 extern void _XklAddAppWindow( Window win, Window parent, Bool force,
                               XklState * initState );
@@ -81,6 +104,10 @@ extern Bool _XklIsTransparentAppWindow( Window appWin );
 
 extern void _XklUpdateCurState( int group, unsigned indicators, const char reason[] );
 
+extern int _XklXkbInit( void );
+
+extern int _XklXmmInit( void );
+
 extern Display *_xklDpy;
 
 extern Window _xklRootWindow;
@@ -134,5 +161,7 @@ extern Window _xklPrevAppWindow;
 extern XklConfigCallback _xklConfigCallback;
 
 extern void *_xklConfigCallbackData;
+
+extern XklVTable *xklVTable;
 
 #endif

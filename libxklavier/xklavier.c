@@ -37,6 +37,8 @@ int _xklDebugLevel = 0;
 
 Window _xklPrevAppWindow;
 
+XklVTable *xklVTable;
+
 XklConfigCallback _xklConfigCallback = NULL;
 void *_xklConfigCallbackData;
 
@@ -51,6 +53,7 @@ static XklLogAppender logAppender = XklDefaultLogAppender;
 static Bool groupPerApp = True;
 
 static Bool handleIndicators = False;
+
 
 void XklSetIndicatorsHandling( Bool whetherHandle )
 {
@@ -141,6 +144,50 @@ int XklStopListen(  )
 {
   XklPauseListen(  );
   return 0;
+}
+
+int XklInit( Display * a_dpy )
+{
+  int opcode;
+  int scr;
+  char *sdl;
+  int rv;
+
+  sdl = getenv( "XKL_DEBUG" );
+  if( sdl != NULL )
+  {
+    XklSetDebugLevel( atoi( sdl ) );
+  }
+
+  if( !a_dpy )
+  {
+    XklDebug( 10, "XklInit : display is NULL ?\n");
+    return -1;
+  }
+
+  _xklDefaultErrHandler =
+    XSetErrorHandler( ( XErrorHandler ) _XklErrHandler );
+
+  _xklDpy = a_dpy;
+  scr = DefaultScreen( _xklDpy );
+  _xklRootWindow = RootWindow( _xklDpy, scr );
+
+  _xklAllowSecondaryGroupOnce = False;
+  _xklSkipOneRestore = False;
+  _xklDefaultGroup = -1;
+  _xklSecondaryGroupsMask = 0L;
+  _xklPrevAppWindow = 0;
+
+  _xklAtoms[WM_NAME] = XInternAtom( _xklDpy, "WM_NAME", False );
+  _xklAtoms[WM_STATE] = XInternAtom( _xklDpy, "WM_STATE", False );
+  _xklAtoms[XKLAVIER_STATE] = XInternAtom( _xklDpy, "XKLAVIER_STATE", False );
+  _xklAtoms[XKLAVIER_TRANSPARENT] =
+    XInternAtom( _xklDpy, "XKLAVIER_TRANSPARENT", False );
+
+  rv = _XklXkbInit();
+  if ( rv != 0 ) 
+    rv = _XklXmmInit();
+  return rv;
 }
 
 int XklTerm(  )
@@ -649,4 +696,47 @@ Bool _XklIsTransparentAppWindow( Window appWin )
     return True;
   }
   return False;
+}
+
+/**
+ * Calling through vtable
+ */
+const char **XklGetGroupNames( void )
+{
+  return (*xklVTable->xklGetGroupNamesHandler)();
+}
+
+unsigned XklGetNumGroups( void )
+{
+  return (*xklVTable->xklGetNumGroupsHandler)();
+}
+
+void XklLockGroup( int group )
+{
+  (*xklVTable->xklLockGroupHandler)( group );
+}
+
+int XklPauseListen( void )
+{
+  return (*xklVTable->xklPauseListenHandler)();
+}
+
+int XklResumeListen( void )
+{
+  return (*xklVTable->xklResumeListenHandler)();
+}
+
+Bool _XklLoadAllInfo( void )
+{
+  return (*xklVTable->xklLoadAllInfoHandler)();
+}
+
+void _XklFreeAllInfo( void )
+{
+  (*xklVTable->xklFreeAllInfoHandler)();
+}
+
+int _XklXmmInit( void )
+{
+  return -1;
 }

@@ -20,89 +20,13 @@ int _xklXkbEventType, _xklXkbError;
 
 static char *groupNames[XkbNumKbdGroups];
 
-const char **XklGetGroupNames( void )
+static const char **_XklXkbGetGroupNames( void )
 {
   return ( const char ** ) groupNames;
 }
-#else
-const char **XklGetGroupNames( void )
+
+static int _XklXkbPauseListen(  )
 {
-  static const char* dummyName = "???";
-  return ( const char ** ) &dummyName;
-}
-#endif
-
-int XklInit( Display * a_dpy )
-{
-  int opcode;
-  int scr;
-  char *sdl;
-
-  sdl = getenv( "XKL_DEBUG" );
-  if( sdl != NULL )
-  {
-    XklSetDebugLevel( atoi( sdl ) );
-  }
-
-  if( !a_dpy )
-  {
-    XklDebug( 10, "XklInit : display is NULL ?\n");
-    return -1;
-  }
-
-  _xklDefaultErrHandler =
-    XSetErrorHandler( ( XErrorHandler ) _XklErrHandler );
-
-  _xklDpy = a_dpy;
-#ifdef XKB_HEADERS_PRESENT
-  /* Lets begin */
-  _xklXkbExtPresent = XkbQueryExtension( _xklDpy,
-                                         &opcode, &_xklXkbEventType,
-                                         &_xklXkbError, NULL, NULL );
-  if( !_xklXkbExtPresent )
-  {
-    _xklDpy = NULL;
-    XSetErrorHandler( ( XErrorHandler ) _xklDefaultErrHandler );
-    return -1;
-  }
-#endif
-
-  scr = DefaultScreen( _xklDpy );
-  _xklRootWindow = RootWindow( _xklDpy, scr );
-#ifdef XKB_HEADERS_PRESENT
-  XklDebug( 160,
-            "xkbEvenType: %X, xkbError: %X, display: %p, root: " WINID_FORMAT
-            "\n", _xklXkbEventType, _xklXkbError, _xklDpy, _xklRootWindow );
-#else
-  XklDebug( 160,
-            "NO XKB LIBS, display: %p, root: " WINID_FORMAT
-            "\n", _xklDpy, _xklRootWindow );
-#endif
-
-  _xklAtoms[WM_NAME] = XInternAtom( _xklDpy, "WM_NAME", False );
-  _xklAtoms[WM_STATE] = XInternAtom( _xklDpy, "WM_STATE", False );
-  _xklAtoms[XKLAVIER_STATE] = XInternAtom( _xklDpy, "XKLAVIER_STATE", False );
-  _xklAtoms[XKLAVIER_TRANSPARENT] =
-    XInternAtom( _xklDpy, "XKLAVIER_TRANSPARENT", False );
-#ifdef XKB_HEADERS_PRESENT
-  _xklAtoms[XKB_RF_NAMES_PROP_ATOM] =
-    XInternAtom( _xklDpy, _XKB_RF_NAMES_PROP_ATOM, False );
-  _xklAtoms[XKB_RF_NAMES_PROP_ATOM_BACKUP] =
-    XInternAtom( _xklDpy, "_XKB_RULES_NAMES_BACKUP", False );
-#endif
-
-  _xklAllowSecondaryGroupOnce = False;
-  _xklSkipOneRestore = False;
-  _xklDefaultGroup = -1;
-  _xklSecondaryGroupsMask = 0L;
-  _xklPrevAppWindow = 0;
-
-  return _XklLoadAllInfo(  )? 0 : _xklLastErrorCode;
-}
-
-int XklPauseListen(  )
-{
-#ifdef XKB_HEADERS_PRESENT
   XkbSelectEvents( _xklDpy, XkbUseCoreKbd, XkbAllEventsMask, 0 );
 //  XkbSelectEventDetails( _xklDpy,
   //                       XkbUseCoreKbd,
@@ -111,13 +35,11 @@ int XklPauseListen(  )
   //                 0 );
 
   //!!_XklSelectInput( _xklRootWindow, 0 );
-#endif
   return 0;
 }
 
-int XklResumeListen(  )
+static int _XklXkbResumeListen(  )
 {
-#ifdef XKB_HEADERS_PRESENT
   /* What events we want */
 #define XKB_EVT_MASK \
          (XkbStateNotifyMask| \
@@ -144,20 +66,15 @@ int XklResumeListen(  )
                          XkbUseCoreKbd,
                          XkbNamesNotify,
                          XKB_NAMES_EVT_DTL_MASK, XKB_NAMES_EVT_DTL_MASK );
-#endif
   _XklSelectInputMerging( _xklRootWindow,
                           SubstructureNotifyMask | PropertyChangeMask );
   _XklGetRealState( &_xklCurState );
   return 0;
 }
 
-unsigned XklGetNumGroups(  )
+static unsigned _XklXkbGetNumGroups( void )
 {
-#ifdef XKB_HEADERS_PRESENT
   return _xklXkb->ctrls->num_groups;
-#else
-  return 1;
-#endif
 }
 
 #define KBD_MASK \
@@ -167,9 +84,8 @@ unsigned XklGetNumGroups(  )
 #define NAMES_MASK \
   ( XkbGroupNamesMask | XkbIndicatorNamesMask )
 
-void _XklFreeAllInfo(  )
+static void _XklXkbFreeAllInfo(  )
 {
-#ifdef XKB_HEADERS_PRESENT
   if( _xklXkb != NULL )
   {
     int i;
@@ -183,15 +99,13 @@ void _XklFreeAllInfo(  )
     XkbFreeKeyboard( _xklXkb, XkbAllComponentsMask, True );
     _xklXkb = NULL;
   }
-#endif
 }
 
 /**
  * Load some XKB parameters
  */
-Bool _XklLoadAllInfo(  )
+static Bool _XklXkbLoadAllInfo(  )
 {
-#ifdef XKB_HEADERS_PRESENT
   int i;
   unsigned bit;
   Atom *gna;
@@ -255,18 +169,15 @@ Bool _XklLoadAllInfo(  )
   XklDebug( 200, "Real indicators are %X\n",
             _xklXkb->indicators->phys_indicators );
 
-#endif
   if( _xklConfigCallback != NULL )
     ( *_xklConfigCallback ) ( _xklConfigCallbackData );
   return True;
 }
 
-void XklLockGroup( int group )
+static void _XklXkbLockGroup( int group )
 {
   XklDebug( 100, "Posted request for change the group to %d ##\n", group );
-#ifdef XKB_HEADERS_PRESENT
   XkbLockGroup( _xklDpy, XkbUseCoreKbd, group );
-#endif
   XSync( _xklDpy, False );
 }
 
@@ -275,12 +186,9 @@ void XklLockGroup( int group )
  */
 void _XklGetRealState( XklState * curState_return )
 {
-#ifdef XKB_HEADERS_PRESENT
   XkbStateRec state;
-#endif
 
   curState_return->group = 0;
-#ifdef XKB_HEADERS_PRESENT
   if( Success == XkbGetState( _xklDpy, XkbUseCoreKbd, &state ) )
     curState_return->group = state.locked_group;
 
@@ -289,9 +197,7 @@ void _XklGetRealState( XklState * curState_return )
                             &curState_return->indicators ) )
     curState_return->indicators &= _xklXkb->indicators->phys_indicators;
   else
-#endif
-    curState_return->indicators = 0;
-
+  curState_return->indicators = 0;
 }
 
 /*
@@ -299,7 +205,6 @@ void _XklGetRealState( XklState * curState_return )
  */
 Bool _XklSetIndicator( int indicatorNum, Bool set )
 {
-#ifdef XKB_HEADERS_PRESENT
   XkbIndicatorMapPtr map;
 
   map = _xklXkb->indicators->maps + indicatorNum;
@@ -448,6 +353,52 @@ Bool _XklSetIndicator( int indicatorNum, Bool set )
       return True;
     }
   }
-#endif
   return True;
+}
+
+#endif
+
+int _XklXkbInit( void )
+{
+#ifdef XKB_HEADERS_PRESENT
+  int opcode;
+  static XklVTable xklXkbVTable =
+  {
+    _XklXkbFreeAllInfo,
+    _XklXkbGetGroupNames,
+    _XklXkbGetNumGroups,
+    _XklXkbLoadAllInfo,
+    _XklXkbLockGroup,
+    _XklXkbPauseListen,
+    _XklXkbResumeListen,
+  };
+  /* Lets begin */
+  _xklXkbExtPresent = XkbQueryExtension( _xklDpy,
+                                         &opcode, &_xklXkbEventType,
+                                         &_xklXkbError, NULL, NULL );
+  if( !_xklXkbExtPresent )
+  {
+    _xklDpy = NULL;
+    XSetErrorHandler( ( XErrorHandler ) _xklDefaultErrHandler );
+    return -1;
+  }
+  
+  XklDebug( 160,
+            "xkbEvenType: %X, xkbError: %X, display: %p, root: " WINID_FORMAT
+            "\n", _xklXkbEventType, _xklXkbError, _xklDpy, _xklRootWindow );
+
+  _xklAtoms[XKB_RF_NAMES_PROP_ATOM] =
+    XInternAtom( _xklDpy, _XKB_RF_NAMES_PROP_ATOM, False );
+  _xklAtoms[XKB_RF_NAMES_PROP_ATOM_BACKUP] =
+    XInternAtom( _xklDpy, "_XKB_RULES_NAMES_BACKUP", False );
+
+  xklVTable = &xklXkbVTable;
+  
+  return _XklLoadAllInfo(  )? 0 : _xklLastErrorCode;
+#else
+  XklDebug( 160,
+            "NO XKB LIBS, display: %p, root: " WINID_FORMAT
+            "\n", _xklDpy, _xklRootWindow );
+  return -1;
+#endif
 }

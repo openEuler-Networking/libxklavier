@@ -184,6 +184,7 @@ static void _XklConfigCleanAfterKbd(  )
 #endif
 }
 
+#ifdef XKB_HEADERS_PRESENT
 static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
 {
   XkbDescPtr xkb = NULL;
@@ -308,6 +309,7 @@ static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
 #endif
   return xkb;
 }
+#endif
 
 // check only client side support
 Bool XklMultipleLayoutsSupported( void )
