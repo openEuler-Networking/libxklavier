@@ -173,9 +173,10 @@ Bool _XklXkbIfCachedInfoEqualsActual( )
       }
     }
     /** 
-     * in case of success, let's reuse - not free! 
+     * in case of failure, reuse in _XklXkbLoadAllInfo
+     * in case of success - free it
      */
-    if( !rv )
+    if( rv )
     {
       XkbFreeKeyboard( precachedXkb, XkbAllComponentsMask, True );
       precachedXkb = NULL;

@@ -1,3 +1,8 @@
+2005-03-11 svu
+	
+	* libxklavier/xklavier_xkb.c: fixed memory leak, precachedXkb.
+	Thanks to kmaraas
+
 2005-02-25 svu
 	
 	* NEWS: update for 2.0
