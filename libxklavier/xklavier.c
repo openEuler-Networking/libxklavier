@@ -33,7 +33,7 @@ Bool _xklSkipOneRestore;
 
 int _xklSecondaryGroupsMask;
 
-int _xklDebugLevel = 160;
+int _xklDebugLevel = 0;
 
 Window _xklPrevAppWindow;
 
