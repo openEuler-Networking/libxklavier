@@ -8,10 +8,11 @@ enum { ACTION_NONE, ACTION_GET, ACTION_SET };
 
 static void printUsage()
 {
-  printf( "Usage: test_config (-g)|(-s -m <model> -l <layouts> -o <options>)|(-h)\n" );
+  printf( "Usage: test_config (-g)|(-s -m <model> -l <layouts> -o <options>)|(-h)(-d <debugLevel>)\n" );
   printf( "Options:\n" );
   printf( "         -g - Dump the current config, load original system settings and revert back\n" ); 
   printf( "         -s - Set the configuration given my -m -l -o options. Similar to setxkbmap\n" ); 
+  printf( "         -d - Set the debug level (by default, 0)\n" );
   printf( "         -h - Show this help\n" );
 }
 
@@ -44,10 +45,11 @@ int main( int argc, char * const argv[] )
   const char* model = NULL;
   const char* layouts = NULL;
   const char* options = NULL;
+  int debugLevel = 0;
 
   while (1)
   {
-    c = getopt( argc, argv, "hsgm:l:o:" );
+    c = getopt( argc, argv, "hsgm:l:o:d:" );
     if ( c == -1 )
       break;
     switch (c)
@@ -72,6 +74,9 @@ int main( int argc, char * const argv[] )
       case 'h':
         printUsage();
         exit(0);
+      case 'd':
+        debugLevel = atoi( optarg );
+        break;
       default:
         fprintf( stderr, "?? getopt returned character code 0%o ??\n", c );
         printUsage();
@@ -94,6 +99,7 @@ int main( int argc, char * const argv[] )
   if ( !XklInit( dpy ) )
   {
     XklConfigRec currentConfig, r2;
+    XklSetDebugLevel( debugLevel );
     XklDebug( 0, "Xklavier initialized\n" );
     XklConfigInit();
     XklConfigLoadRegistry();
