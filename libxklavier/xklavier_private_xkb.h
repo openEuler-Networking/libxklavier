@@ -22,6 +22,10 @@ extern Bool _XklXkbConfigMultipleLayoutsSupported( void );
 
 extern const char *_XklXkbGetXkbEventName( int xkb_type );
 
+extern Bool _XklXkbConfigPrepareNative( const XklConfigRecPtr data, XkbComponentNamesPtr componentNamesPtr );
+
+extern void _XklXkbConfigCleanupNative( XkbComponentNamesPtr componentNamesPtr );
+
 /* Start VTable methods */
 
 extern Bool _XklXkbConfigActivate( const XklConfigRecPtr data );
@@ -57,6 +61,16 @@ extern int _XklXkbResumeListen( void );
 extern void _XklXkbSetIndicators( const XklState *windowState );
 
 /* End of VTable methods */
+
+#else
+
+/**
+ * VERY VERY BAD STYLE, some kind of 'protected' methods - 
+ * but some programs may want to hook into them.
+ */
+extern Bool _XklXkbConfigPrepareNative( const XklConfigRecPtr data, void * componentNamesPtr );
+
+extern void _XklXkbConfigCleanupNative( void * componentNamesPtr );
 
 #endif
 

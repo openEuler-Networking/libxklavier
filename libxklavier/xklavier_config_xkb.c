@@ -30,18 +30,15 @@
 #include <X11/keysymdef.h>
 
 #ifdef XKB_HEADERS_PRESENT
-XkbRF_VarDefsRec _xklVarDefs;
 static XkbRF_RulesPtr _xklRules;
-static XkbComponentNamesRec componentNames;
-
-static char *locale;
 #endif
 
 #ifdef XKB_HEADERS_PRESENT
 static XkbRF_RulesPtr _XklLoadRulesSet( void )
 {
   char fileName[MAXPATHLEN] = "";
-  char* rf = _XklGetRulesSetName( XKB_DEFAULT_RULESET );
+  char *rf = _XklGetRulesSetName( XKB_DEFAULT_RULESET );
+  char *locale = NULL;
 
   _xklRules = NULL;
   if( rf == NULL )
@@ -51,8 +48,6 @@ static XkbRF_RulesPtr _XklLoadRulesSet( void )
   }
 
   locale = setlocale( LC_ALL, NULL );
-  if( locale != NULL )
-    locale = strdup( locale );
 
   snprintf( fileName, sizeof fileName, XKB_BASE "/rules/%s", rf );
   XklDebug( 160, "Loading rules from [%s]\n", fileName );
@@ -104,14 +99,19 @@ Bool _XklXkbConfigLoadRegistry( void )
 }
 
 #ifdef XKB_HEADERS_PRESENT
-static Bool _XklConfigPrepareBeforeKbd( const XklConfigRecPtr data )
+Bool _XklXkbConfigPrepareNative( const XklConfigRecPtr data, XkbComponentNamesPtr componentNamesPtr )
 {
-  XkbRF_RulesPtr rulesPtr = _XklLoadRulesSet();
+  XkbRF_VarDefsRec _xklVarDefs;
+  XkbRF_RulesPtr rulesPtr;
+  Bool gotComponents;
 
   memset( &_xklVarDefs, 0, sizeof( _xklVarDefs ) );
 
+  rulesPtr = _XklLoadRulesSet();
   if( !rulesPtr )
+  {
     return False;
+  }
 
   _xklVarDefs.model = ( char * ) data->model;
 
@@ -124,45 +124,46 @@ static Bool _XklConfigPrepareBeforeKbd( const XklConfigRecPtr data )
   if( data->options != NULL )
     _xklVarDefs.options = _XklConfigRecMergeOptions( data );
 
-  if( !XkbRF_GetComponents( rulesPtr, &_xklVarDefs, &componentNames ) )
+  gotComponents = XkbRF_GetComponents( rulesPtr, &_xklVarDefs, componentNamesPtr );
+
+  free( _xklVarDefs.layout );
+  free( _xklVarDefs.variant );
+  free( _xklVarDefs.options );
+
+  if( !gotComponents )
   {
     _xklLastErrorMsg = "Could not translate rules into components";
+    /* Just cleanup the stuff in case of failure */
+    _XklFreeRulesSet();
+    
     return False;
   }
 
   if ( _xklDebugLevel >= 200 )
   {
-    XklDebug( 200, "keymap: %s\n", componentNames.keymap );
-    XklDebug( 200, "keycodes: %s\n", componentNames.keycodes );
-    XklDebug( 200, "compat: %s\n", componentNames.compat );
-    XklDebug( 200, "types: %s\n", componentNames.types );
-    XklDebug( 200, "symbols: %s\n", componentNames.symbols );
-    XklDebug( 200, "geometry: %s\n", componentNames.geometry );
+    XklDebug( 200, "keymap: %s\n", componentNamesPtr->keymap );
+    XklDebug( 200, "keycodes: %s\n", componentNamesPtr->keycodes );
+    XklDebug( 200, "compat: %s\n", componentNamesPtr->compat );
+    XklDebug( 200, "types: %s\n", componentNamesPtr->types );
+    XklDebug( 200, "symbols: %s\n", componentNamesPtr->symbols );
+    XklDebug( 200, "geometry: %s\n", componentNamesPtr->geometry );
   }
   return True;
 }
 
-static void _XklConfigCleanAfterKbd(  )
+void _XklXkbConfigCleanupNative( XkbComponentNamesPtr componentNamesPtr )
 {
   _XklFreeRulesSet();
 
-  free( locale );
-  locale = NULL;
-
-  free( _xklVarDefs.layout );
-  free( _xklVarDefs.variant );
-  free( _xklVarDefs.options );
-  memset( &_xklVarDefs, 0, sizeof( _xklVarDefs ) );
-
-  free(componentNames.keymap);
-  free(componentNames.keycodes);
-  free(componentNames.compat);
-  free(componentNames.types);
-  free(componentNames.symbols);
-  free(componentNames.geometry);
+  free(componentNamesPtr->keymap);
+  free(componentNamesPtr->keycodes);
+  free(componentNamesPtr->compat);
+  free(componentNamesPtr->types);
+  free(componentNamesPtr->symbols);
+  free(componentNamesPtr->geometry);
 }
 
-static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
+static XkbDescPtr _XklConfigGetKeyboard( XkbComponentNamesPtr componentNamesPtr, Bool activate )
 {
   XkbDescPtr xkb = NULL;
 #if 0
@@ -192,11 +193,11 @@ static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
     if( (tmpxkb = fopen( xkbFN, "w" )) != NULL )
     {
       fprintf( tmpxkb, "xkb_keymap {\n" );
-      fprintf( tmpxkb, "        xkb_keycodes  { include \"%s\" };\n", componentNames.keycodes );
-      fprintf( tmpxkb, "        xkb_types     { include \"%s\" };\n", componentNames.types );
-      fprintf( tmpxkb, "        xkb_compat    { include \"%s\" };\n", componentNames.compat );
-      fprintf( tmpxkb, "        xkb_symbols   { include \"%s\" };\n", componentNames.symbols );
-      fprintf( tmpxkb, "        xkb_geometry  { include \"%s\" };\n", componentNames.geometry );
+      fprintf( tmpxkb, "        xkb_keycodes  { include \"%s\" };\n", componentNamesPtr->keycodes );
+      fprintf( tmpxkb, "        xkb_types     { include \"%s\" };\n", componentNamesPtr->types );
+      fprintf( tmpxkb, "        xkb_compat    { include \"%s\" };\n", componentNamesPtr->compat );
+      fprintf( tmpxkb, "        xkb_symbols   { include \"%s\" };\n", componentNamesPtr->symbols );
+      fprintf( tmpxkb, "        xkb_geometry  { include \"%s\" };\n", componentNamesPtr->geometry );
       fprintf( tmpxkb, "};\n" );
       fclose( tmpxkb );
     
@@ -206,11 +207,11 @@ static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
         "        xkb_compat    { include \"%s\" };\n"
         "        xkb_symbols   { include \"%s\" };\n"
         "        xkb_geometry  { include \"%s\" };\n};\n", 
-        componentNames.keycodes,
-        componentNames.types,
-        componentNames.compat,
-        componentNames.symbols,
-        componentNames.geometry );
+        componentNamesPtr->keycodes,
+        componentNamesPtr->types,
+        componentNamesPtr->compat,
+        componentNamesPtr->symbols,
+        componentNamesPtr->geometry );
        
       cpid=fork();
       switch( cpid )
@@ -293,6 +294,15 @@ static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
 #endif
   return xkb;
 }
+#else /* no XKB headers */
+Bool _XklXkbConfigPrepareNative( const XklConfigRecPtr data, void * componentNamesPtr )
+{
+  return False;
+}
+
+void _XklXkbConfigCleanupNative( void * componentNamesPtr )
+{
+}
 #endif
 
 /* check only client side support */
@@ -304,40 +314,29 @@ Bool _XklXkbConfigMultipleLayoutsSupported( void )
 
   if( supportState == UNCHECKED )
   {
+    XklConfigRec data;
+    char *layouts[] = { "us", "de" };
 #ifdef XKB_HEADERS_PRESENT
-    XkbRF_RulesPtr rulesPtr;
+    XkbComponentNamesRec componentNames;
 #endif
+
+    data.model = "pc105"; 
+    data.numLayouts = 2;
+    data.layouts = layouts;
+    data.numVariants =
+    data.numOptions = 0;
+
     XklDebug( 100, "!!! Checking multiple layouts support\n" );
     supportState = NON_SUPPORTED;
 #ifdef XKB_HEADERS_PRESENT
-    rulesPtr = _XklLoadRulesSet();
-    if( rulesPtr )
+    if( _XklXkbConfigPrepareNative( &data, &componentNames ) )
     {
-      XkbRF_VarDefsRec varDefs;
-      XkbComponentNamesRec cNames;
-      memset( &varDefs, 0, sizeof( varDefs ) );
-
-      varDefs.model = "pc105";
-      varDefs.layout = "a,b";
-      varDefs.variant = "";
-      varDefs.options = "";
-
-      if( XkbRF_GetComponents( rulesPtr, &varDefs, &cNames ) )
-      {
-        XklDebug( 100, "!!! Multiple layouts ARE supported\n" );
-        supportState = SUPPORTED;
-      } else
-      {
-        XklDebug( 100, "!!! Multiple layouts ARE NOT supported\n" );
-      }
-      free(cNames.keymap);
-      free(cNames.keycodes);
-      free(cNames.compat);
-      free(cNames.types);
-      free(cNames.symbols);
-      free(cNames.geometry);
-
-      XkbRF_Free( rulesPtr, True );
+      XklDebug( 100, "!!! Multiple layouts ARE supported\n" );
+      supportState = SUPPORTED;
+      _XklXkbConfigCleanupNative( &componentNames );
+    } else
+    {
+      XklDebug( 100, "!!! Multiple layouts ARE NOT supported\n" );
     }
 #endif
   }
@@ -364,10 +363,12 @@ Bool _XklXkbConfigActivate( const XklConfigRecPtr data )
 #endif
 
 #ifdef XKB_HEADERS_PRESENT
-  if( _XklConfigPrepareBeforeKbd( data ) )
+  XkbComponentNamesRec componentNames;
+
+  if( _XklXkbConfigPrepareNative( data, &componentNames ) )
   {
     XkbDescPtr xkb;
-    xkb = _XklConfigGetKeyboard( True );
+    xkb = _XklConfigGetKeyboard( &componentNames, True );
     if( xkb != NULL )
     {
       if( XklSetNamesProp
@@ -382,8 +383,8 @@ Bool _XklXkbConfigActivate( const XklConfigRecPtr data )
     {
       _xklLastErrorMsg = "Could not load keyboard description";
     }
+    _XklXkbConfigCleanupNative( &componentNames );
   }
-  _XklConfigCleanAfterKbd(  );
 #endif
   return rv;
 }
@@ -395,6 +396,7 @@ Bool _XklXkbConfigWriteFile( const char *fileName,
   Bool rv = False;
 
 #ifdef XKB_HEADERS_PRESENT
+  XkbComponentNamesRec componentNames;
   FILE *output = fopen( fileName, "w" );
   XkbFileInfo dumpInfo;
 
@@ -404,10 +406,10 @@ Bool _XklXkbConfigWriteFile( const char *fileName,
     return False;
   }
 
-  if( _XklConfigPrepareBeforeKbd( data ) )
+  if( _XklXkbConfigPrepareNative( data, &componentNames ) )
   {
     XkbDescPtr xkb;
-    xkb = _XklConfigGetKeyboard( False );
+    xkb = _XklConfigGetKeyboard( &componentNames, False );
     if( xkb != NULL )
     {
       dumpInfo.defined = 0;
@@ -421,8 +423,8 @@ Bool _XklXkbConfigWriteFile( const char *fileName,
       XkbFreeKeyboard( xkb, XkbGBN_AllComponentsMask, True );
     } else
       _xklLastErrorMsg = "Could not load keyboard description";
+    _XklXkbConfigCleanupNative( &componentNames );
   }
-  _XklConfigCleanAfterKbd(  );
   fclose( output );
 #endif
   return rv;

@@ -1,3 +1,17 @@
+2004-12-27 svu
+	
+	* libxklavier/xklavier_config_xkb.c,
+	libxklavier/xklavier_private_xkb.h: A bit of restructuring
+	in all XkbComponentNames-related functions. 
+	Introducing some ... ugh, 'protected' functions.
+
+2004-12-09 21:30  svu
+	
+	* libxklavier/xklavier_xkb.c, 
+	libxklavier/xklavier_xmm.c: intoducing XKL_*_DISABLE
+	envvars - for testing and related stuff. 
+	It is just handy to have them.
+
 2004-12-08 23:30  svu
 	
 	* libxklavier/xklavier_util.c, 
