@@ -289,7 +289,6 @@ extern "C"
  * description. Can be NULL
  * @param binary is a flag indicating whether the output file should be binary
  * @return True on success
- * At the moment, accepts only _ONE_ layout. Later probably I'll improve this..
  */
   extern Bool XklConfigWriteFile( const char *fileName,
                                   const XklConfigRecPtr data,

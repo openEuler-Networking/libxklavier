@@ -260,7 +260,7 @@ const char *_XklGetEventName( int type )
 void _XklUpdateCurState( int group, unsigned indicators, const char reason[] )
 {
   XklDebug( 150, 
-            "Updating the current state with [%d:%u], reason: %s\n", 
+            "Updating the current state with [g:%d/i:%u], reason: %s\n", 
             group, indicators, reason );
   _xklCurState.group = group;
   _xklCurState.indicators = indicators;

@@ -1,3 +1,10 @@
+2004-10-24 03:54  svu
+
+	* libxklavier/xklavier_config.h, libxklavier/xklavier_evt.c,
+	libxklavier/xklavier_util.c: fixing handling of the transparent 
+	windows. Fixes some problems with metacity and Window List-based
+	switching (reported by Alexander Ovcharenko).
+
 2004-10-16 23:18  svu
 
 	* NEWS: preparing 1.10

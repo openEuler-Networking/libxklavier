@@ -253,21 +253,34 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
   {
     if( _xklCurClient != appWin )
     {
-      Bool transparent;
+      Bool oldWinTransparent, newWinTransparent;
       XklState tmpState;
 
-      if ( XklGetState ( _xklCurClient, &tmpState ) )
-        _xklCurState = tmpState;
+      oldWinTransparent = _XklIsTransparentAppWindow( _xklCurClient );
+      if( oldWinTransparent )
+        XklDebug( 150, "Leaving transparent window\n" );
+
+      /**
+       * Reload the current state from the current window. 
+       * Do not do it for transparent window - we keep the state from 
+       * the _previous_ window.
+       */
+      if ( !oldWinTransparent && XklGetState ( _xklCurClient, &tmpState ) )
+      {
+         _XklUpdateCurState( tmpState.group, 
+                             tmpState.indicators,
+                             "Loading current (previous) state from the current (previous) window" );
+      }
 
       _xklCurClient = appWin;
       XklDebug( 150, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
                 _xklCurClient, _XklGetDebugWindowTitle( _xklCurClient ) );
 
-      transparent = _XklIsTransparentAppWindow( appWin );
-      if( transparent )
+      newWinTransparent = _XklIsTransparentAppWindow( appWin );
+      if( newWinTransparent )
         XklDebug( 150, "Entering transparent window\n" );
 
-      if( XklIsGroupPerApp() == !transparent )
+      if( XklIsGroupPerApp() == !newWinTransparent )
       {
         // We skip restoration only if we return to the same app window
         Bool doSkip = False;
@@ -302,7 +315,7 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
           } else
           {
             XklDebug( 150,
-                      "Both old and new focused window have state %d so no point restoring it\n",
+                      "Both old and new focused window have group %d so no point restoring it\n",
                       selectedWindowState.group );
             _xklAllowSecondaryGroupOnce = False;
           }
@@ -389,7 +402,6 @@ void _XklFocusOutEvHandler( XFocusChangeEvent * fev )
     if( _XklGetAppWindow( fev->window, &p ) )
       _xklPrevAppWindow = p;
   }
-
 }
 
 /**
