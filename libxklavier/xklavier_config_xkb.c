@@ -41,7 +41,11 @@ static char* _XklGetRulesSetName( void )
   {
     char* rf = NULL;
     if( !XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], &rf, NULL ) || ( rf == NULL ) )
-      return NULL;
+    {
+      strncpy( rulesSetName, XKB_DEFAULT_RULESET, sizeof rulesSetName );
+      XklDebug( 100, "Using default rules set: [%s]\n", rulesSetName );
+      return rulesSetName;
+    }
     strncpy( rulesSetName, rf, sizeof rulesSetName );
     free( rf );
   }
@@ -135,6 +139,16 @@ static Bool _XklConfigPrepareBeforeKbd( const XklConfigRecPtr data )
     _xklLastErrorMsg = "Could not translate rules into components";
     return False;
   }
+
+  if ( _xklDebugLevel >= 200 )
+  {
+    XklDebug( 200, "keymap: %s\n", componentNames.keymap );
+    XklDebug( 200, "keycodes: %s\n", componentNames.keycodes );
+    XklDebug( 200, "compat: %s\n", componentNames.compat );
+    XklDebug( 200, "types: %s\n", componentNames.types );
+    XklDebug( 200, "symbols: %s\n", componentNames.symbols );
+    XklDebug( 200, "geometry: %s\n", componentNames.geometry );
+  }
 #endif
   return True;
 }
@@ -144,21 +158,20 @@ static void _XklConfigCleanAfterKbd(  )
 #ifdef XKB_HEADERS_PRESENT
   _XklFreeRulesSet();
 
-  if( locale != NULL )
-  {
-    free( locale );
-    locale = NULL;
-  }
-  if( _xklVarDefs.layout != NULL )
-  {
-    free( _xklVarDefs.layout );
-    _xklVarDefs.layout = NULL;
-  }
-  if( _xklVarDefs.options != NULL )
-  {
-    free( _xklVarDefs.options );
-    _xklVarDefs.options = NULL;
-  }
+  free( locale );
+  locale = NULL;
+
+  free( _xklVarDefs.layout );
+  free( _xklVarDefs.variant );
+  free( _xklVarDefs.options );
+  memset( &_xklVarDefs, 0, sizeof( _xklVarDefs ) );
+
+  free(componentNames.keymap);
+  free(componentNames.keycodes);
+  free(componentNames.compat);
+  free(componentNames.types);
+  free(componentNames.symbols);
+  free(componentNames.geometry);
 #endif
 }
 
@@ -191,7 +204,16 @@ Bool XklMultipleLayoutsSupported( void )
         XklDebug( 100, "!!! Multiple layouts ARE supported\n" );
         supportState = SUPPORTED;
       } else
+      {
         XklDebug( 100, "!!! Multiple layouts ARE NOT supported\n" );
+      }
+      free(cNames.keymap);
+      free(cNames.keycodes);
+      free(cNames.compat);
+      free(cNames.types);
+      free(cNames.symbols);
+      free(cNames.geometry);
+
       _XklFreeRulesSet();
     }
 #endif
