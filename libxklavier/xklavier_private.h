@@ -33,18 +33,83 @@ typedef void ( *XklSetIndicatorsHandler )( const XklState *windowState );
 
 typedef struct
 {
+  /**
+   * Activates the configuration.
+   * xkb: create proper the XkbDescRec and send it to the server
+   * TODO: xmodmap
+   */
   XklConfigActivateHandler xklConfigActivateHandler;
+  /**
+   * Background-specific initialization.
+   * xkb: XkbInitAtoms - init internal xkb atoms table
+   * TODO: xmodmap
+   */
   XklConfigInitHandler xklConfigInitHandler; /* private */
-  XklConfigMultipleLayoutsSupportedHandler xklConfigMultipleLayoutsSupportedHandler; 
+  /**
+   * Can the system combine layouts in one configuration - or not?
+   * xkb: checks the simple rule with 2 layouts
+   * xmodmap: return true
+   */
+  XklConfigMultipleLayoutsSupportedHandler xklConfigMultipleLayoutsSupportedHandler;
+  /**
+   * Write the configuration into the file (binary/textual)
+   * xkb: write xkb or xkm file
+   * TODO: xmodmap
+   */
   XklConfigWriteFileHandler xklConfigWriteFileHandler;
+  /**
+   * Handles X events.
+   * xkb: XkbEvent handling
+   * TODO: xmodmap: .... (scariest thing)
+   */
   XklEventHandler xklEventHandler;
+  /**
+   * Flushes the cached server config info.
+   * xkb: frees XkbDesc
+   * TODO: xmodmap
+   */
   XklFreeAllInfoHandler xklFreeAllInfoHandler; /* private */
+  /**
+   * Get the list of the group names
+   * xkb: return cached list of the group names
+   * TODO: xmodmap
+   */
   XklGetGroupNamesHandler xklGetGroupNamesHandler;
+  /**
+   * Get the number of loaded groups
+   * xkb: return from the cached XkbDesc
+   * TODO: xmodmap
+   */
   XklGetNumGroupsHandler xklGetNumGroupsHandler;
+  /**
+   * Loads the configuration info from the server
+   * xkb: loads XkbDesc, names, indicators
+   * TODO: xmodmap
+   */
   XklLoadAllInfoHandler xklLoadAllInfoHandler; /* private */
+  /**
+   * Switches the keyboard to the group N
+   * xkb: simple one-liner to call the XKB function
+   * TODO: xmodmap
+   */
   XklLockGroupHandler xklLockGroupHandler;
+  /**
+   * Stop tracking the keyboard-related events
+   * xkb: XkbSelectEvents(..., 0)
+   * TODO: xmodmap
+   */
   XklPauseResumeListenHandler xklPauseListenHandler;
+  /**
+   * Start tracking the keyboard-related events
+   * xkb: XkbSelectEvents + XkbSelectEventDetails + GetRealState
+   * TODO: xmodmap
+   */
   XklPauseResumeListenHandler xklResumeListenHandler;
+  /**
+   * Set the indicators state from the XklState
+   * xkb: _XklSetIndicator for all indicators
+   * TODO: xmodmap
+   */
   XklSetIndicatorsHandler xklSetIndicatorsHandler; /* private */
 } XklVTable;
 
