@@ -1,0 +1,3 @@
+"Жизнь без XKB"
+
+The library is now buildable/compilable without XKB headers (though it does not work in such a miserable environment). This change required some modifications in the API/ABI, so the shared library has new interface id. The library is proven to be buildable on Solaris. Some internal code reorganization is performed.
