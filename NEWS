@@ -1,3 +1,6 @@
+1.11	A lot of internal changes. VTable introduced (so now at some 
+	point there can be implemented xmodmap backend). Some bugs were 
+	fixed.
 1.10	Some internal reorganization in the xklavier-config department.
 	API/ABI are broken. All this stuff is going to be used in 
 	GNOME 2.9x. The environment variable XKL_DEBUG introduced in 
