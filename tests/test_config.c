@@ -1,17 +1,20 @@
+#include <config.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <X11/Xlib.h>
 #include <libxklavier/xklavier.h>
 #include <libxklavier/xklavier_config.h>
 
-enum { ACTION_NONE, ACTION_GET, ACTION_SET };
+enum { ACTION_NONE, ACTION_GET, ACTION_SET, ACTION_WRITE };
 
 static void printUsage()
 {
-  printf( "Usage: test_config (-g)|(-s -m <model> -l <layouts> -o <options>)|(-h)(-d <debugLevel>)\n" );
+  printf( "Usage: test_config (-g)|(-s -m <model> -l <layouts> -o <options>)|(-h)|(-ws)|(-wb)(-d <debugLevel>)\n" );
   printf( "Options:\n" );
   printf( "         -g - Dump the current config, load original system settings and revert back\n" ); 
   printf( "         -s - Set the configuration given my -m -l -o options. Similar to setxkbmap\n" ); 
+  printf( "         -ws - Write the binary XKB config file (" PACKAGE ".xkm)\n" );
+  printf( "         -wb - Write the source XKB config file (" PACKAGE ".xkb)\n" );
   printf( "         -d - Set the debug level (by default, 0)\n" );
   printf( "         -h - Show this help\n" );
 }
@@ -46,10 +49,11 @@ int main( int argc, char * const argv[] )
   const char* layouts = NULL;
   const char* options = NULL;
   int debugLevel = 0;
+  int binary = 0;
 
   while (1)
   {
-    c = getopt( argc, argv, "hsgm:l:o:d:" );
+    c = getopt( argc, argv, "hsgm:l:o:d:w:" );
     if ( c == -1 )
       break;
     switch (c)
@@ -77,6 +81,9 @@ int main( int argc, char * const argv[] )
       case 'd':
         debugLevel = atoi( optarg );
         break;
+      case 'w':
+        action = ACTION_WRITE;
+        binary = ( 'b' == optarg[0] );
       default:
         fprintf( stderr, "?? getopt returned character code 0%o ??\n", c );
         printUsage();
@@ -124,10 +131,10 @@ int main( int argc, char * const argv[] )
           dump( &r2 );
         }
 
-        if ( XklConfigActivate( &r2, NULL ) )
+        if ( XklConfigActivate( &r2 ) )
         {
           XklDebug( 0, "The backup configuration restored\n" );
-          if ( XklConfigActivate( &currentConfig, NULL ) )
+          if ( XklConfigActivate( &currentConfig ) )
           {
             XklDebug( 0, "Reverting the configuration change\n" );
           } else
@@ -182,10 +189,17 @@ int main( int argc, char * const argv[] )
 
         XklDebug( 0, "New config:\n" );
         dump( &currentConfig );
-        if ( XklConfigActivate( &currentConfig, NULL ) )
+        if ( XklConfigActivate( &currentConfig ) )
             XklDebug( 0, "Set the config\n" );
         else
             XklDebug( 0, "Could not set the config: %s\n", XklGetLastError() );
+        break;
+      case ACTION_WRITE:
+        XklConfigWriteFile( binary ? ( PACKAGE ".xkm" ) : ( PACKAGE ".xkb" ),
+                            &currentConfig, 
+                            binary );     
+        XklDebug( 0, "The file " PACKAGE "%s is written\n", 
+                  binary ? ".xkm" : ".xkb"  );
         break;
     }
 

@@ -221,8 +221,7 @@ Bool XklMultipleLayoutsSupported( void )
   return supportState == SUPPORTED;
 }
 
-Bool XklConfigActivate( const XklConfigRecPtr data,
-                        void *userData )
+Bool XklConfigActivate( const XklConfigRecPtr data )
 {
   Bool rv = False;
 #if 0
@@ -272,8 +271,9 @@ Bool XklConfigActivate( const XklConfigRecPtr data,
   return rv;
 }
 
-Bool XklConfigWriteXKMFile( const char *fileName, const XklConfigRecPtr data,
-                            void *userData )
+Bool XklConfigWriteFile( const char *fileName, 
+                         const XklConfigRecPtr data,
+                         const Bool binary )
 {
   Bool rv = False;
 
@@ -300,7 +300,11 @@ Bool XklConfigWriteXKMFile( const char *fileName, const XklConfigRecPtr data,
       dumpInfo.defined = 0;
       dumpInfo.xkb = xkb;
       dumpInfo.type = XkmKeymapFile;
-      rv = XkbWriteXKMFile( output, &dumpInfo );
+      if( binary )
+        rv = XkbWriteXKMFile( output, &dumpInfo );
+      else
+        rv = XkbWriteXKBFile( output, &dumpInfo, True, NULL, NULL );
+
       XkbFreeKeyboard( xkb, XkbGBN_AllComponentsMask, True );
     } else
       _xklLastErrorMsg = "Could not load keyboard description";

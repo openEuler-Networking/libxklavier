@@ -261,13 +261,11 @@ extern "C"
  * Activates some XKB configuration
  * @param data is a valid XKB configuration
  * description. Can be NULL
- * @param userData is a data to pass to the callback
  * @return True on success
  * @see XklSetKeyAsSwitcher
  * At the moment, accepts only _ONE_ layout. Later probably I'll improve this..
  */
-  extern Bool XklConfigActivate( const XklConfigRecPtr data,
-                                 void *userData );
+  extern Bool XklConfigActivate( const XklConfigRecPtr data );
 
 /**
  * Loads the current XKB configuration (from X server)
@@ -285,17 +283,17 @@ extern "C"
   extern Bool XklConfigGetFromBackup( XklConfigRecPtr data );
 
 /**
- * Writes some XKB configuration into XKM file
+ * Writes some XKB configuration into XKM/XKB file
  * @param fileName is a name of the file to create
  * @param data is a valid XKB configuration
  * description. Can be NULL
- * @param userData is a data to pass to the callback
+ * @param binary is a flag indicating whether the output file should be binary
  * @return True on success
  * At the moment, accepts only _ONE_ layout. Later probably I'll improve this..
  */
-  extern Bool XklConfigWriteXKMFile( const char *fileName,
-                                     const XklConfigRecPtr data,
-                                     void *userData );
+  extern Bool XklConfigWriteFile( const char *fileName,
+                                  const XklConfigRecPtr data,
+                                  const Bool binary );
 
 /** @} */
 
