@@ -1,3 +1,69 @@
+2004-10-01 21:51  svu
+
+	* Changelog, Makefile.am, configure.in,
+	  libxklavier/xklavier_config.c, libxklavier/xklavier_config_xkb.c,
+	  libxklavier/xklavier_props.c, tests/.cvsignore,
+	  tests/Makefile.am, tests/test_config.c, tests/test_monitor.c:
+	  Syncing with HEAD. Major leaks nailed. Default ruleset introduced
+	  (well, it does not help much)
+
+2004-09-30 02:17  svu
+
+	* tests/test_config.c: now, test_config can set debug level as well
+
+2004-09-30 02:15  svu
+
+	* libxklavier/xklavier_config_xkb.c: dumping low-level components
+	  before calling XkbGetKeyboardByName
+
+2004-09-26 03:57  svu
+
+	* tests/: test_config.c, test_monitor.c: monitor is working
+	  somehow, more when needed
+
+2004-09-25 02:40  svu
+
+	* libxklavier/xklavier_config_xkb.c: bit of code polish
+
+2004-09-25 02:25  svu
+
+	* tests/: .cvsignore, Makefile.am, test_config.c, test_monitor.c:
+	  printing the usage, adding the monitor app
+
+2004-09-25 01:57  svu
+
+	* libxklavier/: xklavier_config.c, xklavier_config_xkb.c: found and
+	  fixed some leaks. hurray
+
+2004-09-25 00:43  svu
+
+	* tests/Makefile.am: added -lX11
+
+2004-09-24 01:18  svu
+
+	* tests/test_config.c: command line options give use some
+	  flexibility in testing
+
+2004-09-23 23:29  svu
+
+	* tests/test_config.c: a bit deeper
+
+2004-09-23 01:09  svu
+
+	* Makefile.am, configure.in, tests/.cvsignore, tests/Makefile.am,
+	  tests/test_config.c: starting the tests writing - I just had to
+	  do it, so at least now...
+
+2004-09-23 00:08  svu
+
+	* libxklavier/: xklavier_config_xkb.c, xklavier_props.c: Thanks to
+	  kmaraas for pointing me to the leak. I hope this will fix it
+
+2004-09-18 00:47  svu
+
+	* ChangeLog: Just to make people happy. Though it makes me unhappy
+	  enough
+
 2004-09-18 00:42  svu
 
 	* configure.in, libxklavier/xklavier_config_xkb.c,
