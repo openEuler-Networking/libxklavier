@@ -64,12 +64,12 @@ fi
 
 AC_DEFINE_UNQUOTED(XKB_BASE,"${xkb_base}",Base for XKB configuration)
 
-AC_ARG_WITH( xkb_rules_set,
-             [  --with-xkb-rules-set=SET        Set of XKB rules: xfree86, xorg, ... (by default it is xfree86)],
-             xkb_rules_set="$withval", 
-             xkb_rules_set="xfree86" )
+AC_ARG_WITH( xkb_default_ruleset,
+             [  --with-xkb-default-ruleset=RULES        XKB default set of rules (by default it is base)],
+             xkb_default_ruleset="$withval", 
+             xkb_default_ruleset="base" )
 
-AC_DEFINE_UNQUOTED(XKB_RULES_SET,"${xkb_rules_set}",Set of XKB rules)
+AC_DEFINE_UNQUOTED(XKB_DEFAULT_RULESET,"${xkb_default_ruleset}",Default XKB set of rules)
 
 ac_xkblib_include="\
 #include <stdio.h>

@@ -41,7 +41,11 @@ static char* _XklGetRulesSetName( void )
   {
     char* rf = NULL;
     if( !XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], &rf, NULL ) || ( rf == NULL ) )
-      return NULL;
+    {
+      strncpy( rulesSetName, XKB_DEFAULT_RULESET, sizeof rulesSetName );
+      XklDebug( 100, "Using default rules set: [%s]\n", rulesSetName );
+      return rulesSetName;
+    }
     strncpy( rulesSetName, rf, sizeof rulesSetName );
     free( rf );
   }
