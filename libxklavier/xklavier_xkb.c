@@ -36,13 +36,15 @@ int XklInit( Display * a_dpy )
   int opcode;
   int scr;
 
+  if( !a_dpy )
+  {
+    XklDebug( 10, "XklInit : display is NULL ?\n");
+    return -1;
+  }
+
   _xklDefaultErrHandler =
     XSetErrorHandler( ( XErrorHandler ) _XklErrHandler );
 
-  if( !a_dpy )
-  {
-    return -1;
-  }
   _xklDpy = a_dpy;
 #ifdef XKB_HEADERS_PRESENT
   /* Lets begin */
@@ -51,6 +53,8 @@ int XklInit( Display * a_dpy )
                                          &_xklXkbError, NULL, NULL );
   if( !_xklXkbExtPresent )
   {
+    _xklDpy = NULL;
+    XSetErrorHandler( ( XErrorHandler ) _xklDefaultErrHandler );
     return -1;
   }
 #endif
