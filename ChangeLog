@@ -1,3 +1,31 @@
+2004-10-16 23:18  svu
+
+	* NEWS: preparing 1.10
+
+2004-10-11 23:38  svu
+
+	* libxklavier/: xklavier_config.c, xklavier_config_xkb.c,
+	  xklavier_private.h, xklavier_xkb.c: Introducing the envvar
+	  XKL_DEBUG - I am sick of calling XklSetDebug manually
+
+2004-10-10 23:38  svu
+
+	* libxklavier/xklavier_config_xkb.c, libxklavier/xklavier_xkb.c,
+	  tests/test_config.c, tests/test_monitor.c: The revolution is on.
+	  The whole description is not compiled on the client side -
+	  nothing on the server side
+
+2004-10-04 22:51  svu
+
+	* ChangeLog, configure.in, libxklavier/xklavier_config.h,
+	  libxklavier/xklavier_config_xkb.c, tests/.cvsignore,
+	  tests/test_config.c: Cleaning up some functions. BREAKING the
+	  API/ABI. Hope people will not start chasing me with axes...
+
+2004-10-04 19:31  svu
+
+	* configure.in: 1.10 but not 1.1
+
 2004-10-02 01:32  svu
 
 	* NEWS, RELEASE_NOTES_1_01, RELEASE_NOTES_1_02, configure.in: a bit
