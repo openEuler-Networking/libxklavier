@@ -20,12 +20,12 @@ int _xklXkbEventType, _xklXkbError;
 
 static char *groupNames[XkbNumKbdGroups];
 
-static const char **_XklXkbGetGroupNames( void )
+const char **_XklXkbGetGroupNames( void )
 {
   return ( const char ** ) groupNames;
 }
 
-static int _XklXkbPauseListen(  )
+int _XklXkbPauseListen(  )
 {
   XkbSelectEvents( _xklDpy, XkbUseCoreKbd, XkbAllEventsMask, 0 );
 //  XkbSelectEventDetails( _xklDpy,
@@ -38,7 +38,7 @@ static int _XklXkbPauseListen(  )
   return 0;
 }
 
-static int _XklXkbResumeListen(  )
+int _XklXkbResumeListen(  )
 {
   /* What events we want */
 #define XKB_EVT_MASK \
@@ -72,7 +72,7 @@ static int _XklXkbResumeListen(  )
   return 0;
 }
 
-static unsigned _XklXkbGetNumGroups( void )
+unsigned _XklXkbGetNumGroups( void )
 {
   return _xklXkb->ctrls->num_groups;
 }
@@ -84,7 +84,7 @@ static unsigned _XklXkbGetNumGroups( void )
 #define NAMES_MASK \
   ( XkbGroupNamesMask | XkbIndicatorNamesMask )
 
-static void _XklXkbFreeAllInfo(  )
+void _XklXkbFreeAllInfo(  )
 {
   if( _xklXkb != NULL )
   {
@@ -104,7 +104,7 @@ static void _XklXkbFreeAllInfo(  )
 /**
  * Load some XKB parameters
  */
-static Bool _XklXkbLoadAllInfo(  )
+Bool _XklXkbLoadAllInfo(  )
 {
   int i;
   unsigned bit;
@@ -174,7 +174,7 @@ static Bool _XklXkbLoadAllInfo(  )
   return True;
 }
 
-static void _XklXkbLockGroup( int group )
+void _XklXkbLockGroup( int group )
 {
   XklDebug( 100, "Posted request for change the group to %d ##\n", group );
   XkbLockGroup( _xklDpy, XkbUseCoreKbd, group );
@@ -364,6 +364,10 @@ int _XklXkbInit( void )
   int opcode;
   static XklVTable xklXkbVTable =
   {
+    _XklXkbConfigActivate,
+    _XklXkbConfigInit,
+    _XklXkbConfigMultipleLayoutsSupported,
+    _XklXkbConfigWriteFile,
     _XklXkbFreeAllInfo,
     _XklXkbGetGroupNames,
     _XklXkbGetNumGroups,

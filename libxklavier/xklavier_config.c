@@ -350,7 +350,7 @@ void XklConfigInit( void )
     xmlXPathCompile( "/xkbConfigRegistry/optionList/group" );
   _XklI18NInit(  );
 
-  _XklConfigXkbInit();
+  (*xklVTable->xklConfigInitHandler)();
 }
 
 void XklConfigTerm( void )
@@ -515,3 +515,24 @@ Bool XklConfigFindOption( const char *optionGroupName,
       "[../configItem/name = '%s' and configItem/name = '%s']",
       optionGroupName, ptr, NULL );
 }
+
+/**
+ * Calling through vtable
+ */
+Bool XklConfigActivate( const XklConfigRecPtr data )
+{
+  return (*xklVTable->xklConfigActivateHandler)( data );
+}
+
+Bool XklMultipleLayoutsSupported( void )
+{
+  return (*xklVTable->xklConfigMultipleLayoutsSupportedHandler)();
+}
+
+Bool XklConfigWriteFile( const char *fileName,
+                         const XklConfigRecPtr data,
+                         const Bool binary )
+{
+  return (*xklVTable->xklConfigWriteFileHandler)( fileName, data, binary );
+}
+

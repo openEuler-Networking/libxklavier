@@ -5,11 +5,6 @@
 
 #include <X11/extensions/XKBrules.h>
 
-extern void _XklStdXkbHandler( int grp, XklStateChange changeType,
-                               unsigned inds, Bool setInds );
-
-extern void _XklXkbEvHandler( XkbEvent * kev );
-
 #define ForPhysIndicators( i, bit ) \
     for ( i=0, bit=1; i<XkbNumIndicators; i++, bit<<=1 ) \
           if ( _xklXkb->indicators->phys_indicators & bit )
@@ -21,6 +16,37 @@ extern XkbRF_VarDefsRec _xklVarDefs;
 extern XkbDescPtr _xklXkb;
 
 extern void XklDumpXkbDesc( const char *filename, XkbDescPtr kbd );
+
+extern void _XklStdXkbHandler( int grp, XklStateChange changeType,
+                               unsigned inds, Bool setInds );
+
+extern void _XklXkbEvHandler( XkbEvent * kev );
+
+/* Start VTable methods */
+
+extern Bool _XklXkbConfigActivate( const XklConfigRecPtr data );
+
+extern void _XklXkbConfigInit( void );
+
+extern Bool _XklXkbConfigMultipleLayoutsSupported( void );
+
+extern Bool _XklXkbConfigWriteFile( const char *fileName,
+                                    const XklConfigRecPtr data,
+                                    const Bool binary );
+
+extern void _XklXkbFreeAllInfo( void );
+
+extern const char **_XklXkbGetGroupNames( void );
+
+extern unsigned _XklXkbGetNumGroups( void );
+
+extern Bool _XklXkbLoadAllInfo( void );
+
+extern void _XklXkbLockGroup( int group );
+
+extern int _XklXkbPauseResumeListen( void );
+
+/* End of VTable methods */
 
 #endif
 

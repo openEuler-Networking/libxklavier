@@ -99,7 +99,7 @@ static void _XklFreeRulesSet( void )
 #endif
 }
 
-void _XklConfigXkbInit( void )
+void _XklXkbConfigInit( void )
 {
   XkbInitAtoms( NULL );
 }
@@ -321,7 +321,7 @@ static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
 #endif
 
 // check only client side support
-Bool XklMultipleLayoutsSupported( void )
+Bool _XklXkbConfigMultipleLayoutsSupported( void )
 {
   enum { NON_SUPPORTED, SUPPORTED, UNCHECKED };
 
@@ -369,7 +369,7 @@ Bool XklMultipleLayoutsSupported( void )
   return supportState == SUPPORTED;
 }
 
-Bool XklConfigActivate( const XklConfigRecPtr data )
+Bool _XklXkbConfigActivate( const XklConfigRecPtr data )
 {
   Bool rv = False;
 #if 0
@@ -413,9 +413,9 @@ Bool XklConfigActivate( const XklConfigRecPtr data )
   return rv;
 }
 
-Bool XklConfigWriteFile( const char *fileName, 
-                         const XklConfigRecPtr data,
-                         const Bool binary )
+Bool _XklXkbConfigWriteFile( const char *fileName, 
+                             const XklConfigRecPtr data,
+                             const Bool binary )
 {
   Bool rv = False;
 

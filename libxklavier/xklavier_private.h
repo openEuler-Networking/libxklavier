@@ -5,20 +5,34 @@
 
 #include <libxklavier/xklavier_config.h>
 
-typedef void (*XklFreeAllInfoHandler)( void );
+typedef Bool ( *XklConfigActivateHandler )( const XklConfigRecPtr data );
 
-typedef const char **(*XklGetGroupNamesHandler)( void );
+typedef void ( *XklConfigInitHandler )( void );
 
-typedef unsigned (*XklGetNumGroupsHandler)( void );
+typedef Bool ( *XklConfigMultipleLayoutsSupportedHandler )( void );
 
-typedef Bool (*XklLoadAllInfoHandler)( void );
+typedef Bool ( *XklConfigWriteFileHandler )( const char *fileName,
+                                             const XklConfigRecPtr data,
+                                             const Bool binary );
 
-typedef void (*XklLockGroupHandler)( int group );
+typedef void ( *XklFreeAllInfoHandler )( void );
 
-typedef int (*XklPauseResumeListenHandler)( void );
+typedef const char **( *XklGetGroupNamesHandler )( void );
+
+typedef unsigned ( *XklGetNumGroupsHandler )( void );
+
+typedef Bool ( *XklLoadAllInfoHandler )( void );
+
+typedef void ( *XklLockGroupHandler )( int group );
+
+typedef int ( *XklPauseResumeListenHandler )( void );
 
 typedef struct
 {
+  XklConfigActivateHandler xklConfigActivateHandler;
+  XklConfigInitHandler xklConfigInitHandler; /* private */
+  XklConfigMultipleLayoutsSupportedHandler xklConfigMultipleLayoutsSupportedHandler; 
+  XklConfigWriteFileHandler xklConfigWriteFileHandler;
   XklFreeAllInfoHandler xklFreeAllInfoHandler;
   XklGetGroupNamesHandler xklGetGroupNamesHandler;
   XklGetNumGroupsHandler xklGetNumGroupsHandler;
@@ -74,8 +88,6 @@ extern void _XklI18NInit(  );
 extern char *_XklLocaleFromUtf8( const char *utf8string );
 
 extern int _XklGetLanguagePriority( const char *language );
-
-extern void _XklConfigXkbInit( void );
 
 extern char *_XklConfigRecMergeByComma( const char **array,
                                         const int arrayLength );
