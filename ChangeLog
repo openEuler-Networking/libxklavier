@@ -1,3 +1,7 @@
+2004-12-02 21:47  svu
+	
+	* configure.in: xmodmap support is built by default
+
 2004-12-02 21:20  svu
 	
 	* libxklavier/xklavier_xkb.c: Fix for compiling without

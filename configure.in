@@ -75,7 +75,7 @@ AC_ARG_WITH( xmodmap_base,
 AC_DEFINE_UNQUOTED(XMODMAP_BASE,"${xmodmap_base}",Base for xmodmap configuration)
 
 save_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -I$x_includes"
+CFLAGS="${CFLAGS} -I${x_includes}"
 
 ac_xkblib_include="\
 #include <stdio.h>
@@ -105,7 +105,7 @@ AM_CONDITIONAL(ENABLE_XKB_SUPPORT, test "$enable_xkb_support" = "yes")
 
 AC_ARG_ENABLE(xmm-support, 
 [  --enable-xmm-support       Enable xmodmap support],
-, enable_xmm_support=no)
+, enable_xmm_support=yes)
 
 AM_CONDITIONAL(ENABLE_XMM_SUPPORT, test "$enable_xmm_support" = "yes")
 
