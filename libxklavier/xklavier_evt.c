@@ -378,7 +378,7 @@ void _XklStateModificationHandler( XklStateChange changeType,
   Window focused, focusedApp;
   XklState oldState;
   int revert;
-  Bool haveState;
+  Bool haveOldState = True;
   Bool setGroup = changeType == GROUP_CHANGED;
 
   XGetInputFocus( _xklDpy, &focused, &revert );
@@ -389,44 +389,61 @@ void _XklStateModificationHandler( XklStateChange changeType,
     return;
   }
 
-  if( !_XklGetAppWindow( focused, &focusedApp ) )
+  /** 
+   * Only if we manage states - otherwise _xklCurClient does not make sense 
+   */
+  if( !_XklGetAppWindow( focused, &focusedApp ) &&
+      _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
     focusedApp = _xklCurClient; /* what else can I do */
 
   XklDebug( 150, "Focused window: " WINID_FORMAT ", '%s'\n", focusedApp,
             _XklGetDebugWindowTitle( focusedApp ) );
-  XklDebug( 150, "CurClient: " WINID_FORMAT ", '%s'\n", _xklCurClient,
-            _XklGetDebugWindowTitle( _xklCurClient ) );
-
-  if( focusedApp != _xklCurClient )
+  if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
   {
-    if ( !_XklGetAppState( focusedApp, &oldState ) )
-    {
-      _XklUpdateCurState( grp, inds, 
-                          "Updating the state from new focused window" );
-      if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
-        _XklAddAppWindow( focusedApp, ( Window ) NULL, False, &_xklCurState );
-    }
-    else
-    {
-      grp = oldState.group;
-      inds = oldState.indicators;
-    }
-    _xklCurClient = focusedApp;
-    XklDebug( 160, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
-              _xklCurClient, _XklGetDebugWindowTitle( _xklCurClient ) );
-  }
-  /* if the window already has this this state - we are just restoring it!
-    (see the second parameter of stateCallback */
-  haveState = _XklGetAppState( _xklCurClient, &oldState );
+    XklDebug( 150, "CurClient: " WINID_FORMAT ", '%s'\n", _xklCurClient,
+              _XklGetDebugWindowTitle( _xklCurClient ) );
 
-  if( setGroup || haveState )
+    if( focusedApp != _xklCurClient )
+    {
+      /**
+       * If not state - we got the new window
+       */
+      if ( !_XklGetAppState( focusedApp, &oldState ) )
+      {
+        _XklUpdateCurState( grp, inds, 
+                            "Updating the state from new focused window" );
+        if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
+          _XklAddAppWindow( focusedApp, ( Window ) NULL, False, &_xklCurState );
+      }
+      /**
+       * There is state - just get the state from the window
+       */
+      else
+      {
+        grp = oldState.group;
+        inds = oldState.indicators;
+      }
+      _xklCurClient = focusedApp;
+      XklDebug( 160, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
+                _xklCurClient, _XklGetDebugWindowTitle( _xklCurClient ) );
+    }
+    /* If the window already has this this state - we are just restoring it!
+      (see the second parameter of stateCallback */
+    haveOldState = _XklGetAppState( _xklCurClient, &oldState );
+  } else /* just tracking the stuff, no smart things */
+  {
+    XklDebug( 160, "Just updating the current state in the tracking mode\n" );
+    memcpy( &oldState, &_xklCurState, sizeof( XklState ) );
+  }
+
+  if( setGroup || haveOldState )
   {
     _XklUpdateCurState( setGroup ? grp : oldState.group,
                         setInds ? inds : oldState.indicators,
                         "Restoring the state from the window" );
   }
 
-  if( haveState )
+  if( haveOldState )
     _XklTryCallStateCallback( changeType, &oldState );
 
   if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
