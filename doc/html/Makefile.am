@@ -43,16 +43,20 @@ EXTRA_DIST= $(doc_files)
 
 install:
 	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(doc_to); \
-	for p in $(doc_files); do \
-	  $(INSTALL_DATA) $$p $(DESTDIR)$(doc_to)/$$p; \
-	done;
+	if test "x$(DO_DOXYGEN)" = "xyes" ; then \
+	  $(mkinstalldirs) $(DESTDIR)$(doc_to); \
+	  for p in $(doc_files); do \
+	    $(INSTALL_DATA) $$p $(DESTDIR)$(doc_to)/$$p; \
+	  done; \
+	fi
 
 uninstall:
 	@$(NORMAL_UNINSTALL)
-	for p in $(doc_files); do \
-	  rm -f $(DESTDIR)$(doc_to)/$$p; \
-	done
+	if test "x$(DO_DOXYGEN)" = "xyes" ; then \
+	  for p in $(doc_files); do \
+	    rm -f $(DESTDIR)$(doc_to)/$$p; \
+	  done \
+	fi
 
 MAINTAINERCLEANFILES = $(DOXYGEN_OUT_FILES)
 
