@@ -1,4 +1,4 @@
-CFLAGS = -DDATA_DIR=\"$(datadir)/$(PACKAGE)\" -I. -I$(includedir) $(XML_CFLAGS) -I$(x_includes) -I$(top_srcdir)
+AM_CFLAGS = -DDATA_DIR=\"$(datadir)/$(PACKAGE)\" -I. -I$(includedir) $(XML_CFLAGS) -I$(x_includes) -I$(top_srcdir)
 
 lib_LTLIBRARIES = libxklavier.la
 noinst_HEADERS = xklavier_private.h 
