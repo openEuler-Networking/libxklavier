@@ -8,7 +8,7 @@ enum { ACTION_NONE, ACTION_GET, ACTION_SET };
 
 static void printUsage()
 {
-  printf( "Usage: test_config (-g)|(-s -m <model> -l <layouts> -o <options>)\n" );
+  printf( "Usage: test_config (-g)|(-s -m <model> -l <layouts> -o <options>)|(-h)\n" );
   printf( "Options:\n" );
   printf( "         -g - Dump the current config, load original system settings and revert back\n" ); 
   printf( "         -s - Set the configuration given my -m -l -o options. Similar to setxkbmap\n" ); 
@@ -50,7 +50,7 @@ int main( int argc, char * const argv[] )
     c = getopt( argc, argv, "hsgm:l:o:" );
     if ( c == -1 )
       break;
-    switch(c)
+    switch (c)
     {
       case 's':
         printf( "Set the config\n" );
