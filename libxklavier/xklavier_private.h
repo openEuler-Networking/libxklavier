@@ -77,6 +77,8 @@ extern const char *_XklGetEventName( int type );
 
 extern Bool _XklIsTransparentAppWindow( Window appWin );
 
+extern void _XklUpdateCurState( int group, unsigned indicators );
+
 extern Display *_xklDpy;
 
 extern Window _xklRootWindow;

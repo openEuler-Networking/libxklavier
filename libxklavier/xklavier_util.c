@@ -256,3 +256,11 @@ const char *_XklGetEventName( int type )
     return NULL;
   return evtNames[type];
 }
+
+void _XklUpdateCurState( int group, unsigned indicators )
+{
+  XklDebug( 150, 
+            "Updating the current state with [%d:%u]\n", group, indicators );
+  _xklCurState.group = group;
+  _xklCurState.indicators = indicators;
+}
