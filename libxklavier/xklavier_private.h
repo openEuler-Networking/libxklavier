@@ -52,6 +52,8 @@ extern char *_XklLocaleFromUtf8( const char *utf8string );
 
 extern int _XklGetLanguagePriority( const char *language );
 
+extern void _XklConfigXkbInit( void );
+
 extern char *_XklConfigRecMergeByComma( const char **array,
                                         const int arrayLength );
 

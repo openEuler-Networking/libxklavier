@@ -1,4 +1,5 @@
 #include <time.h>
+#include <stdlib.h>
 
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
@@ -35,6 +36,13 @@ int XklInit( Display * a_dpy )
 {
   int opcode;
   int scr;
+  char *sdl;
+
+  sdl = getenv( "XKL_DEBUG" );
+  if( sdl != NULL )
+  {
+    XklSetDebugLevel( atoi( sdl ) );
+  }
 
   if( !a_dpy )
   {
@@ -88,8 +96,6 @@ int XklInit( Display * a_dpy )
   _xklDefaultGroup = -1;
   _xklSecondaryGroupsMask = 0L;
   _xklPrevAppWindow = 0;
-
-  XkbInitAtoms( NULL );
 
   return _XklLoadAllInfo(  )? 0 : _xklLastErrorCode;
 }

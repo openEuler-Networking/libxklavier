@@ -97,6 +97,11 @@ static void _XklFreeRulesSet( void )
 #endif
 }
 
+void _XklConfigXkbInit( void )
+{
+  XkbInitAtoms( NULL );
+}
+
 Bool XklConfigLoadRegistry( void )
 {
   struct stat statBuf;

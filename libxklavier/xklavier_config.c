@@ -349,6 +349,8 @@ void XklConfigInit( void )
   optionGroupsXPath =
     xmlXPathCompile( "/xkbConfigRegistry/optionList/group" );
   _XklI18NInit(  );
+
+  _XklConfigXkbInit();
 }
 
 void XklConfigTerm( void )
