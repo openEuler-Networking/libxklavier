@@ -1,0 +1,2 @@
+"Аленушка"
+Mostly bugfix release. Some compile-time bugfixes (including related to portability), some minor runtime logic bugfixes. Better doxygen handling at build time.
