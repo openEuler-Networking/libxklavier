@@ -1,7 +1,10 @@
-noinst_PROGRAMS=test_config
+noinst_PROGRAMS=test_config test_monitor
 
 test_config_SOURCES=test_config.c
 
-test_config_CFLAGS=-I$(includedir) -I$(x_includes) -I$(top_srcdir)
+test_monitor_SOURCES=test_monitor.c
 
-test_config_LDADD=$(top_builddir)/libxklavier/libxklavier.la -lX11
+AM_CFLAGS=-I$(includedir) -I$(x_includes) -I$(top_srcdir)
+
+AM_LDFLAGS=$(top_builddir)/libxklavier/libxklavier.la -lX11
+
