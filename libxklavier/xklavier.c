@@ -505,7 +505,7 @@ Bool _XklGetAppState( Window appWin, XklState * state_return )
   Bool ret = False;
                                                                                             
   int grp = -1;
-  unsigned inds = -1;
+  unsigned inds = 0;
                                                                                             
   if( ( XGetWindowProperty
         ( _xklDpy, appWin, _xklAtoms[XKLAVIER_STATE], 0L,
