@@ -64,7 +64,7 @@ int XklFilterEvents( XEvent * xev )
     }
   XklDebug( 400, "Filtered event %d of type %d from window %d **>\n",
             pe->serial, pe->type, pe->window );
-  return 0;
+  return 1;
 }
 
 /**
