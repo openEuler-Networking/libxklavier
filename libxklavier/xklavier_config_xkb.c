@@ -16,11 +16,11 @@
 #include <X11/extensions/XKM.h>
 #endif
 
-#define RULES_FILE "xfree86"
+#define RULES_FILE XKB_RULES_SET
 
 #define RULES_PATH ( XKB_BASE "/rules/" RULES_FILE )
 
-#define XML_CFG_PATH ( XKB_BASE "/rules/xfree86.xml" )
+#define XML_CFG_PATH ( XKB_BASE "/rules/" RULES_FILE ".xml" )
 
 // For "bad" X servers we hold our own copy
 #define XML_CFG_FALLBACK_PATH ( DATA_DIR "/xfree86.xml" )
