@@ -1,7 +1,7 @@
-2004-12-06 01:30  svu
+2004-12-07 00:20  svu
 	
 	* configure.in: using ac_x_includes to make configure
-	work better.
+	work better. Improved backend checking and diagnostics.
 	* autogen.sh: updating the version of tools
 
 2004-12-02 21:47  svu

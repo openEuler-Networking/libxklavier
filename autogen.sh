@@ -18,7 +18,7 @@ DIE=0
   (libtool --version) < /dev/null > /dev/null 2>&1 || {
     echo
     echo "**Error**: You must have \`libtool' installed."
-    echo "Get ftp://ftp.gnu.org/pub/gnu/libtool-1.2d.tar.gz"
+    echo "Get ftp://ftp.gnu.org/pub/gnu/libtool-1.5.6.tar.gz"
     echo "(or a newer version if it is available)"
     DIE=1
   }
@@ -29,7 +29,7 @@ grep "^AM_GNU_GETTEXT" $srcdir/configure.in >/dev/null && {
   (gettext --version) < /dev/null > /dev/null 2>&1 || {
     echo
     echo "**Error**: You must have \`gettext' installed."
-    echo "Get ftp://alpha.gnu.org/gnu/gettext-0.10.35.tar.gz"
+    echo "Get ftp://alpha.gnu.org/gnu/gettext-0.14.1.tar.gz"
     echo "(or a newer version if it is available)"
     DIE=1
   }
@@ -40,7 +40,7 @@ grep "^AM_GNOME_GETTEXT" $srcdir/configure.in >/dev/null && {
   (gettext --version) < /dev/null > /dev/null 2>&1 || {
     echo
     echo "**Error**: You must have \`gettext' installed."
-    echo "Get ftp://alpha.gnu.org/gnu/gettext-0.10.35.tar.gz"
+    echo "Get ftp://alpha.gnu.org/gnu/gettext-0.14.1.tar.gz"
     echo "(or a newer version if it is available)"
     DIE=1
   }
@@ -49,7 +49,7 @@ grep "^AM_GNOME_GETTEXT" $srcdir/configure.in >/dev/null && {
 (automake --version) < /dev/null > /dev/null 2>&1 || {
   echo
   echo "**Error**: You must have \`automake' installed."
-  echo "Get ftp://ftp.gnu.org/pub/gnu/automake-1.3.tar.gz"
+  echo "Get ftp://ftp.gnu.org/pub/gnu/automake-1.9.2.tar.gz"
   echo "(or a newer version if it is available)"
   DIE=1
   NO_AUTOMAKE=yes
@@ -61,7 +61,7 @@ test -n "$NO_AUTOMAKE" || (aclocal --version) < /dev/null > /dev/null 2>&1 || {
   echo
   echo "**Error**: Missing \`aclocal'.  The version of \`automake'"
   echo "installed doesn't appear recent enough."
-  echo "Get ftp://ftp.gnu.org/pub/gnu/automake-1.3.tar.gz"
+  echo "Get ftp://ftp.gnu.org/pub/gnu/automake-1.9.2.tar.gz"
   echo "(or a newer version if it is available)"
   DIE=1
 }
