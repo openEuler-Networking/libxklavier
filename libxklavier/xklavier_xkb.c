@@ -5,6 +5,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xlibint.h>
+#include <X11/XKBlib.h>
 
 #include "xklavier_private.h"
 #include "xklavier_private_xkb.h"

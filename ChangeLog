@@ -1,3 +1,8 @@
+2004-12-02 00:21  svu
+	
+	* libxklavier/xklavier_xkb.c: Build patch by Andrei 
+	Yurkevich
+
 2004-11-28 16:00  svu
 	
 	* NEWS: Preparing 1.12
