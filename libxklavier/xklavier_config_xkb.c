@@ -31,16 +31,14 @@
 
 #ifdef XKB_HEADERS_PRESENT
 static XkbRF_RulesPtr _xklRules;
-#endif
 
-#ifdef XKB_HEADERS_PRESENT
 static XkbRF_RulesPtr _XklLoadRulesSet( void )
 {
+  XkbRF_RulesPtr rulesSet = NULL;
   char fileName[MAXPATHLEN] = "";
   char *rf = _XklGetRulesSetName( XKB_DEFAULT_RULESET );
   char *locale = NULL;
 
-  _xklRules = NULL;
   if( rf == NULL )
   {
     _xklLastErrorMsg = "Could not find the XKB rules set";
@@ -52,22 +50,21 @@ static XkbRF_RulesPtr _XklLoadRulesSet( void )
   snprintf( fileName, sizeof fileName, XKB_BASE "/rules/%s", rf );
   XklDebug( 160, "Loading rules from [%s]\n", fileName );
 
-  _xklRules = XkbRF_Load( fileName, locale, True, True );
+  rulesSet = XkbRF_Load( fileName, locale, True, True );
 
-  if( _xklRules == NULL )
+  if( rulesSet == NULL )
   {
     _xklLastErrorMsg = "Could not load rules";
     return NULL;
   }
-  return _xklRules;
+  return rulesSet;
 }
-#endif
 
-#ifdef XKB_HEADERS_PRESENT
 static void _XklFreeRulesSet( void )
 {
   if ( _xklRules )
     XkbRF_Free( _xklRules, True );
+  _xklRules = NULL;
 }
 #endif
 
@@ -102,13 +99,12 @@ Bool _XklXkbConfigLoadRegistry( void )
 Bool _XklXkbConfigPrepareNative( const XklConfigRecPtr data, XkbComponentNamesPtr componentNamesPtr )
 {
   XkbRF_VarDefsRec _xklVarDefs;
-  XkbRF_RulesPtr rulesPtr;
   Bool gotComponents;
 
   memset( &_xklVarDefs, 0, sizeof( _xklVarDefs ) );
 
-  rulesPtr = _XklLoadRulesSet();
-  if( !rulesPtr )
+  _xklRules = _XklLoadRulesSet();
+  if( !_xklRules )
   {
     return False;
   }
@@ -124,7 +120,7 @@ Bool _XklXkbConfigPrepareNative( const XklConfigRecPtr data, XkbComponentNamesPt
   if( data->options != NULL )
     _xklVarDefs.options = _XklConfigRecMergeOptions( data );
 
-  gotComponents = XkbRF_GetComponents( rulesPtr, &_xklVarDefs, componentNamesPtr );
+  gotComponents = XkbRF_GetComponents( _xklRules, &_xklVarDefs, componentNamesPtr );
 
   free( _xklVarDefs.layout );
   free( _xklVarDefs.variant );
@@ -134,7 +130,7 @@ Bool _XklXkbConfigPrepareNative( const XklConfigRecPtr data, XkbComponentNamesPt
   {
     _xklLastErrorMsg = "Could not translate rules into components";
     /* Just cleanup the stuff in case of failure */
-    _XklFreeRulesSet();
+    _XklXkbConfigCleanupNative( componentNamesPtr );
     
     return False;
   }
@@ -319,6 +315,7 @@ Bool _XklXkbConfigMultipleLayoutsSupported( void )
     char *variants[] = { NULL, NULL };
 #ifdef XKB_HEADERS_PRESENT
     XkbComponentNamesRec componentNames;
+    memset( &componentNames, 0, sizeof( componentNames ) );
 #endif
 
     data.model = "pc105"; 
@@ -367,6 +364,7 @@ Bool _XklXkbConfigActivate( const XklConfigRecPtr data )
 
 #ifdef XKB_HEADERS_PRESENT
   XkbComponentNamesRec componentNames;
+  memset( &componentNames, 0, sizeof( componentNames ) );
 
   if( _XklXkbConfigPrepareNative( data, &componentNames ) )
   {
@@ -408,6 +406,8 @@ Bool _XklXkbConfigWriteFile( const char *fileName,
     _xklLastErrorMsg = "Could not open the XKB file";
     return False;
   }
+
+  memset( &componentNames, 0, sizeof( componentNames ) );
 
   if( _XklXkbConfigPrepareNative( data, &componentNames ) )
   {
