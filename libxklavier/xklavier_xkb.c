@@ -89,6 +89,8 @@ int XklInit( Display * a_dpy )
   _xklSecondaryGroupsMask = 0L;
   _xklPrevAppWindow = 0;
 
+  XkbInitAtoms( NULL );
+
   return _XklLoadAllInfo(  )? 0 : _xklLastErrorCode;
 }
 

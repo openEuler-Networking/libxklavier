@@ -1,8 +1,12 @@
 #include <errno.h>
 #include <string.h>
 #include <locale.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/param.h>
+
+#include <sys/types.h>
+#include <fcntl.h>
 
 #include <libxml/xpath.h>
 
@@ -20,7 +24,7 @@
 // For "bad" X servers we hold our own copy
 #define XML_CFG_FALLBACK_PATH ( DATA_DIR "/xfree86.xml" )
 
-#define MULTIPLE_LAYOUTS_CHECK_PATH ( XKB_BASE "/symbols/pc/en_US" )
+#define XKBCOMP ( XKB_BASE "/xkbcomp" )
 
 #define XK_XKB_KEYS
 #include <X11/keysymdef.h>
@@ -175,6 +179,131 @@ static void _XklConfigCleanAfterKbd(  )
 #endif
 }
 
+static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
+{
+  XkbDescPtr xkb = NULL;
+#if 0
+  xkb = XkbGetKeyboardByName( _xklDpy, 
+                              XkbUseCoreKbd, 
+                              &componentNames,
+                              XkbGBN_AllComponentsMask,
+                              XkbGBN_AllComponentsMask &
+                              ( ~XkbGBN_GeometryMask ), 
+                              activate );
+#else
+#define FOR_READING (0)
+#define FOR_WRITING (1)
+  XkbFileInfo result;
+  FILE *p2cf;
+  int xkmloadres;
+  int p2c[2] = { -1, -1 };
+  FILE* tmpxkm = NULL;
+
+  if( !pipe(p2c) )
+  {
+    if( (tmpxkm = tmpfile()) != NULL )
+    {
+      pid_t cpid;
+      int status;
+
+      cpid=fork();
+      switch( cpid )
+      {
+        case -1:
+          XklDebug( 0, "Could not fork: %d\n", errno );
+          break;
+        case 0:
+          /* child */
+          // XklDebug( 0, "Executing %s\n", XKBCOMP );
+          dup2( p2c[FOR_READING], fileno( stdin ) );
+          dup2( fileno( tmpxkm ), fileno( stdout ) );
+          close( p2c[FOR_READING] );
+          close( p2c[FOR_WRITING] );
+          close( fileno( stderr ) );
+          
+          execl( XKBCOMP, XKBCOMP, "-xkm", "-", "-", NULL );
+          XklDebug( 0, "Could not exec %s: %d\n", XKBCOMP, errno );
+          exit( 1 );
+        default:
+          /* parent */
+          close( p2c[FOR_READING] ); p2c[FOR_READING] = -1;
+          p2cf = fdopen( p2c[FOR_WRITING], "w" );
+
+          fprintf( p2cf, "xkb_keymap {\n" );
+          fprintf( p2cf, "        xkb_keycodes  { include \"%s\" };\n", componentNames.keycodes );
+          fprintf( p2cf, "        xkb_types     { include \"%s\" };\n", componentNames.types );
+          fprintf( p2cf, "        xkb_compat    { include \"%s\" };\n", componentNames.compat );
+          fprintf( p2cf, "        xkb_symbols   { include \"%s\" };\n", componentNames.symbols );
+          fprintf( p2cf, "        xkb_geometry  { include \"%s\" };\n", componentNames.geometry );
+          fprintf( p2cf, "};\n" );
+          fclose( p2cf ); p2c[FOR_WRITING] = -1;
+
+          cpid = wait( &status );
+          XklDebug( 150, "Return status of %d: %d\n", cpid, status );
+
+          XklDebug( 150, "xkb_keymap {\n"
+            "        xkb_keycodes  { include \"%s\" };\n"
+            "        xkb_types     { include \"%s\" };\n"
+            "        xkb_compat    { include \"%s\" };\n"
+            "        xkb_symbols   { include \"%s\" };\n"
+            "        xkb_geometry  { include \"%s\" };\n};\n", 
+            componentNames.keycodes,
+            componentNames.types,
+            componentNames.compat,
+            componentNames.symbols,
+            componentNames.geometry );
+          
+          memset( (char *)&result, 0, sizeof(result) );
+          result.xkb = XkbAllocKeyboard();
+
+          fseek( tmpxkm, 0L, SEEK_SET );
+          if ( ( xkmloadres = XkmReadFile( tmpxkm, 0, XkmKeymapLegal, &result) ) != XkmKeymapLegal )
+          {
+            if( activate )
+            {
+              if( Success == XkbChangeKbdDisplay( _xklDpy, &result ) )
+              {
+                if( XkbWriteToServer(&result) )
+                {
+                  xkb = result.xkb;
+                } else
+                {
+                  XklDebug( 0, "Could not write keyboard description to the server\n" );
+                }
+              } else
+              {
+                XklDebug( 0, "Could not change the keyboard description to display\n" );
+              } 
+            } else
+              xkb = result.xkb;
+          }
+          else
+          {
+            XklDebug( 0, "Could not load %s output as XKM file, got %d (asked %d)\n", 
+                      XKBCOMP, xkmloadres, XkmKeymapLegal );
+          }
+          fclose( tmpxkm ); tmpxkm = NULL;
+
+          if ( xkb == NULL )
+            XkbFreeKeyboard( result.xkb, XkbAllComponentsMask, True );
+          break;
+      }
+      if( tmpxkm != NULL ) fclose( tmpxkm );
+    } else
+    {
+      XklDebug( 0, "Could not open c2p pipe: %d\n", errno );
+    }
+    if( p2c[FOR_READING] != -1 ) close( p2c[FOR_READING] );
+    if( p2c[FOR_WRITING] != -1 ) close( p2c[FOR_WRITING] );
+  } else
+  {
+    XklDebug( 0, "Could not open p2c pipe: %d\n", errno );
+  }
+
+#endif
+  return xkb;
+}
+
 // check only client side support
 Bool XklMultipleLayoutsSupported( void )
 {
@@ -182,13 +311,16 @@ Bool XklMultipleLayoutsSupported( void )
 
   static int supportState = UNCHECKED;
 
-  if ( supportState == UNCHECKED )
+  if( supportState == UNCHECKED )
   {
+#ifdef XKB_HEADERS_PRESENT
+    XkbRF_RulesPtr rulesPtr;
+#endif
     XklDebug( 100, "!!! Checking multiple layouts support\n" );
     supportState = NON_SUPPORTED;
 #ifdef XKB_HEADERS_PRESENT
-    XkbRF_RulesPtr rulesPtr = _XklLoadRulesSet();
-    if ( rulesPtr )
+    rulesPtr = _XklLoadRulesSet();
+    if( rulesPtr )
     {
       XkbRF_VarDefsRec varDefs;
       XkbComponentNamesRec cNames;
@@ -244,13 +376,7 @@ Bool XklConfigActivate( const XklConfigRecPtr data )
   if( _XklConfigPrepareBeforeKbd( data ) )
   {
     XkbDescPtr xkb;
-    xkb =
-      XkbGetKeyboardByName( _xklDpy, XkbUseCoreKbd, &componentNames,
-                            XkbGBN_AllComponentsMask,
-                            XkbGBN_AllComponentsMask &
-                            ( ~XkbGBN_GeometryMask ), True );
-
-    //!! Do I need to free it anywhere?
+    xkb = _XklConfigGetKeyboard( True );
     if( xkb != NULL )
     {
       if( XklSetNamesProp
@@ -290,11 +416,7 @@ Bool XklConfigWriteFile( const char *fileName,
   if( _XklConfigPrepareBeforeKbd( data ) )
   {
     XkbDescPtr xkb;
-    xkb =
-      XkbGetKeyboardByName( _xklDpy, XkbUseCoreKbd, &componentNames,
-                            XkbGBN_AllComponentsMask,
-                            XkbGBN_AllComponentsMask &
-                            ( ~XkbGBN_GeometryMask ), False );
+    xkb = _XklConfigGetKeyboard( False );
     if( xkb != NULL )
     {
       dumpInfo.defined = 0;

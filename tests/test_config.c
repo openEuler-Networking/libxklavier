@@ -50,6 +50,7 @@ int main( int argc, char * const argv[] )
   const char* options = NULL;
   int debugLevel = 0;
   int binary = 0;
+  Display *dpy;
 
   while (1)
   {
@@ -96,7 +97,7 @@ int main( int argc, char * const argv[] )
     exit( 0 );
   }
 
-  Display* dpy = XOpenDisplay( NULL );
+  dpy = XOpenDisplay( NULL );
   if ( dpy == NULL )
   {
     fprintf( stderr, "Could not open display\n" );

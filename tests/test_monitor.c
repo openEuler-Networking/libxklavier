@@ -42,6 +42,7 @@ int main( int argc, char * argv[] )
   int c;
   int debugLevel = 0;
   XkbEvent ev;
+  Display* dpy;
 
   while (1)
   {
@@ -63,7 +64,7 @@ int main( int argc, char * argv[] )
     }
   }
 
-  Display* dpy = XOpenDisplay( NULL );
+  dpy = XOpenDisplay( NULL );
   if ( dpy == NULL )
   {
     fprintf( stderr, "Could not open display\n" );
