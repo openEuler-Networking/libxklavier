@@ -526,6 +526,12 @@ Bool XklConfigActivate( const XklConfigRecPtr data )
   return (*xklVTable->xklConfigActivateHandler)( data );
 }
 
+Bool XklConfigLoadRegistry( void )
+{
+  _XklEnsureVTableInited();
+  return (*xklVTable->xklConfigLoadRegistryHandler)();
+}
+
 Bool XklMultipleLayoutsSupported( void )
 {
   _XklEnsureVTableInited();
