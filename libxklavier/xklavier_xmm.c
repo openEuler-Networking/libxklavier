@@ -254,6 +254,9 @@ int _XklXmmInit( void )
     NULL,
   };
 
+  if( getenv( "XKL_XMODMAP_DISABLE" ) != NULL )
+    return -1;
+
   xklXmmVTable.baseConfigAtom =
     XInternAtom( _xklDpy, "_XMM_NAMES", False );
   xklXmmVTable.backupConfigAtom =

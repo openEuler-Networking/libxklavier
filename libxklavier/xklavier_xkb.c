@@ -388,7 +388,10 @@ int _XklXkbInit( void )
     _XklXkbResumeListen,
     _XklXkbSetIndicators,
   };
-  /* Lets begin */
+
+  if( getenv( "XKL_XKB_DISABLE" ) != NULL )
+    return -1;
+
   _xklXkbExtPresent = XkbQueryExtension( _xklDpy,
                                          &opcode, &_xklXkbEventType,
                                          &_xklXkbError, NULL, NULL );
