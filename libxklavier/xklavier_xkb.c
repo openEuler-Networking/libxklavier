@@ -90,6 +90,14 @@ unsigned _XklXkbGetNumGroups( void )
 
 void _XklXkbFreeAllInfo(  )
 {
+  int i;
+  char **pi = _xklIndicatorNames;
+  for( i = 0; i < XkbNumIndicators; i++, pi++ )
+  {
+    /* only free non-empty ones */
+    if( *pi && **pi )
+      XFree( *pi );
+  }
   if( _xklXkb != NULL )
   {
     int i;
@@ -111,9 +119,10 @@ void _XklXkbFreeAllInfo(  )
 Bool _XklXkbLoadAllInfo(  )
 {
   int i;
-  unsigned bit;
   Atom *gna;
+  Atom *pia;
   char **groupName;
+  char **pi = _xklIndicatorNames;
 
   _xklXkb = XkbGetMap( _xklDpy, KBD_MASK, XkbUseCoreKbd );
   if( _xklXkb == NULL )
@@ -159,15 +168,16 @@ Bool _XklXkbLoadAllInfo(  )
     return False;
   }
 
-  for( i = 0, bit = 1; i < XkbNumIndicators; i++, bit <<= 1 )
+  pia = _xklXkb->names->indicators;
+  for( i = XkbNumIndicators; --i>=0; pi++, pia++ )
   {
-    Atom a = _xklXkb->names->indicators[i];
+    Atom a = *pia;
     if( a != None )
-      _xklIndicatorNames[i] = XGetAtomName( _xklDpy, a );
+      *pi = XGetAtomName( _xklDpy, a );
     else
-      _xklIndicatorNames[i] = "";
+      *pi = "";
 
-    XklDebug( 200, "Indicator[%d] is %s\n", i, _xklIndicatorNames[i] );
+    XklDebug( 200, "Indicator[%d] is %s\n", i, *pi  );
   }
 
   XklDebug( 200, "Real indicators are %X\n",
