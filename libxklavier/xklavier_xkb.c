@@ -420,6 +420,7 @@ int _XklXkbInit( void )
 #endif
 }
 
+#ifdef XKB_HEADERS_PRESENT
 const char *_XklXkbGetXkbEventName( int xkb_type )
 {
   /* Not really good to use the fact of consecutivity
@@ -445,3 +446,4 @@ const char *_XklXkbGetXkbEventName( int xkb_type )
     return "UNKNOWN";
   return evtNames[xkb_type];
 }
+#endif
