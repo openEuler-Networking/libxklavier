@@ -1,3 +1,7 @@
+2005-02-24 svu
+	
+	* libxklavier/xklavier_props.c: small warning eliminated
+
 2005-01-07 svu
 	
 	* libxklavier: a lot of optimizations (and some small fixes)

@@ -318,8 +318,8 @@ Bool XklGetNamesProp( Atom rulesAtom,
               realloc( *theVariant, varlen ) : malloc( varlen );
             memcpy( var, varstart + 1, --varlen );
             var[varlen] = '\0';
-            realloc( *theLayout, laylen + 1 );
-            ( *theLayout )[laylen] = '\0';
+            
+            ( (char*)realloc( *theLayout, laylen + 1 ) )[laylen] = '\0';
           }
         }
       }
