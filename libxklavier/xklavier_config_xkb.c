@@ -316,15 +316,18 @@ Bool _XklXkbConfigMultipleLayoutsSupported( void )
   {
     XklConfigRec data;
     char *layouts[] = { "us", "de" };
+    char *variants[] = { NULL, NULL };
 #ifdef XKB_HEADERS_PRESENT
     XkbComponentNamesRec componentNames;
 #endif
 
     data.model = "pc105"; 
-    data.numLayouts = 2;
-    data.layouts = layouts;
     data.numVariants =
+    data.numLayouts = 2;
     data.numOptions = 0;
+    data.layouts = layouts;
+    data.variants = variants;
+    data.options = NULL;
 
     XklDebug( 100, "!!! Checking multiple layouts support\n" );
     supportState = NON_SUPPORTED;

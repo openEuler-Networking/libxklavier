@@ -1,3 +1,7 @@
+2004-12-30 svu
+	
+	* libxklavier/xklavier_config_xkb.c: some memory leak nailed
+
 2004-12-27 svu
 	
 	* libxklavier/xklavier_config_xkb.c,
