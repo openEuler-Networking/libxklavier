@@ -199,6 +199,17 @@ Bool XklUngrabKey( int key, unsigned modifiers )
   return Success == XUngrabKey( _xklDpy, keyCode, 0, _xklRootWindow );
 }
 
+int XklGetNextGroup(  )
+{
+  return ( _xklCurState.group + 1 ) % XklGetNumGroups(  );
+}
+                                                                                          
+int XklGetPrevGroup(  )
+{
+  int n = XklGetNumGroups(  );
+  return ( _xklCurState.group + n - 1 ) % n;
+}
+
 int XklGetRestoreGroup(  )
 {
   XklState state;
@@ -482,6 +493,56 @@ void XklDefaultLogAppender( const char file[], const char function[],
   vfprintf( stdout, format, args );
 }
 
+/**
+ * Gets the state from the window property
+ */
+Bool _XklGetAppState( Window appWin, XklState * state_return )
+{
+  Atom type_ret;
+  int format_ret;
+  unsigned long nitems, rest;
+  CARD32 *prop = NULL;
+  Bool ret = False;
+                                                                                            
+  int grp = -1;
+  unsigned inds = -1;
+                                                                                            
+  if( ( XGetWindowProperty
+        ( _xklDpy, appWin, _xklAtoms[XKLAVIER_STATE], 0L,
+          XKLAVIER_STATE_PROP_LENGTH, False,
+          XA_INTEGER, &type_ret, &format_ret, &nitems, &rest,
+          ( unsigned char ** ) &prop ) == Success )
+      && ( type_ret == XA_INTEGER ) && ( format_ret == 32 ) )
+  {
+    grp = prop[0];
+    if( grp >= XklGetNumGroups(  ) || grp < 0 )
+      grp = 0;
+                                                                                            
+    inds = prop[1];
+                                                                                            
+    if( state_return != NULL )
+    {
+      state_return->group = grp;
+      state_return->indicators = inds;
+    }
+    if( prop != NULL )
+      XFree( prop );
+                                                                                            
+    ret = True;
+  }
+                                                                                            
+  if( ret )
+    XklDebug( 150,
+              "Appwin " WINID_FORMAT
+              ", '%s' has the group %d, indicators %X\n", appWin,
+              _XklGetDebugWindowTitle( appWin ), grp, inds );
+  else
+    XklDebug( 150, "Appwin " WINID_FORMAT ", '%s' does not have state\n",
+              appWin, _XklGetDebugWindowTitle( appWin ) );
+                                                                                            
+  return ret;
+}
+                                                                                            
 /**
  * Deletes the state from the window properties
  */
