@@ -89,11 +89,14 @@ int _XklXkbEventHandler( XEvent *xev )
     case XkbIndicatorMapNotify:
     case XkbControlsNotify:
     case XkbNamesNotify:
+      /* not really fair - but still better than flooding... */
+      XklDebug( 200, "warning: configuration event %s is not actually processed\n",
+                _XklXkbGetXkbEventName( kev->any.xkb_type ) );
+      break;
     case XkbNewKeyboardNotify:
       XklDebug( 150, "%s\n",
                 _XklXkbGetXkbEventName( kev->any.xkb_type ) );
-      _XklFreeAllInfo();
-      _XklLoadAllInfo();
+      _XklResetAllInfo( "XKB event: XkbNewKeyboardNotify" );
       break;
 
     /**

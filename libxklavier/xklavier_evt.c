@@ -40,8 +40,7 @@ int XklFilterEvents( XEvent * xev )
         break;
       case MappingNotify:
         XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
-        _XklFreeAllInfo(  );
-        _XklLoadAllInfo(  );
+        _XklResetAllInfo( "X event: MappingNotify" );
         break;
       case GravityNotify:
         XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
@@ -300,8 +299,7 @@ void _XklPropertyEvHandler( XPropertyEvent * pev )
         XklDebug( 160, "New value of *_NAMES_PROP_ATOM on root window\n" );
         /* If root window got new *_NAMES_PROP_ATOM -
          it most probably means new keyboard config is loaded by somebody */
-        _XklFreeAllInfo(  );
-        _XklLoadAllInfo(  );
+        _XklResetAllInfo( "New value of *_NAMES_PROP_ATOM on root window" );
       }
     }
   } /* XKLL_MANAGE_WINDOW_STATES */

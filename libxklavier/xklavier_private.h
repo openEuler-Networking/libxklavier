@@ -199,6 +199,7 @@ extern void _XklErrHandler( Display * dpy, XErrorEvent * evt );
 extern Window _XklGetRegisteredParent( Window win );
 extern Bool _XklLoadAllInfo( void );
 extern void _XklFreeAllInfo( void );
+extern void _XklResetAllInfo( const char reason[] );
 extern Bool _XklLoadWindowTree( void );
 extern Bool _XklLoadSubtree( Window window, int level, XklState * initState );
 

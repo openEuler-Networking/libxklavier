@@ -788,6 +788,13 @@ int XklGetBackendFeatures( void )
   return xklVTable->features;
 }
 
+void _XklResetAllInfo( const char reason[] )
+{
+  XklDebug( 150, "Resetting all the info, reason: [%s]\n", reason );
+  _XklFreeAllInfo();
+  _XklLoadAllInfo();
+}
+
 /**
  * Calling through vtable
  */

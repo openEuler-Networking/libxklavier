@@ -75,8 +75,7 @@ static int _XklXmmPropertyEventHandler( XPropertyEvent* kpe )
    */
   if( kpe->atom == xklVTable->baseConfigAtom )
   {
-    _XklFreeAllInfo();
-    _XklLoadAllInfo();
+    _XklResetAllInfo( "base config atom changed" );
   }
   
   return 0;
