@@ -1,3 +1,5 @@
+2.0     New stable release (for GNOME 2.10). Minor changes since 1.14:
+	some optimization and cleanup.
 1.14	Memory leaks nailed. Some minor restructuring. Bugfixing.
 	A couple of XKL_*_DISABLE envvars introduced.
 1.13	Some build process cleanup and fixes. One more "virtual function"
