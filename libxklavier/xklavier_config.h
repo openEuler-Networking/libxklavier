@@ -253,11 +253,6 @@ extern "C"
  */
 
 /**
- * Determines whether multiple layouts (by Ivan Pascal) are supported.
- * @return True if so.
- */
-  extern Bool XklMultipleLayoutsSupported( void );
-/**
  * Activates some XKB configuration
  * @param data is a valid XKB configuration
  * description. Can be NULL

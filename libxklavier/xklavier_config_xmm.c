@@ -25,23 +25,31 @@ void _XklXmmConfigInit( void )
 
 Bool _XklXmmConfigLoadRegistry( void )
 {
-  return False;
-}
+  struct stat statBuf;
+  char fileName[MAXPATHLEN] = "";
+  char* rf = _XklGetRulesSetName( "" );
 
-// check only client side support
-Bool _XklXmmConfigMultipleLayoutsSupported( void )
-{
-  return False;
+  if ( rf == NULL || rf[0] == '\0' )
+    return False;
+
+  snprintf( fileName, sizeof fileName, XMODMAP_BASE "/%s.xml", rf );
+
+  if( stat( fileName, &statBuf ) != 0 )
+  {
+    _xklLastErrorMsg = "No rules file found";    
+    return False;
+  }
+
+  return XklConfigLoadRegistryFromFile( fileName );
 }
 
 Bool _XklXmmConfigActivate( const XklConfigRecPtr data )
 {
-  return False;
-}
-
-Bool _XklXmmConfigWriteFile( const char *fileName, 
-                             const XklConfigRecPtr data,
-                             const Bool binary )
-{
-  return False;
+  Bool rv;
+  rv = XklSetNamesProp( xklVTable->baseConfigAtom, 
+                        currentXmmRules, 
+                        data );
+  if( rv )
+    _XklXmmLockGroup( 0 );
+  return rv;
 }

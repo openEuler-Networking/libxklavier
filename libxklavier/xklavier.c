@@ -37,6 +37,8 @@ int _xklDebugLevel = 0;
 
 Window _xklPrevAppWindow;
 
+int _xklListenerType = 0;
+
 XklVTable *xklVTable = NULL;
 
 XklConfigCallback _xklConfigCallback = NULL;
@@ -132,8 +134,15 @@ void XklSetLogAppender( XklLogAppender fun )
   logAppender = fun;
 }
 
-int XklStartListen(  )
+int XklStartListen( int what )
 {
+  _xklListenerType = what;
+  
+  if( !( xklVTable->features & XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT ) &&
+      ( what & XKLL_MANAGE_LAYOUTS ) )
+    XklDebug( 0, "The backend does not require manual layout management - "
+                 "but it is provided by the application" );
+  
   XklResumeListen(  );
   _XklLoadWindowTree(  );
   XFlush( _xklDpy );
@@ -183,10 +192,19 @@ int XklInit( Display * a_dpy )
   _xklAtoms[XKLAVIER_TRANSPARENT] =
     XInternAtom( _xklDpy, "XKLAVIER_TRANSPARENT", False );
 
+  rv = -1;
+  XklDebug( 150, "Trying all backends:\n" );
+#ifdef ENABLE_XKB_SUPPORT
+  XklDebug( 150, "Trying XKB backend\n" );
   rv = _XklXkbInit();
-  if ( rv != 0 ) 
+#endif
+#ifdef ENABLE_XMM_SUPPORT
+  XklDebug( 150, "Trying XMM backend\n" );
+  if( rv != 0 ) 
     rv = _XklXmmInit();
-  return rv;
+#endif
+  return ( rv == 0 ) ?
+    ( _XklLoadAllInfo() ? 0 : _xklLastErrorCode ) : -1;
 }
 
 int XklTerm(  )
@@ -202,28 +220,28 @@ int XklTerm(  )
   return 0;
 }
 
-Bool XklGrabKey( int key, unsigned modifiers )
+Bool XklGrabKey( int keycode, unsigned modifiers )
 {
-  int keyCode;
   Bool retCode;
   char *keyName;
 
-  keyCode = XKeysymToKeycode( _xklDpy, key );
-  keyName = XKeysymToString( key );
+  if( _xklDebugLevel >= 100 )
+  {
+    keyName = XKeysymToString( XKeycodeToKeysym( _xklDpy, keycode, 0 ) );
+    XklDebug( 100, "Listen to the key %d/(%s)/%d\n", 
+                   keycode, keyName, modifiers );
+  }
 
-  XklDebug( 100, "listen to the key %X(%d/%s)/%d\n", key, keyCode, keyName,
-            modifiers );
-
-  if( ( KeyCode ) NULL == keyCode )
+  if( ( KeyCode ) NULL == keycode )
     return False;
 
   _xklLastErrorCode = Success;
 
-  retCode = XGrabKey( _xklDpy, keyCode, modifiers, _xklRootWindow,
+  retCode = XGrabKey( _xklDpy, keycode, modifiers, _xklRootWindow,
                       True, GrabModeAsync, GrabModeAsync );
   XSync( _xklDpy, False );
 
-  XklDebug( 100, "trying to listen: %d/%d\n", retCode, _xklLastErrorCode );
+  XklDebug( 100, "XGrabKey recode %d/error %d\n", retCode, _xklLastErrorCode );
 
   retCode = ( _xklLastErrorCode == Success );
 
@@ -233,16 +251,12 @@ Bool XklGrabKey( int key, unsigned modifiers )
   return retCode;
 }
 
-Bool XklUngrabKey( int key, unsigned modifiers )
+Bool XklUngrabKey( int keycode, unsigned modifiers )
 {
-  int keyCode;
-
-  keyCode = XKeysymToKeycode( _xklDpy, key );
-
-  if( ( KeyCode ) NULL == keyCode )
+  if( ( KeyCode ) NULL == keycode )
     return False;
 
-  return Success == XUngrabKey( _xklDpy, keyCode, 0, _xklRootWindow );
+  return Success == XUngrabKey( _xklDpy, keycode, 0, _xklRootWindow );
 }
 
 int XklGetNextGroup(  )
@@ -284,7 +298,7 @@ void XklSetTransparent( Window win, Bool transparent )
   {
     XklDebug( 150, "No app window!\n" );
     appWin = win;
-//    return;
+/*    return; */
   }
 
   wasTransparent = XklIsTransparent( appWin );
@@ -488,9 +502,10 @@ Bool _XklLoadWindowTree(  )
 {
   Window focused;
   int revert;
-  Bool retval, haveAppWindow;
+  Bool retval = True, haveAppWindow;
 
-  retval = _XklLoadSubtree( _xklRootWindow, 0, &_xklCurState );
+  if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
+    retval = _XklLoadSubtree( _xklRootWindow, 0, &_xklCurState );
 
   XGetInputFocus( _xklDpy, &focused, &revert );
 
@@ -624,7 +639,7 @@ void _XklSelectInput( Window win, long mask )
 {
   if( _xklRootWindow == win )
     XklDebug( 160,
-              "Someone is looking for " WINID_FORMAT " on root window ***\n",
+              "Someone is looking for %lx on root window ***\n",
               mask );
 
   XSelectInput( _xklDpy, win, mask );
@@ -664,7 +679,7 @@ void _XklTryCallStateCallback( XklStateChange changeType,
         XklDebug( 150, "secondary -> go next\n" );
         group = XklGetNextGroup(  );
         XklLockGroup( group );
-        return;                 // we do not need to revalidate
+        return;                 /* we do not need to revalidate */
       }
     }
     _xklAllowSecondaryGroupOnce = False;
@@ -706,6 +721,16 @@ void _XklEnsureVTableInited( void )
   }
 }
 
+const char *XklGetBackendName( void )
+{
+  return xklVTable->id;
+}
+
+int XklGetBackendFeatures( void )
+{
+  return xklVTable->features;
+}
+
 /**
  * Calling through vtable
  */
@@ -736,7 +761,15 @@ int XklPauseListen( void )
 int XklResumeListen( void )
 {
   _XklEnsureVTableInited();
-  return (*xklVTable->xklResumeListenHandler)();
+  XklDebug( 150, "listenerType: %x\n", _xklListenerType );
+  if( (*xklVTable->xklResumeListenHandler)() )
+    return 1;
+  
+  _XklSelectInputMerging( _xklRootWindow,
+                          SubstructureNotifyMask | PropertyChangeMask );
+  _XklEnsureVTableInited();
+  (*xklVTable->xklGetRealStateHandler)( &_xklCurState );
+  return 0;
 }
 
 Bool _XklLoadAllInfo( void )

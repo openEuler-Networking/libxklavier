@@ -11,8 +11,6 @@ typedef void ( *XklConfigInitHandler )( void );
 
 typedef Bool ( *XklConfigLoadRegistryHandler )( void );
 
-typedef Bool ( *XklConfigMultipleLayoutsSupportedHandler )( void );
-
 typedef Bool ( *XklConfigWriteFileHandler )( const char *fileName,
                                              const XklConfigRecPtr data,
                                              const Bool binary );
@@ -25,6 +23,8 @@ typedef const char **( *XklGetGroupNamesHandler )( void );
 
 typedef unsigned ( *XklGetNumGroupsHandler )( void );
 
+typedef void ( *XklGetRealStateHandler)( XklState * curState_return );
+
 typedef Bool ( *XklLoadAllInfoHandler )( void );
 
 typedef void ( *XklLockGroupHandler )( int group );
@@ -36,95 +36,132 @@ typedef void ( *XklSetIndicatorsHandler )( const XklState *windowState );
 typedef struct
 {
   /**
+   * Backend name
+   */
+  const char *id;
+  /**
+   * Functions supported by the backend, combination of XKLF_* constants
+   */
+  int features;
+  /**
    * Activates the configuration.
    * xkb: create proper the XkbDescRec and send it to the server
-   * TODO: xmodmap
+   * xmodmap: save the property, init layout #1
    */
   XklConfigActivateHandler xklConfigActivateHandler;
   /**
    * Background-specific initialization.
    * xkb: XkbInitAtoms - init internal xkb atoms table
-   * TODO: xmodmap
+   * xmodmap: void.
    */
   XklConfigInitHandler xklConfigInitHandler; /* private */
   /**
    * Loads the registry tree into DOM (using whatever path(s))
    * The XklConfigFreeRegistry is static - no virtualization necessary.
    * xkb: loads xml from XKB_BASE+"/rules/"+ruleset+".xml"
-   * TODO: xmodmap
+   * xmodmap: loads xml from XMODMAP_BASE+"/"+ruleset+".xml"
    */
   XklConfigLoadRegistryHandler xklConfigLoadRegistryHandler;
   /**
-   * Can the system combine layouts in one configuration - or not?
-   * xkb: checks the simple rule with 2 layouts
-   * xmodmap: return true
-   */
-  XklConfigMultipleLayoutsSupportedHandler xklConfigMultipleLayoutsSupportedHandler;
-  /**
    * Write the configuration into the file (binary/textual)
    * xkb: write xkb or xkm file
-   * TODO: xmodmap
+   * xmodmap: if text requested, just dump XklConfigRec to the 
+   * file - not really useful. If binary - fail (not supported)
    */
   XklConfigWriteFileHandler xklConfigWriteFileHandler;
   /**
    * Handles X events.
    * xkb: XkbEvent handling
-   * TODO: xmodmap: .... (scariest thing)
+   * xmodmap: keep track on the root window properties. What else can we do?
    */
   XklEventHandler xklEventHandler;
   /**
    * Flushes the cached server config info.
    * xkb: frees XkbDesc
-   * TODO: xmodmap
+   * xmodmap: frees internal XklConfigRec
    */
   XklFreeAllInfoHandler xklFreeAllInfoHandler; /* private */
   /**
    * Get the list of the group names
    * xkb: return cached list of the group names
-   * TODO: xmodmap
+   * xmodmap: return the list of layouts from the internal XklConfigRec
    */
   XklGetGroupNamesHandler xklGetGroupNamesHandler;
   /**
    * Get the number of loaded groups
    * xkb: return from the cached XkbDesc
-   * TODO: xmodmap
+   * xmodmap: return number of layouts from internal XklConfigRec
    */
   XklGetNumGroupsHandler xklGetNumGroupsHandler;
+
+  /**
+   * Gets the current stateCallback
+   * xkb: XkbGetState and XkbGetIndicatorState
+   * xmodmap: check the root window property (regarding the group)
+   */
+  XklGetRealStateHandler xklGetRealStateHandler;
+
   /**
    * Loads the configuration info from the server
    * xkb: loads XkbDesc, names, indicators
-   * TODO: xmodmap
+   * xmodmap: loads internal XklConfigRec from server
    */
   XklLoadAllInfoHandler xklLoadAllInfoHandler; /* private */
   /**
    * Switches the keyboard to the group N
    * xkb: simple one-liner to call the XKB function
-   * TODO: xmodmap
+   * xmodmap: changes the root window property 
+   * (listener invokes xmodmap with appropriate config file).
    */
   XklLockGroupHandler xklLockGroupHandler;
   /**
    * Stop tracking the keyboard-related events
    * xkb: XkbSelectEvents(..., 0)
-   * TODO: xmodmap
+   * xmodmap: Ungrab the switching shortcut.
    */
   XklPauseResumeListenHandler xklPauseListenHandler;
   /**
    * Start tracking the keyboard-related events
-   * xkb: XkbSelectEvents + XkbSelectEventDetails + GetRealState
-   * TODO: xmodmap
+   * xkb: XkbSelectEvents + XkbSelectEventDetails
+   * xmodmap: Grab the switching shortcut.
    */
   XklPauseResumeListenHandler xklResumeListenHandler;
   /**
    * Set the indicators state from the XklState
    * xkb: _XklSetIndicator for all indicators
-   * TODO: xmodmap
+   * xmodmap: NULL. Not supported
    */
   XklSetIndicatorsHandler xklSetIndicatorsHandler; /* private */
+  
+  /* all data is private - no direct access */
+  /**
+   * The base configuration atom.
+   * xkb: _XKB_RF_NAMES_PROP_ATOM
+   * xmodmap:  "_XMM_NAMES"
+   */
+  Atom baseConfigAtom;
+  
+  /**
+   * The configuration backup atom
+   * xkb: "_XKB_RULES_NAMES_BACKUP"
+   * xmodmap: "_XMM_NAMES_BACKUP"
+   */
+  Atom backupConfigAtom;
+  
+  /**
+   * Fallback for missing model
+   */
+  const char* defaultModel;
+
+  /**
+   * Fallback for missing layout
+   */
+  const char* defaultLayout;
+  
 } XklVTable;
 
 extern void _XklEnsureVTableInited( void );
 
-extern void _XklGetRealState( XklState * curState_return );
 extern void _XklAddAppWindow( Window win, Window parent, Bool force,
                               XklState * initState );
 extern Bool _XklGetAppWindowBottomToTop( Window win, Window * appWin_return );
@@ -171,6 +208,11 @@ extern char *_XklLocaleFromUtf8( const char *utf8string );
 
 extern int _XklGetLanguagePriority( const char *language );
 
+extern char* _XklGetRulesSetName( const char defaultRuleset[] );
+
+extern Bool _XklConfigGetFullFromServer( char **rulesFileOut, 
+                                         XklConfigRecPtr data );
+
 extern char *_XklConfigRecMergeByComma( const char **array,
                                         const int arrayLength );
 
@@ -192,6 +234,9 @@ extern void _XklConfigRecSplitVariants( XklConfigRecPtr data,
 extern void _XklConfigRecSplitOptions( XklConfigRecPtr data,
                                        const char *merged );
 
+extern void XklConfigDump( FILE* file,
+                           XklConfigRecPtr data );
+                           
 extern const char *_XklGetEventName( int type );
 
 extern Bool _XklIsTransparentAppWindow( Window appWin );
@@ -218,19 +263,12 @@ extern XErrorHandler _xklDefaultErrHandler;
 
 extern char *_xklIndicatorNames[];
 
-#define WM_NAME 0
-#define WM_STATE 1
-#define XKLAVIER_STATE 2
-#define XKLAVIER_TRANSPARENT 3
-
-// XKB ones
-#define XKB_RF_NAMES_PROP_ATOM 4
-#define XKB_RF_NAMES_PROP_ATOM_BACKUP 5
-#define TOTAL_ATOMS 6
+enum { WM_NAME, WM_STATE, XKLAVIER_STATE, XKLAVIER_TRANSPARENT,
+  TOTAL_ATOMS };
 
 #define XKLAVIER_STATE_PROP_LENGTH 2
 
-// taken from XFree86 maprules.c
+/* taken from XFree86 maprules.c */
 #define _XKB_RF_NAMES_PROP_MAXLEN 1024
 
 extern Atom _xklAtoms[];
@@ -245,6 +283,8 @@ extern int _xklSecondaryGroupsMask;
 
 extern int _xklDebugLevel;
 
+extern int _xklListenerType;
+
 extern Window _xklPrevAppWindow;
 
 #define WINID_FORMAT "%lx"
@@ -254,5 +294,14 @@ extern XklConfigCallback _xklConfigCallback;
 extern void *_xklConfigCallbackData;
 
 extern XklVTable *xklVTable;
+
+#ifdef __STRICT_ANSI__
+/* these are functions which are NOT in ANSI C. 
+   Probably we should provide the implementation */
+extern int snprintf( char *s, size_t maxlen,
+                     const char *format, ... );
+                     
+extern char *strdup( const char *s );
+#endif
 
 #endif

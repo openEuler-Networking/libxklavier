@@ -28,13 +28,14 @@ const char **_XklXkbGetGroupNames( void )
 int _XklXkbPauseListen(  )
 {
   XkbSelectEvents( _xklDpy, XkbUseCoreKbd, XkbAllEventsMask, 0 );
-//  XkbSelectEventDetails( _xklDpy,
-  //                       XkbUseCoreKbd,
-  //                     XkbStateNotify,
-  //                   0,
-  //                 0 );
+/*  XkbSelectEventDetails( _xklDpy,
+                         XkbUseCoreKbd,
+                       XkbStateNotify,
+                     0,
+                   0 );
 
-  //!!_XklSelectInput( _xklRootWindow, 0 );
+  !!_XklSelectInput( _xklRootWindow, 0 );
+*/
   return 0;
 }
 
@@ -66,9 +67,6 @@ int _XklXkbResumeListen(  )
                          XkbUseCoreKbd,
                          XkbNamesNotify,
                          XKB_NAMES_EVT_DTL_MASK, XKB_NAMES_EVT_DTL_MASK );
-  _XklSelectInputMerging( _xklRootWindow,
-                          SubstructureNotifyMask | PropertyChangeMask );
-  _XklGetRealState( &_xklCurState );
   return 0;
 }
 
@@ -184,7 +182,7 @@ void _XklXkbLockGroup( int group )
 /**
  * Updates current internal state from X state
  */
-void _XklGetRealState( XklState * curState_return )
+void _XklXkbGetRealState( XklState * curState_return )
 {
   XkbStateRec state;
 
@@ -197,7 +195,7 @@ void _XklGetRealState( XklState * curState_return )
                             &curState_return->indicators ) )
     curState_return->indicators &= _xklXkb->indicators->phys_indicators;
   else
-  curState_return->indicators = 0;
+    curState_return->indicators = 0;
 }
 
 /*
@@ -228,7 +226,7 @@ Bool _XklSetIndicator( int indicatorNum, Bool set )
   {
     case XkbIM_NoExplicit | XkbIM_NoAutomatic:
     {
-      // Can do nothing. Just ignore the indicator
+      /* Can do nothing. Just ignore the indicator */
       return True;
     }
 
@@ -275,9 +273,9 @@ Bool _XklSetIndicator( int indicatorNum, Bool set )
   }
 
   /* The 'which_groups' field tells when this indicator turns on
-   *      * for the 'groups' field:  base (0x1), latched (0x2), locked (0x4),
-   *           *                          or effective (0x8).
-   *                */
+   * for the 'groups' field:  base (0x1), latched (0x2), locked (0x4),
+   * or effective (0x8).
+   */
   if( map->groups )
   {
     int i;
@@ -298,13 +296,13 @@ Bool _XklSetIndicator( int indicatorNum, Bool set )
         }
       if( map->which_groups & ( XkbIM_UseLocked | XkbIM_UseEffective ) )
       {
-        // Important: Groups should be ignored here - because they are handled separately!
-        // XklLockGroup( group );
+        /* Important: Groups should be ignored here - because they are handled separately! */
+        /* XklLockGroup( group ); */
       } else if( map->which_groups & XkbIM_UseLatched )
         XkbLatchGroup( _xklDpy, XkbUseCoreKbd, group );
       else
       {
-        // Can do nothing. Just ignore the indicator
+        /* Can do nothing. Just ignore the indicator */
         return True;
       }
     } else
@@ -364,15 +362,19 @@ int _XklXkbInit( void )
   int opcode;
   static XklVTable xklXkbVTable =
   {
+    "XKB",
+    XKLF_CAN_TOGGLE_INDICATORS |
+      XKLF_CAN_OUTPUT_CONFIG_AS_ASCII |
+      XKLF_CAN_OUTPUT_CONFIG_AS_BINARY,
     _XklXkbConfigActivate,
     _XklXkbConfigInit,
     _XklXkbConfigLoadRegistry,
-    _XklXkbConfigMultipleLayoutsSupported,
     _XklXkbConfigWriteFile,
     _XklXkbEventHandler,
     _XklXkbFreeAllInfo,
     _XklXkbGetGroupNames,
     _XklXkbGetNumGroups,
+    _XklXkbGetRealState,
     _XklXkbLoadAllInfo,
     _XklXkbLockGroup,
     _XklXkbPauseListen,
@@ -394,14 +396,23 @@ int _XklXkbInit( void )
             "xkbEvenType: %X, xkbError: %X, display: %p, root: " WINID_FORMAT
             "\n", _xklXkbEventType, _xklXkbError, _xklDpy, _xklRootWindow );
 
-  _xklAtoms[XKB_RF_NAMES_PROP_ATOM] =
+  xklXkbVTable.baseConfigAtom =
     XInternAtom( _xklDpy, _XKB_RF_NAMES_PROP_ATOM, False );
-  _xklAtoms[XKB_RF_NAMES_PROP_ATOM_BACKUP] =
+  xklXkbVTable.backupConfigAtom =
     XInternAtom( _xklDpy, "_XKB_RULES_NAMES_BACKUP", False );
 
+  xklXkbVTable.defaultModel = "pc101";
+  xklXkbVTable.defaultLayout = "us";
+
   xklVTable = &xklXkbVTable;
+
+  /* First, we have to assign xklVTable - 
+     because this function uses it */
   
-  return _XklLoadAllInfo(  ) ? 0 : _xklLastErrorCode;
+  if( _XklXkbConfigMultipleLayoutsSupported() )
+    xklXkbVTable.features |= XKLF_MULTIPLE_LAYOUTS_SUPPORTED;
+  
+  return 0;
 #else
   XklDebug( 160,
             "NO XKB LIBS, display: %p, root: " WINID_FORMAT

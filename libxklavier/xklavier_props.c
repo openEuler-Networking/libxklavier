@@ -13,12 +13,9 @@
 #include "xklavier_config.h"
 #include "xklavier_private.h"
 
-#define XKB_DEFAULT_MODEL "pc101"
-#define XKB_DEFAULT_LAYOUT "us"
-
 void XklConfigRecInit( XklConfigRecPtr data )
 {
-  // clear the structure VarDefsPtr...
+  /* clear the structure VarDefsPtr... */
   memset( ( void * ) data, 0, sizeof( XklConfigRec ) );
 }
 
@@ -50,16 +47,27 @@ static Bool _XklGetDefaultNamesProp( char **rulesFileOut, XklConfigRecPtr data )
 {
   if ( rulesFileOut != NULL )
     *rulesFileOut = strdup( XKB_DEFAULT_RULESET );
-  data->model = strdup( XKB_DEFAULT_MODEL );
-// keeping Nvariants = Nlayouts
+  data->model = strdup( xklVTable->defaultModel );
+/* keeping Nvariants = Nlayouts */
   data->numLayouts = data->numVariants = 1;
   data->layouts = malloc( sizeof( char * ) );
-  data->layouts[0] = strdup( XKB_DEFAULT_LAYOUT );
+  data->layouts[0] = strdup( xklVTable->defaultLayout );
   data->variants = malloc( sizeof( char * ) );
   data->variants[0] = strdup( "" );
   data->numOptions = 0;
   data->options = NULL;
   return True;
+}
+
+Bool _XklConfigGetFullFromServer( char **rulesFileOut, XklConfigRecPtr data )
+{
+  Bool rv =
+    XklGetNamesProp( xklVTable->baseConfigAtom, rulesFileOut, data );
+
+  if( !rv )
+    rv = _XklGetDefaultNamesProp( rulesFileOut, data );
+
+  return rv;
 }
 
 Bool XklConfigRecEquals( XklConfigRecPtr data1, XklConfigRecPtr data2 )
@@ -116,19 +124,13 @@ void XklConfigRecReset( XklConfigRecPtr data )
 
 Bool XklConfigGetFromServer( XklConfigRecPtr data )
 {
-  Bool rv =
-    XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], NULL, data );
-
-  if( !rv )
-    rv = _XklGetDefaultNamesProp( NULL, data );
-
-  return rv;
+  return _XklConfigGetFullFromServer( NULL, data );
 }
 
 Bool XklConfigGetFromBackup( XklConfigRecPtr data )
 {
   Bool rv =
-    XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM_BACKUP], NULL, data );
+    XklGetNamesProp( xklVTable->backupConfigAtom, NULL, data );
 
   return rv;
 }
@@ -142,16 +144,14 @@ Bool XklBackupNamesProp(  )
 
   XklConfigRecInit( &data );
   if( XklGetNamesProp
-      ( _xklAtoms[XKB_RF_NAMES_PROP_ATOM_BACKUP], NULL, &data ) )
+      ( xklVTable->backupConfigAtom, NULL, &data ) )
   {
     XklConfigRecDestroy( &data );
     return True;
   }
-  // "backup" property is not defined
+  /* "backup" property is not defined */
   XklConfigRecReset( &data );
-  cgp = XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], &rf, &data );
-  if ( !cgp )
-    cgp = _XklGetDefaultNamesProp( &rf, &data );
+  cgp = _XklConfigGetFullFromServer( &rf, &data );
 
   if ( cgp )
   {
@@ -171,7 +171,7 @@ Bool XklBackupNamesProp(  )
     for( i = data.numOptions; --i >= 0; )
       XklDebug( 150, "%d: [%s]\n", i, data.options[i] );
 #endif
-    if( !XklSetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM_BACKUP], rf, &data ) )
+    if( !XklSetNamesProp( xklVTable->backupConfigAtom, rf, &data ) )
     {
       XklDebug( 150, "Could not backup the configuration" );
       rv = False;
@@ -194,13 +194,13 @@ Bool XklRestoreNamesProp(  )
   XklConfigRec data;
 
   XklConfigRecInit( &data );
-  if( !XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM_BACKUP], NULL, &data ) )
+  if( !XklGetNamesProp( xklVTable->backupConfigAtom, NULL, &data ) )
   {
     XklConfigRecDestroy( &data );
     return False;
   }
 
-  if( !XklSetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], rf, &data ) )
+  if( !XklSetNamesProp( xklVTable->baseConfigAtom, rf, &data ) )
   {
     XklDebug( 150, "Could not backup the configuration" );
     rv = False;
@@ -218,7 +218,7 @@ Bool XklGetNamesProp( Atom rulesAtom,
   char *propData = NULL, *out;
   Status rtrn;
 
-  // no such atom!
+  /* no such atom! */
   if( rulesAtom == None )       /* property cannot exist */
   {
     _xklLastErrorMsg = "Could not find the atom";
@@ -230,17 +230,17 @@ Bool XklGetNamesProp( Atom rulesAtom,
                         _XKB_RF_NAMES_PROP_MAXLEN, False, XA_STRING,
                         &realPropType, &fmt, &nitems, &extraBytes,
                         ( unsigned char ** ) ( void * ) &propData );
-  // property not found!
+  /* property not found! */
   if( rtrn != Success )
   {
     _xklLastErrorMsg = "Could not get the property";
     return False;
   }
-  // set rules file to ""
+  /* set rules file to "" */
   if( rulesFileOut )
     *rulesFileOut = NULL;
 
-  // has to be array of strings
+  /* has to be array of strings */
   if( ( extraBytes > 0 ) || ( realPropType != XA_STRING ) || ( fmt != 8 ) )
   {
     if( propData )
@@ -255,13 +255,13 @@ Bool XklGetNamesProp( Atom rulesAtom,
     return False;
   }
 
-  // rules file
+  /* rules file */
   out = propData;
   if( out && ( *out ) && rulesFileOut )
     *rulesFileOut = strdup( out );
   out += strlen( out ) + 1;
 
-  // if user is interested in rules only - don't waste the time
+  /* if user is interested in rules only - don't waste the time */
   if( !data )
   {
     XFree( propData );
@@ -298,7 +298,7 @@ Bool XklGetNamesProp( Atom rulesAtom,
               ( data->numLayouts - data->numVariants ) * sizeof( char * ) );
       data->numVariants = data->numLayouts;
     }
-    // take variants from layouts like ru(winkeys)
+    /* take variants from layouts like ru(winkeys) */
     theLayout = data->layouts;
     theVariant = data->variants;
     for( i = data->numLayouts; --i >= 0; theLayout++, theVariant++ )
@@ -313,7 +313,7 @@ Bool XklGetNamesProp( Atom rulesAtom,
           {
             int varlen = varend - varstart;
             int laylen = varstart - *theLayout;
-            // I am not sure - but I assume variants in layout have priority
+            /* I am not sure - but I assume variants in layout have priority */
             char *var = *theVariant = ( *theVariant != NULL ) ?
               realloc( *theVariant, varlen ) : malloc( varlen );
             memcpy( var, varstart + 1, --varlen );
@@ -330,13 +330,13 @@ Bool XklGetNamesProp( Atom rulesAtom,
   if( ( out - propData ) < nitems )
   {
     _XklConfigRecSplitOptions( data, out );
-//    out += strlen( out ) + 1;
+/*    out += strlen( out ) + 1; */
   }
   XFree( propData );
   return True;
 }
 
-// taken from XFree86 maprules.c
+/* taken from XFree86 maprules.c */
 Bool XklSetNamesProp( Atom rulesAtom,
                       char *rulesFile, const XklConfigRecPtr data )
 {

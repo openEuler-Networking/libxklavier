@@ -1,4 +1,11 @@
+2004-11-25 23:00  svu
+	
+	* libxklavier, tests: MASSIVE commit. First version
+	with somewhat working xmodmap support. Broken API
+
 2004-11-04 19:00  svu
+
+	* libxklavier/Makefile.am,
 
 	* libxklavier/Makefile.am,
 	libxklavier/xklavier.c,

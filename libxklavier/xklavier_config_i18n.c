@@ -31,9 +31,9 @@ static const char *_XklParseLC_ALL2LC_MESSAGES( const char *lcAll )
     return lcAll;
   lcMsgPos += 12;
   lcMsgEnd = strchr( lcMsgPos, ';' );
-  if( lcMsgEnd == NULL )        // LC_MESSAGES is the last piece of LC_ALL
+  if( lcMsgEnd == NULL )        /* LC_MESSAGES is the last piece of LC_ALL */
   {
-    return lcMsgPos;            //safe to return!
+    return lcMsgPos;            /* safe to return! */
   }
   len = lcMsgEnd - lcMsgPos;
   if( len > sizeof( buf ) )
@@ -43,7 +43,7 @@ static const char *_XklParseLC_ALL2LC_MESSAGES( const char *lcAll )
   return buf;
 }
 
-// Taken from gnome-vfs
+/* Taken from gnome-vfs */
 static Bool _XklGetCharset( const char **a )
 {
   static const char *charset = NULL;
@@ -54,7 +54,7 @@ static Bool _XklGetCharset( const char **a )
 
     if( charset == NULL || charset[0] == '\0' )
     {
-// taken from gnome-vfs
+/* taken from gnome-vfs */
 #ifdef HAVE_LANGINFO_CODESET
       charset = nl_langinfo( CODESET );
       if( charset == NULL || charset[0] == '\0' )
@@ -208,7 +208,7 @@ void _XklI18NInit(  )
   }
 
   XklDebug( 150, "Locale search order:\n" );
-  XklDebug( 150, " 0: %s\n", localeSubStrings[0] );     // full locale - highest priority
+  XklDebug( 150, " 0: %s\n", localeSubStrings[0] );     /* full locale - highest priority */
   XklDebug( 150, " 1: %s\n", localeSubStrings[1] );
   XklDebug( 150, " 2: %s\n", localeSubStrings[2] );
 }

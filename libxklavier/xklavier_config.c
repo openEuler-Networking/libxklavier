@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <string.h>
+#include <stdio.h>
 #include <locale.h>
 #include <sys/stat.h>
 
@@ -85,11 +86,11 @@ static Bool _XklReadConfigItem( xmlNodePtr iptr, XklConfigItemPtr pci )
       if( lang != NULL )
       {
         int priority = _XklGetLanguagePriority( lang );
-        if( !strcmp( nptr->name, "description" ) && ( priority > maxDescPriority ) )    // higher priority
+        if( !strcmp( nptr->name, "description" ) && ( priority > maxDescPriority ) )    /* higher priority */
         {
           descElement = nptr;
           maxDescPriority = priority;
-        } else if( !strcmp( nptr->name, "shortDescription" ) && ( priority > maxShortDescPriority ) )   // higher priority
+        } else if( !strcmp( nptr->name, "shortDescription" ) && ( priority > maxShortDescPriority ) )   /* higher priority */
         {
           shortDescElement = nptr;
           maxShortDescPriority = priority;
@@ -105,16 +106,16 @@ static Bool _XklReadConfigItem( xmlNodePtr iptr, XklConfigItemPtr pci )
     nptr = nptr->next;
   }
 
-  // if no language-specific description found - use the ones without lang
+  /* if no language-specific description found - use the ones without lang */
   if( descElement == NULL )
     descElement = ntDescElement;
 
   if( shortDescElement == NULL )
     shortDescElement = ntShortDescElement;
 
-  //
-  // Actually, here we should have some code to find the correct localized description...
-  // 
+  /**
+   * Actually, here we should have some code to find the correct localized description...
+   */ 
 
   if( nameElement != NULL && nameElement->children != NULL )
     strncat( pci->name, nameElement->children->content,
@@ -302,7 +303,7 @@ void _XklConfigRecSplitByComma( char ***array,
   if( merged == NULL || merged[0] == '\0' )
     return;
 
-  // first count the elements 
+  /* first count the elements */
   while( ( npc = strchr( pc, ',' ) ) != NULL )
   {
     ( *arraySize )++;
@@ -320,7 +321,7 @@ void _XklConfigRecSplitByComma( char ***array,
     while( ( npc = strchr( pc, ',' ) ) != NULL )
     {
       int len = npc - pc;
-      //*ppc = ( char * ) strndup( pc, len );
+      /* *ppc = ( char * ) strndup( pc, len ); */
       *ppc = ( char * ) malloc( len + 1 );
       if ( *ppc != NULL )
       {
@@ -332,13 +333,32 @@ void _XklConfigRecSplitByComma( char ***array,
       pc = npc + 1;
     }
 
-    //len = npc - pc;
+    /* len = npc - pc; */
     len = strlen( pc );
-    //*ppc = ( char * ) strndup( pc, len );
+    /* *ppc = ( char * ) strndup( pc, len ); */
     *ppc = ( char * ) malloc( len + 1 );
     if ( *ppc != NULL )
       strcpy( *ppc, pc );
   }
+}
+
+char* _XklGetRulesSetName( const char defaultRuleset[] )
+{
+  static char rulesSetName[1024] = "";
+  if ( !rulesSetName[0] )
+  {
+    char* rf = NULL;
+    if( !XklGetNamesProp( xklVTable->baseConfigAtom, &rf, NULL ) || ( rf == NULL ) )
+    {
+      strncpy( rulesSetName, defaultRuleset, sizeof rulesSetName );
+      XklDebug( 100, "Using default rules set: [%s]\n", rulesSetName );
+      return rulesSetName;
+    }
+    strncpy( rulesSetName, rf, sizeof rulesSetName );
+    free( rf );
+  }
+  XklDebug( 100, "Rules set: [%s]\n", rulesSetName );
+  return rulesSetName;
 }
 
 void XklConfigInit( void )
@@ -532,17 +552,41 @@ Bool XklConfigLoadRegistry( void )
   return (*xklVTable->xklConfigLoadRegistryHandler)();
 }
 
-Bool XklMultipleLayoutsSupported( void )
-{
-  _XklEnsureVTableInited();
-  return (*xklVTable->xklConfigMultipleLayoutsSupportedHandler)();
-}
-
 Bool XklConfigWriteFile( const char *fileName,
                          const XklConfigRecPtr data,
                          const Bool binary )
 {
+  if( ( !binary && 
+        !( xklVTable->features & XKLF_CAN_OUTPUT_CONFIG_AS_ASCII ) ) ||
+      ( binary && 
+        !( xklVTable->features & XKLF_CAN_OUTPUT_CONFIG_AS_BINARY ) ) )
+  {
+    _xklLastErrorMsg = "Function not supported at backend";
+    return False;
+  }
   _XklEnsureVTableInited();
   return (*xklVTable->xklConfigWriteFileHandler)( fileName, data, binary );
 }
 
+void XklConfigDump( FILE* file,
+                    XklConfigRecPtr data )
+{
+  int i,j;
+  char**p;
+  fprintf( file, "  model: [%s]\n", data->model );
+
+  fprintf( file, "  layouts(%d):\n", data->numLayouts );
+  p = data->layouts;
+  for( i = data->numLayouts, j = 0; --i >= 0; )
+    fprintf( file, "  %d: [%s]\n", j++, *p++ );
+
+  fprintf( file, "  variants(%d):\n", data->numVariants );
+  p = data->variants;
+  for( i = data->numVariants, j = 0; --i >= 0; )
+    fprintf( file, "  %d: [%s]\n", j++, *p++ );
+
+  fprintf( file, "  options(%d):\n", data->numOptions );
+  p = data->options;
+  for( i = data->numOptions, j = 0; --i >= 0; )
+    fprintf( file, "  %d: [%s]\n", j++, *p++ );
+}

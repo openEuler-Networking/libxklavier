@@ -21,7 +21,7 @@
 #include <X11/extensions/XKM.h>
 #endif
 
-// For "bad" X servers we hold our own copy
+/* For "bad" X servers we hold our own copy */
 #define XML_CFG_FALLBACK_PATH ( DATA_DIR "/xfree86.xml" )
 
 #define XKBCOMP ( XKB_BASE "/xkbcomp" )
@@ -37,34 +37,11 @@ static XkbComponentNamesRec componentNames;
 static char *locale;
 #endif
 
-static char* _XklGetRulesSetName( void )
-{
-#ifdef XKB_HEADERS_PRESENT
-  static char rulesSetName[_XKB_RF_NAMES_PROP_MAXLEN] = "";
-  if ( !rulesSetName[0] )
-  {
-    char* rf = NULL;
-    if( !XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], &rf, NULL ) || ( rf == NULL ) )
-    {
-      strncpy( rulesSetName, XKB_DEFAULT_RULESET, sizeof rulesSetName );
-      XklDebug( 100, "Using default rules set: [%s]\n", rulesSetName );
-      return rulesSetName;
-    }
-    strncpy( rulesSetName, rf, sizeof rulesSetName );
-    free( rf );
-  }
-  XklDebug( 100, "Rules set: [%s]\n", rulesSetName );
-  return rulesSetName;
-#else
-  return NULL;
-#endif
-}
-
 #ifdef XKB_HEADERS_PRESENT
 static XkbRF_RulesPtr _XklLoadRulesSet( void )
 {
   char fileName[MAXPATHLEN] = "";
-  char* rf = _XklGetRulesSetName();
+  char* rf = _XklGetRulesSetName( XKB_DEFAULT_RULESET );
 
   _xklRules = NULL;
   if( rf == NULL )
@@ -110,7 +87,7 @@ Bool _XklXkbConfigLoadRegistry( void )
 {
   struct stat statBuf;
   char fileName[MAXPATHLEN] = "";
-  char* rf = _XklGetRulesSetName();
+  char* rf = _XklGetRulesSetName( XKB_DEFAULT_RULESET );
 
   if ( rf == NULL )
     return False;
@@ -318,7 +295,7 @@ static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
 }
 #endif
 
-// check only client side support
+/* check only client side support */
 Bool _XklXkbConfigMultipleLayoutsSupported( void )
 {
   enum { NON_SUPPORTED, SUPPORTED, UNCHECKED };
@@ -394,9 +371,9 @@ Bool _XklXkbConfigActivate( const XklConfigRecPtr data )
     if( xkb != NULL )
     {
       if( XklSetNamesProp
-          ( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], _XklGetRulesSetName(), data ) )
-          // We do not need to check the result of _XklGetRulesSetName - 
-          // because PrepareBeforeKbd did it for us
+          ( xklVTable->baseConfigAtom, _XklGetRulesSetName( XKB_DEFAULT_RULESET ), data ) )
+          /* We do not need to check the result of _XklGetRulesSetName - 
+             because PrepareBeforeKbd did it for us */
         rv = True;
       else
         _xklLastErrorMsg = "Could not set names property";

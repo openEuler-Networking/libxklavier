@@ -30,7 +30,7 @@ static void _XklStdXkbHandler( int grp, XklStateChange changeType, unsigned inds
   }
 
   if( !_XklGetAppWindow( focused, &focusedApp ) )
-    focusedApp = _xklCurClient; //what else can I do
+    focusedApp = _xklCurClient; /* what else can I do */
 
   XklDebug( 150, "Focused window: " WINID_FORMAT ", '%s'\n", focusedApp,
             _XklGetDebugWindowTitle( focusedApp ) );
@@ -43,7 +43,8 @@ static void _XklStdXkbHandler( int grp, XklStateChange changeType, unsigned inds
     {
       _XklUpdateCurState( grp, inds, 
                           "Updating the state from new focused window" );
-      _XklAddAppWindow( focusedApp, ( Window ) NULL, False, &_xklCurState );
+      if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
+        _XklAddAppWindow( focusedApp, ( Window ) NULL, False, &_xklCurState );
     }
     else
     {
@@ -54,8 +55,8 @@ static void _XklStdXkbHandler( int grp, XklStateChange changeType, unsigned inds
     XklDebug( 160, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
               _xklCurClient, _XklGetDebugWindowTitle( _xklCurClient ) );
   }
-  // if the window already has this this state - we are just restoring it!
-  // (see the second parameter of stateCallback
+  /* if the window already has this this state - we are just restoring it!
+    (see the second parameter of stateCallback */
   haveState = _XklGetAppState( _xklCurClient, &oldState );
 
   if( setGroup || haveState )
@@ -68,7 +69,8 @@ static void _XklStdXkbHandler( int grp, XklStateChange changeType, unsigned inds
   if( haveState )
     _XklTryCallStateCallback( changeType, &oldState );
 
-  _XklSaveAppState( _xklCurClient, &_xklCurState );
+  if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
+    _XklSaveAppState( _xklCurClient, &_xklCurState );
 }
 #endif
 
@@ -86,8 +88,12 @@ int _XklXkbEventHandler( XEvent *xev )
   if( xev->type != _xklXkbEventType )
     return 0;
 
-  XklDebug( 150, "Xkb event detected\n" );
+  if( !( _xklListenerType &
+         ( XKLL_MANAGE_WINDOW_STATES | XKLL_TRACK_KEYBOARD_STATE ) ) )
+    return 0;
 
+  XklDebug( 150, "Xkb event detected\n" );
+  
   switch ( kev->any.xkb_type )
   {
     case XkbStateNotify:

@@ -65,6 +65,9 @@ void XklSaveState( Window win, XklState * state )
 {
   Window appWin;
 
+  if( !( _xklListenerType & XKLL_MANAGE_WINDOW_STATES ) )
+    return;
+
   if( _XklGetAppWindow( win, &appWin ) )
     _XklSaveAppState( appWin, state );
 }
@@ -117,23 +120,23 @@ Bool _XklLoadSubtree( Window window, int level, XklState * initState )
   child = children;
   while( num )
   {
-    XklDebug( 150, "Looking at child " WINID_FORMAT " '%s'\n", *child,
-              _XklGetDebugWindowTitle( *child ) );
     if( _XklHasWmState( *child ) )
     {
-      XklDebug( 150, "It has WM_STATE so we'll add it\n" );
+      XklDebug( 160, "Window " WINID_FORMAT " '%s' has WM_STATE so we'll add it\n",
+                *child, _XklGetDebugWindowTitle( *child )  );
       _XklAddAppWindow( *child, window, True, initState );
     } else
     {
-      XklDebug( 150, "It does not have have WM_STATE so we'll not add it\n" );
+      XklDebug( 200, "Window " WINID_FORMAT " '%s' does not have have WM_STATE so we'll not add it\n",
+                *child, _XklGetDebugWindowTitle( *child ) );
 
       if( level == 0 )
       {
-        XklDebug( 150, "But we are at level 0 so we'll spy on it\n" );
+        XklDebug( 200, "But we are at level 0 so we'll spy on it\n" );
         _XklSelectInputMerging( *child,
                                 FocusChangeMask | PropertyChangeMask );
       } else
-        XklDebug( 150, "And we are at level %d so we'll not spy on it\n",
+        XklDebug( 200, "And we are at level %d so we'll not spy on it\n",
                   level );
 
       retval = _XklLoadSubtree( *child, level + 1, initState );
@@ -216,8 +219,8 @@ Status _XklStatusQueryTree( Display * display,
 
 const char *_XklGetEventName( int type )
 {
-  // Not really good to use the fact of consecutivity
-  // but X protocol is already standartized so...
+  /* Not really good to use the fact of consecutivity
+     but X protocol is already standartized so... */
   static const char *evtNames[] = {
     "KeyPress",
     "KeyRelease",
@@ -253,7 +256,7 @@ const char *_XklGetEventName( int type )
   };
   type -= KeyPress;
   if( type < 0 || type > ( sizeof( evtNames ) / sizeof( evtNames[0] ) ) )
-    return NULL;
+    return "UNKNOWN";
   return evtNames[type];
 }
 

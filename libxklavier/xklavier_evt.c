@@ -33,27 +33,26 @@ int XklFilterEvents( XEvent * xev )
                   xev->xdestroywindow.window );
         break;
       case UnmapNotify:
-        XklDebug( 200, "UnmapNotify\n" );
+        XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
         break;
       case MapNotify:
-        XklDebug( 200, "MapNotify\n" );
+        XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
         break;
       case MappingNotify:
-        XklDebug( 200, "MappingNotify\n" );
+        XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
         _XklFreeAllInfo(  );
         _XklLoadAllInfo(  );
         break;
       case GravityNotify:
-        XklDebug( 200, "GravityNotify\n" );
+        XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
         break;
       case ReparentNotify:
-        XklDebug( 200, "ReparentNotify\n" );
+        XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
         break;                  /* Ignore these events */
       default:
       {
-        const char *name = _XklGetEventName( xev->type );
         XklDebug( 200, "Unknown event %d [%s]\n", xev->type,
-                  ( name == NULL ? "??" : name ) );
+                       _XklGetEventName( xev->type ) );
         return 1;
       }
     }
@@ -71,6 +70,9 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
   Window appWin;
   XklState selectedWindowState;
 
+  if( !( _xklListenerType & XKLL_MANAGE_WINDOW_STATES ) )
+    return;
+  
   win = fev->window;
 
   switch ( fev->mode )
@@ -129,7 +131,7 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
 
       if( XklIsGroupPerApp() == !newWinTransparent )
       {
-        // We skip restoration only if we return to the same app window
+        /* We skip restoration only if we return to the same app window */
         Bool doSkip = False;
         if( _xklSkipOneRestore )
         {
@@ -168,7 +170,8 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
           }
         }
 
-        if( XklGetIndicatorsHandling(  ) )
+        if( ( xklVTable->features & XKLF_CAN_TOGGLE_INDICATORS ) && 
+             XklGetIndicatorsHandling(  ) )
         {
           XklDebug( 150,
                     "Restoring the indicators from %X to %X after gaining focus\n",
@@ -206,6 +209,9 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
  */
 void _XklFocusOutEvHandler( XFocusChangeEvent * fev )
 {
+  if( !( _xklListenerType & XKLL_MANAGE_WINDOW_STATES ) )
+    return;
+  
   if( fev->mode != NotifyNormal )
   {
     XklDebug( 200,
@@ -238,7 +244,10 @@ void _XklFocusOutEvHandler( XFocusChangeEvent * fev )
 
 /**
  * PropertyChange handler
- * Interested in WM_STATE property only
+ * Interested in :
+ *  + for XKLL_MANAGE_WINDOW_STATES
+ *    - WM_STATE property for all windows
+ *    - Configuration property of the root window
  */
 void _XklPropertyEvHandler( XPropertyEvent * pev )
 {
@@ -257,49 +266,55 @@ void _XklPropertyEvHandler( XPropertyEvent * pev )
     }
   }
 
-  if( pev->atom == _xklAtoms[WM_STATE] )
+  if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
   {
-    Bool hasXklState = XklGetState( pev->window, NULL );
-
-    if( pev->state == PropertyNewValue )
+    if( pev->atom == _xklAtoms[WM_STATE] )
     {
-      XklDebug( 160, "New value of WM_STATE on window " WINID_FORMAT "\n",
-                pev->window );
-      if( !hasXklState )        /* Is this event the first or not? */
+      Bool hasXklState = XklGetState( pev->window, NULL );
+  
+      if( pev->state == PropertyNewValue )
       {
-        _XklAddAppWindow( pev->window, ( Window ) NULL, False,
-                          &_xklCurState );
+        XklDebug( 160, "New value of WM_STATE on window " WINID_FORMAT "\n",
+                  pev->window );
+        if( !hasXklState )        /* Is this event the first or not? */
+        {
+          _XklAddAppWindow( pev->window, ( Window ) NULL, False,
+                            &_xklCurState );
+        }
+      } else
+      {                           /* ev->xproperty.state == PropertyDelete, either client or WM can remove it, ICCCM 4.1.3.1 */
+        XklDebug( 160, "Something (%d) happened to WM_STATE of window 0x%x\n",
+                  pev->state, pev->window );
+        _XklSelectInputMerging( pev->window, PropertyChangeMask );
+        if( hasXklState )
+        {
+          XklDelState( pev->window );
+        }
       }
     } else
-    {                           /* ev->xproperty.state == PropertyDelete, either client or WM can remove it, ICCCM 4.1.3.1 */
-      XklDebug( 160, "Something (%d) happened to WM_STATE of window 0x%x\n",
-                pev->state, pev->window );
-      _XklSelectInputMerging( pev->window, PropertyChangeMask );
-      if( hasXklState )
+      if( pev->atom ==  xklVTable->baseConfigAtom
+          && pev->window == _xklRootWindow )
+    {
+      if( pev->state == PropertyNewValue )
       {
-        XklDelState( pev->window );
+        XklDebug( 160, "New value of *_NAMES_PROP_ATOM on root window\n" );
+        /* If root window got new *_NAMES_PROP_ATOM -
+         it most probably means new keyboard config is loaded by somebody */
+        _XklFreeAllInfo(  );
+        _XklLoadAllInfo(  );
       }
     }
-  } else
-    if( pev->atom == _xklAtoms[XKB_RF_NAMES_PROP_ATOM]
-        && pev->window == _xklRootWindow )
-  {
-    if( pev->state == PropertyNewValue )
-    {
-      XklDebug( 160, "New value of XKB_RF_NAMES_PROP_ATOM on root window\n" );
-      // If root window got new _XKB_RF_NAMES_PROP_ATOM -
-      // it most probably means new xkb is loaded by somebody
-      _XklFreeAllInfo(  );
-      _XklLoadAllInfo(  );
-    }
-  }
+  } /* XKLL_MANAGE_WINDOW_STATES */
 }
 
 /**
- *  * CreateNotify handler. Just interested in properties and focus events...
- *   */
+ * CreateNotify handler. Just interested in properties and focus events...
+ */
 void _XklCreateEvHandler( XCreateWindowEvent * cev )
 {
+  if( !( _xklListenerType & XKLL_MANAGE_WINDOW_STATES ) )
+    return;
+
   XklDebug( 200,
             "Under-root window " WINID_FORMAT
             "/%s (%d,%d,%d x %d) is created\n", cev->window,
@@ -339,7 +354,7 @@ void _XklErrHandler( Display * dpy, XErrorEvent * evt )
     case BadWindow:
     case BadAccess:
     {
-      // in most cases this means we are late:)
+      /* in most cases this means we are late:) */
       XklDebug( 200, "ERROR: %p, " WINID_FORMAT ", %d, %d, %d\n",
                 dpy,
                 ( unsigned long ) evt->resourceid,

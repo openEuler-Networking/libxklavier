@@ -18,6 +18,8 @@ extern XkbDescPtr _xklXkb;
 
 extern void XklDumpXkbDesc( const char *filename, XkbDescPtr kbd );
 
+extern Bool _XklXkbConfigMultipleLayoutsSupported( void );
+
 /* Start VTable methods */
 
 extern Bool _XklXkbConfigActivate( const XklConfigRecPtr data );
@@ -25,8 +27,6 @@ extern Bool _XklXkbConfigActivate( const XklConfigRecPtr data );
 extern void _XklXkbConfigInit( void );
 
 extern Bool _XklXkbConfigLoadRegistry( void );
-
-extern Bool _XklXkbConfigMultipleLayoutsSupported( void );
 
 extern Bool _XklXkbConfigWriteFile( const char *fileName,
                                     const XklConfigRecPtr data,
@@ -39,6 +39,8 @@ extern void _XklXkbFreeAllInfo( void );
 extern const char **_XklXkbGetGroupNames( void );
 
 extern unsigned _XklXkbGetNumGroups( void );
+
+extern void _XklXkbGetRealState( XklState * curState_return );
 
 extern Bool _XklXkbLoadAllInfo( void );
 

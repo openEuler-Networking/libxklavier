@@ -1,11 +1,21 @@
 #include <config.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
 #include <X11/Xlib.h>
 #include <libxklavier/xklavier.h>
 #include <libxklavier/xklavier_config.h>
+
+#ifdef __STRICT_ANSI__
+/* these are functions which are NOT in ANSI C. 
+   Probably we should provide the implementation */
+extern char *strdup( const char *s );
+#endif
+
+extern void XklConfigDump( FILE* file,
+                           XklConfigRecPtr data );
 
 enum { ACTION_NONE, ACTION_GET, ACTION_SET, ACTION_WRITE };
 
@@ -21,28 +31,6 @@ static void printUsage()
   printf( "         -h - Show this help\n" );
 }
 
-static void dump( XklConfigRecPtr ptr )
-{
-  int i,j;
-  char**p;
-  XklDebug( 0, "  model: [%s]\n", ptr->model );
-
-  XklDebug( 0, "  layouts(%d):\n", ptr->numLayouts );
-  p = ptr->layouts;
-  for( i = ptr->numLayouts, j = 0; --i >= 0; )
-    XklDebug( 0, "  %d: [%s]\n", j++, *p++ );
-
-  XklDebug( 0, "  variants(%d):\n", ptr->numVariants );
-  p = ptr->variants;
-  for( i = ptr->numVariants, j = 0; --i >= 0; )
-    XklDebug( 0, "  %d: [%s]\n", j++, *p++ );
-
-  XklDebug( 0, "  options(%d):\n", ptr->numOptions );
-  p = ptr->options;
-  for( i = ptr->numOptions, j = 0; --i >= 0; )
-    XklDebug( 0, "  %d: [%s]\n", j++, *p++ );
-}
-
 int main( int argc, char * const argv[] )
 {
   int c, i;
@@ -50,7 +38,7 @@ int main( int argc, char * const argv[] )
   const char* model = NULL;
   const char* layouts = NULL;
   const char* options = NULL;
-  int debugLevel = 0;
+  int debugLevel = -1;
   int binary = 0;
   Display *dpy;
 
@@ -109,13 +97,14 @@ int main( int argc, char * const argv[] )
   if ( !XklInit( dpy ) )
   {
     XklConfigRec currentConfig, r2;
-    XklSetDebugLevel( debugLevel );
+    if( debugLevel != -1 )
+      XklSetDebugLevel( debugLevel );
     XklDebug( 0, "Xklavier initialized\n" );
     XklConfigInit();
     XklConfigLoadRegistry();
     XklDebug( 0, "Xklavier registry loaded\n" );
-    XklDebug( 0, "Multiple layouts are %ssupported\n",
-      XklMultipleLayoutsSupported() ? "" : "not " );
+    XklDebug( 0, "Bakend: [%s]\n", XklGetBackendName() );
+    XklDebug( 0, "Supported features: 0x0%X\n", XklGetBackendFeatures() );
 
     XklConfigRecInit( &currentConfig );
     XklConfigGetFromServer( &currentConfig );
@@ -124,14 +113,14 @@ int main( int argc, char * const argv[] )
     {
       case ACTION_GET:
         XklDebug( 0, "Got config from the server\n" );
-        dump( &currentConfig );
+        XklConfigDump( stdout, &currentConfig );
 
         XklConfigRecInit( &r2 );
 
         if ( XklConfigGetFromBackup( &r2 ) )
         {
           XklDebug( 0, "Got config from the backup\n" );
-          dump( &r2 );
+          XklConfigDump( stdout, &r2 );
         }
 
         if ( XklConfigActivate( &r2 ) )
@@ -191,7 +180,7 @@ int main( int argc, char * const argv[] )
         }
 
         XklDebug( 0, "New config:\n" );
-        dump( &currentConfig );
+        XklConfigDump( stdout, &currentConfig );
         if ( XklConfigActivate( &currentConfig ) )
             XklDebug( 0, "Set the config\n" );
         else
@@ -215,7 +204,7 @@ int main( int argc, char * const argv[] )
     XklTerm();
   } else
   {
-    fprintf( stderr, "Could not init Xklavier\n" );
+    fprintf( stderr, "Could not init Xklavier: %s\n", XklGetLastError() );
     exit(2);
   }
   printf( "closing display: %p\n", dpy );

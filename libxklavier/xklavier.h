@@ -28,6 +28,32 @@ extern "C"
   XklStateChange;
 
 /**
+ * Backend allows to toggls indicators on/off
+ */  
+#define XKLF_CAN_TOGGLE_INDICATORS 0x01
+/**
+ * Backend allows to write ascii representation of the configuration
+ */
+#define XKLF_CAN_OUTPUT_CONFIG_AS_ASCII 0x02
+  
+/**
+ * Backend allows to write binary representation of the configuration
+ */
+#define XKLF_CAN_OUTPUT_CONFIG_AS_BINARY 0x04
+
+/**
+ * Backend supports multiple layouts
+ */
+#define XKLF_MULTIPLE_LAYOUTS_SUPPORTED 0x08
+
+/**
+ * Backend requires manual configuration, 
+ * some daemon should do 
+ * XklStartListen( XKLL_MANAGE_LAYOUTS );
+ */
+#define XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT 0x10
+
+/**
  * XKB state. Can be global or per-window
  */
   typedef struct
@@ -59,6 +85,18 @@ extern "C"
  */
   extern int XklTerm( void );
 
+/**
+ * What kind of backend if used
+ * @return some string id of the backend
+ */
+  extern const char *XklGetBackendName( void );
+
+/**
+ * Provides information regarding available backend features
+ * (combination of XKLF_* constants)
+ * @return ORed XKLF_* constants
+ */
+  extern int XklGetBackendFeatures( void );
 /** @} */
 
 /**
@@ -67,10 +105,28 @@ extern "C"
  */
 
 /**
+ * The listener process should handle the per-window states 
+ * and all the related activity
+ */
+#define XKLL_MANAGE_WINDOW_STATES   0x01
+
+/**
+ * Just track the state and pass it to the application above.
+ */
+#define XKLL_TRACK_KEYBOARD_STATE 0x02
+
+/**
+ * The listener process should help backend to maintain the configuration
+ * (manually switch layouts etc).
+ */
+#define XKLL_MANAGE_LAYOUTS  0x04
+
+/**
  * Starts listening for XKB-related events
+ * @param what any combination of XKLL_* constants
  * @return 0
  */
-  extern int XklStartListen( void );
+  extern int XklStartListen( int what );
 
 /**
  * Stops listening for XKB-related events
@@ -92,19 +148,19 @@ extern "C"
 
 /**
  * Grabs some key
- * @param key is a keysym
+ * @param keycode is a keycode
  * @param modifiers is a bitmask of modifiers
  * @return True on success
  */
-  extern Bool XklGrabKey( int key, unsigned modifiers );
+  extern Bool XklGrabKey( int keycode, unsigned modifiers );
 
 /**
  * Ungrabs some key
- * @param key is a keysym
+ * @param keycode is a keycode
  * @param modifiers is a bitmask of modifiers
  * @return True on success
  */
-  extern Bool XklUngrabKey( int key, unsigned modifiers );
+  extern Bool XklUngrabKey( int keycode, unsigned modifiers );
 
 /**
  * Processes X events. Should be included into the main event cycle of an
@@ -450,12 +506,21 @@ extern "C"
  */
   extern void XklSetDebugLevel( int level );
 
+/* Just to make doxygen happy - two block with/without @param format */
+#if defined(G_HAVE_GNUC_VARARGS)
 /**
  * Output (optionally) some debug info
  * @param level is a level of the message
  * @param format is a format (like in printf)
  * @see _XklDebug
  */
+#else
+/**
+ * Output (optionally) some debug info
+ * @param level is a level of the message
+ * @see _XklDebug
+ */
+#endif
 #ifdef G_HAVE_ISO_VARARGS
 #define XklDebug( level, ... ) \
   _XklDebug( __FILE__, __func__, level, __VA_ARGS__ )
