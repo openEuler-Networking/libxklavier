@@ -1,4 +1,4 @@
-EXTRA_WEB_FILES = doxygen.css\
+EXTRA_WEB_FILES = doxygen.css \
   doxygen.png
 
 HTML_FILES = annotated.html\
@@ -35,23 +35,23 @@ HTML_FILES = annotated.html\
 
 DOXYGEN_OUT_FILES = $(EXTRA_WEB_FILES) $(HTML_FILES)
 
-html_to = $(datadir)/doc/$(PACKAGE)-$(VERSION)/html
+doc_to = $(datadir)/doc/$(PACKAGE)-$(VERSION)/html
 
-html_files = $(DOXYGEN_OUT_FILES)
+doc_files = $(DOXYGEN_OUT_FILES)
+
+EXTRA_DIST= $(doc_files)
 
 install:
 	@$(NORMAL_INSTALL)
-	if test "x$(DO_DOXYGEN)" = "xyes"; then \
-	  $(mkinstalldirs) $(DESTDIR)$(html_to); \
-	  for p in $(html_files); do \
-	    $(INSTALL_DATA) $$p $(DESTDIR)$(html_to)/$$p; \
-	  done; \
-	fi
+	$(mkinstalldirs) $(DESTDIR)$(doc_to); \
+	for p in $(doc_files); do \
+	  $(INSTALL_DATA) $$p $(DESTDIR)$(doc_to)/$$p; \
+	done; \
 
 uninstall:
 	@$(NORMAL_UNINSTALL)
-	for p in $(html_files); do \
-	  rm -f $(DESTDIR)$(html_to)/$$p; \
+	for p in $(doc_files); do \
+	  rm -f $(DESTDIR)$(doc_to)/$$p; \
 	done
 
 MAINTAINERCLEANFILES = $(DOXYGEN_OUT_FILES)

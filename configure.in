@@ -64,8 +64,8 @@ fi
 AC_DEFINE_UNQUOTED(XKB_BASE,"${xkb_base}",Base for XKB configuration)
 
 AC_ARG_ENABLE(doxygen, 
-[  --disable-doxygen       Do not build doxygen documentation],
-, enable_doxygen=yes)
+[  --enable-doxygen       Build doxygen documentation],
+, enable_doxygen=no)
 
 AC_SUBST(DO_DOXYGEN,"${enable_doxygen}")
 

@@ -28,7 +28,7 @@ Libraries, include files, etc you can use to develop libxklavier applications.
 
 CONFIG_FLAGS="--prefix=%{_prefix} --libdir=%{_libdir} \
   --includedir=%{_includedir} --bindir=%{_bindir} \
-  --enable-doxygen"
+  --disable-doxygen"
 
 if [ ! -f configure ]; then
     CFLAGS="$RPM_OPT_FLAGS" ./autogen.sh $CONFIG_FLAGS
