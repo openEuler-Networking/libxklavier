@@ -2,6 +2,7 @@
 #include <string.h>
 #include <locale.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 
 #include <libxml/xpath.h>
 
@@ -15,12 +16,6 @@
 #include <X11/extensions/XKBfile.h>
 #include <X11/extensions/XKM.h>
 #endif
-
-#define RULES_FILE XKB_RULES_SET
-
-#define RULES_PATH ( XKB_BASE "/rules/" RULES_FILE )
-
-#define XML_CFG_PATH ( XKB_BASE "/rules/" RULES_FILE ".xml" )
 
 // For "bad" X servers we hold our own copy
 #define XML_CFG_FALLBACK_PATH ( DATA_DIR "/xfree86.xml" )
@@ -39,20 +34,57 @@ static XkbComponentNamesRec componentNames;
 
 static char *locale;
 
+static char* _XklGetRulesSet( void )
+{
+#ifdef XKB_HEADERS_PRESENT
+  static char rulesSet[_XKB_RF_NAMES_PROP_MAXLEN] = "";
+  if ( !rulesSet[0] )
+  {
+    char* rf = NULL;
+    if( !XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], &rf, NULL ) || ( rf == NULL ) )
+      return NULL;
+    strncpy( rulesSet, rf, sizeof rulesSet );
+    free( rf );
+  }
+  XklDebug( 100, "Rules set: [%s]\n", rulesSet );
+  return rulesSet;
+#else
+  return NULL;
+#endif
+}
+
 Bool XklConfigLoadRegistry( void )
 {
   struct stat statBuf;
-                                                                                          
-  const char *fileName = XML_CFG_PATH;
-  if( stat( XML_CFG_PATH, &statBuf ) != 0 )
-    fileName = XML_CFG_FALLBACK_PATH;
-                                                                                          
+  char fileName[MAXPATHLEN] = "";
+  char* rf = _XklGetRulesSet();
+
+  if ( rf == NULL )
+    return False;
+
+  snprintf( fileName, sizeof fileName, XKB_BASE "/rules/%s.xml", rf );
+
+  if( stat( fileName, &statBuf ) != 0 )
+  {
+    strncpy( fileName, XML_CFG_FALLBACK_PATH, sizeof fileName );
+    fileName[ MAXPATHLEN - 1 ] = '\0';
+  }
+
   return XklConfigLoadRegistryFromFile( fileName );
 }
 
 static Bool _XklConfigPrepareBeforeKbd( const XklConfigRecPtr data )
 {
 #ifdef XKB_HEADERS_PRESENT
+  char fileName[MAXPATHLEN] = "";
+  char* rf = _XklGetRulesSet();
+
+  if( rf == NULL )
+  {
+    _xklLastErrorMsg = "Could not find the XKB rules set";
+    return False;
+  }
+
   memset( &_xklVarDefs, 0, sizeof( _xklVarDefs ) );
 
   _xklVarDefs.model = ( char * ) data->model;
@@ -70,7 +102,8 @@ static Bool _XklConfigPrepareBeforeKbd( const XklConfigRecPtr data )
   if( locale != NULL )
     locale = strdup( locale );
 
-  rules = XkbRF_Load( RULES_PATH, locale, True, True );
+  snprintf( fileName, sizeof fileName, XKB_BASE "/rules/%s", rf );
+  rules = XkbRF_Load( fileName, locale, True, True );
 
   if( rules == NULL )
   {
@@ -150,7 +183,9 @@ Bool XklConfigActivate( const XklConfigRecPtr data,
     if( xkb != NULL )
     {
       if( XklSetNamesProp
-          ( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], RULES_FILE, data ) )
+          ( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], _XklGetRulesSet(), data ) )
+          // We do not need to check the result of _XklGetRulesSet - 
+          // because PrepareBeforeKbd did it for us
         rv = True;
       else
         _xklLastErrorMsg = "Could not set names property";
