@@ -40,6 +40,8 @@ extern void _XklXkbFreeAllInfo( void );
 
 extern const char **_XklXkbGetGroupNames( void );
 
+extern unsigned _XklXkbGetMaxNumGroups( void );
+
 extern unsigned _XklXkbGetNumGroups( void );
 
 extern void _XklXkbGetRealState( XklState * curState_return );

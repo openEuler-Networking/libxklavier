@@ -70,6 +70,12 @@ int _XklXkbResumeListen(  )
   return 0;
 }
 
+unsigned _XklXkbGetMaxNumGroups( void )
+{
+  return xklVTable->features & XKLF_MULTIPLE_LAYOUTS_SUPPORTED ?
+    XkbNumKbdGroups : 1;
+}
+
 unsigned _XklXkbGetNumGroups( void )
 {
   return _xklXkb->ctrls->num_groups;
@@ -373,6 +379,7 @@ int _XklXkbInit( void )
     _XklXkbEventHandler,
     _XklXkbFreeAllInfo,
     _XklXkbGetGroupNames,
+    _XklXkbGetMaxNumGroups,
     _XklXkbGetNumGroups,
     _XklXkbGetRealState,
     _XklXkbLoadAllInfo,

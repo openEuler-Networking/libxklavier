@@ -21,6 +21,8 @@ typedef void ( *XklFreeAllInfoHandler )( void );
 
 typedef const char **( *XklGetGroupNamesHandler )( void );
 
+typedef unsigned ( *XklGetMaxNumGroupsHandler )( void );
+
 typedef unsigned ( *XklGetNumGroupsHandler )( void );
 
 typedef void ( *XklGetRealStateHandler)( XklState * curState_return );
@@ -39,22 +41,26 @@ typedef struct
    * Backend name
    */
   const char *id;
+
   /**
    * Functions supported by the backend, combination of XKLF_* constants
    */
   int features;
+
   /**
    * Activates the configuration.
    * xkb: create proper the XkbDescRec and send it to the server
    * xmodmap: save the property, init layout #1
    */
   XklConfigActivateHandler xklConfigActivateHandler;
+
   /**
    * Background-specific initialization.
    * xkb: XkbInitAtoms - init internal xkb atoms table
    * xmodmap: void.
    */
   XklConfigInitHandler xklConfigInitHandler; /* private */
+
   /**
    * Loads the registry tree into DOM (using whatever path(s))
    * The XklConfigFreeRegistry is static - no virtualization necessary.
@@ -62,6 +68,7 @@ typedef struct
    * xmodmap: loads xml from XMODMAP_BASE+"/"+ruleset+".xml"
    */
   XklConfigLoadRegistryHandler xklConfigLoadRegistryHandler;
+
   /**
    * Write the configuration into the file (binary/textual)
    * xkb: write xkb or xkm file
@@ -69,24 +76,35 @@ typedef struct
    * file - not really useful. If binary - fail (not supported)
    */
   XklConfigWriteFileHandler xklConfigWriteFileHandler;
+
   /**
    * Handles X events.
    * xkb: XkbEvent handling
    * xmodmap: keep track on the root window properties. What else can we do?
    */
   XklEventHandler xklEventHandler;
+
   /**
    * Flushes the cached server config info.
    * xkb: frees XkbDesc
    * xmodmap: frees internal XklConfigRec
    */
   XklFreeAllInfoHandler xklFreeAllInfoHandler; /* private */
+
   /**
    * Get the list of the group names
    * xkb: return cached list of the group names
    * xmodmap: return the list of layouts from the internal XklConfigRec
    */
   XklGetGroupNamesHandler xklGetGroupNamesHandler;
+
+  /**
+   * Get the maximum number of loaded groups
+   * xkb: returns 1 or XkbNumKbdGroups
+   * xmodmap: return 0
+   */
+  XklGetMaxNumGroupsHandler xklGetMaxNumGroupsHandler;
+
   /**
    * Get the number of loaded groups
    * xkb: return from the cached XkbDesc
@@ -107,6 +125,7 @@ typedef struct
    * xmodmap: loads internal XklConfigRec from server
    */
   XklLoadAllInfoHandler xklLoadAllInfoHandler; /* private */
+
   /**
    * Switches the keyboard to the group N
    * xkb: simple one-liner to call the XKB function
@@ -114,18 +133,21 @@ typedef struct
    * (listener invokes xmodmap with appropriate config file).
    */
   XklLockGroupHandler xklLockGroupHandler;
+
   /**
    * Stop tracking the keyboard-related events
    * xkb: XkbSelectEvents(..., 0)
    * xmodmap: Ungrab the switching shortcut.
    */
   XklPauseResumeListenHandler xklPauseListenHandler;
+
   /**
    * Start tracking the keyboard-related events
    * xkb: XkbSelectEvents + XkbSelectEventDetails
    * xmodmap: Grab the switching shortcut.
    */
   XklPauseResumeListenHandler xklResumeListenHandler;
+
   /**
    * Set the indicators state from the XklState
    * xkb: _XklSetIndicator for all indicators

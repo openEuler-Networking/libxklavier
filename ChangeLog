@@ -1,3 +1,8 @@
+2004-12-07 01:30  svu
+	
+	* libxklavier, tests: introducing XklGetMaxNumGroups. 
+	Another new call in API.
+
 2004-12-07 00:20  svu
 	
 	* configure.in: using ac_x_includes to make configure

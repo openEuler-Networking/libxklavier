@@ -796,3 +796,10 @@ void _XklFreeAllInfo( void )
   _XklEnsureVTableInited();
   (*xklVTable->xklFreeAllInfoHandler)();
 }
+
+unsigned XklGetMaxNumGroups( void )
+{
+  _XklEnsureVTableInited();
+  return (*xklVTable->xklGetMaxNumGroupsHandler)();
+}
+

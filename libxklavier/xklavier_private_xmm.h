@@ -57,6 +57,8 @@ extern void _XklXmmFreeAllInfo( void );
 
 extern const char **_XklXmmGetGroupNames( void );
 
+extern unsigned _XklXmmGetMaxNumGroups( void );
+
 extern unsigned _XklXmmGetNumGroups( void );
 
 extern void _XklXmmGetRealState( XklState * curState_return );

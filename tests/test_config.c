@@ -105,6 +105,7 @@ int main( int argc, char * const argv[] )
     XklDebug( 0, "Xklavier registry loaded\n" );
     XklDebug( 0, "Bakend: [%s]\n", XklGetBackendName() );
     XklDebug( 0, "Supported features: 0x0%X\n", XklGetBackendFeatures() );
+    XklDebug( 0, "Max number of groups: %d\n", XklGetMaxNumGroups() );
 
     XklConfigRecInit( &currentConfig );
     XklConfigGetFromServer( &currentConfig );

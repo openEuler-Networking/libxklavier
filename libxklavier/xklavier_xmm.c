@@ -130,6 +130,11 @@ int _XklXmmPauseListen(  )
   return 0;
 }
 
+unsigned _XklXmmGetMaxNumGroups( void )
+{
+  return 0;
+}
+
 unsigned _XklXmmGetNumGroups( void )
 {
   return currentXmmConfig.numLayouts;
@@ -239,6 +244,7 @@ int _XklXmmInit( void )
     _XklXmmEventHandler,
     _XklXmmFreeAllInfo,
     _XklXmmGetGroupNames,
+    _XklXmmGetMaxNumGroups,
     _XklXmmGetNumGroups,
     _XklXmmGetRealState,
     _XklXmmLoadAllInfo,

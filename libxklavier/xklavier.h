@@ -31,6 +31,7 @@ extern "C"
  * Backend allows to toggls indicators on/off
  */  
 #define XKLF_CAN_TOGGLE_INDICATORS 0x01
+
 /**
  * Backend allows to write ascii representation of the configuration
  */
@@ -97,6 +98,14 @@ extern "C"
  * @return ORed XKLF_* constants
  */
   extern int XklGetBackendFeatures( void );
+
+/**
+ * Provides the information on maximum number of simultaneously supported 
+ * groups (layouts)
+ * @return maximum number of the groups in configuration, 
+ *         0 if no restrictions.
+ */
+  extern unsigned XklGetMaxNumGroups( void );
 /** @} */
 
 /**
