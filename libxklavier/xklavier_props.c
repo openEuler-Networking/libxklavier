@@ -21,7 +21,7 @@ void XklConfigRecInit( XklConfigRecPtr data )
 
 static Bool PtrsEqual( char* p1, char* p2 )
 {
-  if ( p1 == NULL && p2 == NULL )
+  if ( p1 == p2 )
     return True;
   if ( ( p1 == NULL && p2 != NULL ) ||
        ( p1 != NULL && p2 == NULL ) )
@@ -35,6 +35,8 @@ static Bool ListsEqual( int numItems1, char** items1,
   int i;
   if ( numItems1 != numItems2 )
     return False;
+  if ( items1 == items2 )
+    return True;
   for( i = numItems1; --i >= 0; )
      if ( !PtrsEqual( *items1++ , *items2++ ) )
        return False;
@@ -43,6 +45,8 @@ static Bool ListsEqual( int numItems1, char** items1,
 
 Bool XklConfigRecEquals( XklConfigRecPtr data1, XklConfigRecPtr data2 )
 {
+  if ( data1 == data2 )
+    return True;
   if ( !PtrsEqual( data1->model, data2->model ) )
     return False;
   if ( !ListsEqual( data1->numLayouts, data1->layouts, 
