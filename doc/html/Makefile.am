@@ -46,7 +46,7 @@ install:
 	$(mkinstalldirs) $(DESTDIR)$(doc_to); \
 	for p in $(doc_files); do \
 	  $(INSTALL_DATA) $$p $(DESTDIR)$(doc_to)/$$p; \
-	done; \
+	done;
 
 uninstall:
 	@$(NORMAL_UNINSTALL)
