@@ -368,6 +368,7 @@ int _XklXkbInit( void )
     _XklXkbConfigInit,
     _XklXkbConfigMultipleLayoutsSupported,
     _XklXkbConfigWriteFile,
+    _XklXkbEventHandler,
     _XklXkbFreeAllInfo,
     _XklXkbGetGroupNames,
     _XklXkbGetNumGroups,
@@ -375,6 +376,7 @@ int _XklXkbInit( void )
     _XklXkbLockGroup,
     _XklXkbPauseListen,
     _XklXkbResumeListen,
+    _XklXkbSetIndicators,
   };
   /* Lets begin */
   _xklXkbExtPresent = XkbQueryExtension( _xklDpy,

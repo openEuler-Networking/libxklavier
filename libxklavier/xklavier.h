@@ -9,10 +9,6 @@
 
 #include <X11/Xlib.h>
 
-#ifdef XKB_HEADERS_PRESENT
-#include <X11/XKBlib.h>
-#endif
-
 #ifdef __cplusplus
 extern "C"
 {

@@ -116,7 +116,6 @@ void XklConfigRecReset( XklConfigRecPtr data )
 
 Bool XklConfigGetFromServer( XklConfigRecPtr data )
 {
-#ifdef XKB_HEADERS_PRESENT
   Bool rv =
     XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], NULL, data );
 
@@ -124,27 +123,19 @@ Bool XklConfigGetFromServer( XklConfigRecPtr data )
     rv = _XklGetDefaultNamesProp( NULL, data );
 
   return rv;
-#else
-  return False;
-#endif
 }
 
 Bool XklConfigGetFromBackup( XklConfigRecPtr data )
 {
-#ifdef XKB_HEADERS_PRESENT
   Bool rv =
     XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM_BACKUP], NULL, data );
 
   return rv;
-#else
-  return False;
-#endif
 }
 
 Bool XklBackupNamesProp(  )
 {
   Bool rv = True;
-#ifdef XKB_HEADERS_PRESENT
   char *rf = NULL;
   XklConfigRec data;
   Bool cgp = False;
@@ -193,14 +184,12 @@ Bool XklBackupNamesProp(  )
     rv = False;
   }
   XklConfigRecDestroy( &data );
-#endif
   return rv;
 }
 
 Bool XklRestoreNamesProp(  )
 {
   Bool rv = True;
-#ifdef XKB_HEADERS_PRESENT
   char *rf = NULL;
   XklConfigRec data;
 
@@ -217,7 +206,6 @@ Bool XklRestoreNamesProp(  )
     rv = False;
   }
   XklConfigRecDestroy( &data );
-#endif
   return rv;
 }
 
@@ -241,7 +229,7 @@ Bool XklGetNamesProp( Atom rulesAtom,
     XGetWindowProperty( _xklDpy, _xklRootWindow, rulesAtom, 0L,
                         _XKB_RF_NAMES_PROP_MAXLEN, False, XA_STRING,
                         &realPropType, &fmt, &nitems, &extraBytes,
-                        ( unsigned char ** ) &propData );
+                        ( unsigned char ** ) ( void * ) &propData );
   // property not found!
   if( rtrn != Success )
   {
@@ -352,7 +340,7 @@ Bool XklGetNamesProp( Atom rulesAtom,
 Bool XklSetNamesProp( Atom rulesAtom,
                       char *rulesFile, const XklConfigRecPtr data )
 {
-  int len, i, rv;
+  int len, rv;
   char *pval;
   char *next;
   char *allLayouts = _XklConfigRecMergeLayouts( data );

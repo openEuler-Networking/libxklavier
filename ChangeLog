@@ -1,3 +1,21 @@
+2004-11-02 22:55  svu
+
+	* libxklavier/Makefile.am,
+	  libxklavier/xklavier.c,
+	  libxklavier/xklavier.h,
+	  libxklavier/xklavier_config.c,
+	  libxklavier/xklavier_config_i18n.c,
+	  libxklavier/xklavier_config_xkb.c,
+	  libxklavier/xklavier_dump.c,
+	  libxklavier/xklavier_evt.c,
+	  libxklavier/xklavier_private.h,
+	  libxklavier/xklavier_private_xkb.h,
+	  libxklavier/xklavier_props.c,
+	  libxklavier/xklavier_xkb.c: virtualizing everything (?) which
+	  involves XKB directly. The VTable is introduced. So, now another
+	  VTable (xmodmap) can be created, hopefully...
+	* configure.in: preparing 1.11
+
 2004-10-31 21:00  svu
 
 	* libxklavier/xklavier_config_xkb.c:

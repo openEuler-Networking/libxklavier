@@ -15,6 +15,8 @@ typedef Bool ( *XklConfigWriteFileHandler )( const char *fileName,
                                              const XklConfigRecPtr data,
                                              const Bool binary );
 
+typedef int ( *XklEventHandler )( XEvent *xev );
+
 typedef void ( *XklFreeAllInfoHandler )( void );
 
 typedef const char **( *XklGetGroupNamesHandler )( void );
@@ -27,12 +29,15 @@ typedef void ( *XklLockGroupHandler )( int group );
 
 typedef int ( *XklPauseResumeListenHandler )( void );
 
+typedef void ( *XklSetIndicatorsHandler )( const XklState *windowState );
+
 typedef struct
 {
   XklConfigActivateHandler xklConfigActivateHandler;
   XklConfigInitHandler xklConfigInitHandler; /* private */
   XklConfigMultipleLayoutsSupportedHandler xklConfigMultipleLayoutsSupportedHandler; 
   XklConfigWriteFileHandler xklConfigWriteFileHandler;
+  XklEventHandler xklEventHandler;
   XklFreeAllInfoHandler xklFreeAllInfoHandler; /* private */
   XklGetGroupNamesHandler xklGetGroupNamesHandler;
   XklGetNumGroupsHandler xklGetNumGroupsHandler;
@@ -40,6 +45,7 @@ typedef struct
   XklLockGroupHandler xklLockGroupHandler;
   XklPauseResumeListenHandler xklPauseListenHandler;
   XklPauseResumeListenHandler xklResumeListenHandler;
+  XklSetIndicatorsHandler xklSetIndicatorsHandler; /* private */
 } XklVTable;
 
 extern void _XklEnsureVTableInited( void );
@@ -143,13 +149,10 @@ extern char *_xklIndicatorNames[];
 #define XKLAVIER_STATE 2
 #define XKLAVIER_TRANSPARENT 3
 
-#ifdef XKB_HEADERS_PRESENT
-  #define XKB_RF_NAMES_PROP_ATOM 4
-  #define XKB_RF_NAMES_PROP_ATOM_BACKUP 5
-  #define TOTAL_ATOMS 6
-#else
-  #define TOTAL_ATOMS 4
-#endif
+// XKB ones
+#define XKB_RF_NAMES_PROP_ATOM 4
+#define XKB_RF_NAMES_PROP_ATOM_BACKUP 5
+#define TOTAL_ATOMS 6
 
 #define XKLAVIER_STATE_PROP_LENGTH 2
 

@@ -148,7 +148,6 @@ int XklStopListen(  )
 
 int XklInit( Display * a_dpy )
 {
-  int opcode;
   int scr;
   char *sdl;
   int rv;
@@ -559,7 +558,7 @@ Bool _XklGetAppState( Window appWin, XklState * state_return )
         ( _xklDpy, appWin, _xklAtoms[XKLAVIER_STATE], 0L,
           XKLAVIER_STATE_PROP_LENGTH, False,
           XA_INTEGER, &type_ret, &format_ret, &nitems, &rest,
-          ( unsigned char ** ) &prop ) == Success )
+          ( unsigned char ** ) ( void * ) &prop ) == Success )
       && ( type_ret == XA_INTEGER ) && ( format_ret == 32 ) )
   {
     grp = prop[0];
@@ -684,11 +683,10 @@ Bool _XklIsTransparentAppWindow( Window appWin )
   int format_ret;
   unsigned long nitems, rest;
   CARD32 *prop = NULL;
-  Bool retVal;
   if( ( XGetWindowProperty
         ( _xklDpy, appWin, _xklAtoms[XKLAVIER_TRANSPARENT], 0L, 1, False,
           XA_INTEGER, &type_ret, &format_ret, &nitems, &rest,
-          ( unsigned char ** ) &prop ) == Success )
+          ( unsigned char ** ) ( void * ) &prop ) == Success )
       && ( type_ret == XA_INTEGER ) && ( format_ret == 32 ) )
   {
     if( prop != NULL )

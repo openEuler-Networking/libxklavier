@@ -27,7 +27,7 @@ static void _XkbModsRecDump( FILE * fs, XkbModsRec * mods )
   fprintf( fs, "vmods: 0x%X\n", mods->vmods );
 }
 
-static void _XkbControlsDump( FILE * fs, XkbControlsPtr ctrls )
+extern void _XkbControlsDump( FILE * fs, XkbControlsPtr ctrls )
 {
   int i;
   char buf[1024];
@@ -180,7 +180,7 @@ static void _XkbServerMapDump( FILE * fs, int level, XkbServerMapPtr server,
 static void _XkbKeyTypeDump( FILE * fs, int level, XkbKeyTypePtr type )
 {
   char *z = type->name == None ? NULL : XGetAtomName( _xklDpy, type->name );
-  fprintf( fs, "%*sname: 0x%X(%s)\n", level, "", type->name, z );
+  fprintf( fs, "%*sname: 0x%X(%s)\n", level, "", (int)type->name, z );
   if( z != NULL )
     XFree( z );
 }

@@ -350,6 +350,7 @@ void XklConfigInit( void )
     xmlXPathCompile( "/xkbConfigRegistry/optionList/group" );
   _XklI18NInit(  );
 
+  _XklEnsureVTableInited();
   (*xklVTable->xklConfigInitHandler)();
 }
 

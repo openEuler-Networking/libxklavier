@@ -102,8 +102,6 @@ static Bool _XklGetCharset( const char **a )
 char *_XklLocaleFromUtf8( const char *utf8string )
 {
   int len;
-  int bytesRead;
-  int bytesWritten;
 
   iconv_t converter;
   static char converted[XKL_MAX_CI_DESC_LENGTH];
@@ -134,8 +132,6 @@ char *_XklLocaleFromUtf8( const char *utf8string )
     }
     return strdup( utf8string );
   }
-  //converted = convert_with_iconv( utf8string,
-  //                              len, converter, &bytesRead, &bytesWritten );
 
   if( iconv( converter, &utfStart, &len, &convertedStart, &clen ) == -1 )
   {

@@ -3,6 +3,7 @@
 
 #ifdef XKB_HEADERS_PRESENT
 
+#include <X11/XKBlib.h>
 #include <X11/extensions/XKBrules.h>
 
 #define ForPhysIndicators( i, bit ) \
@@ -17,11 +18,6 @@ extern XkbDescPtr _xklXkb;
 
 extern void XklDumpXkbDesc( const char *filename, XkbDescPtr kbd );
 
-extern void _XklStdXkbHandler( int grp, XklStateChange changeType,
-                               unsigned inds, Bool setInds );
-
-extern void _XklXkbEvHandler( XkbEvent * kev );
-
 /* Start VTable methods */
 
 extern Bool _XklXkbConfigActivate( const XklConfigRecPtr data );
@@ -34,6 +30,8 @@ extern Bool _XklXkbConfigWriteFile( const char *fileName,
                                     const XklConfigRecPtr data,
                                     const Bool binary );
 
+extern int _XklXkbEventHandler( XEvent * kev );
+
 extern void _XklXkbFreeAllInfo( void );
 
 extern const char **_XklXkbGetGroupNames( void );
@@ -45,6 +43,8 @@ extern Bool _XklXkbLoadAllInfo( void );
 extern void _XklXkbLockGroup( int group );
 
 extern int _XklXkbPauseResumeListen( void );
+
+extern void _XklXkbSetIndicators( const XklState *windowState );
 
 /* End of VTable methods */
 

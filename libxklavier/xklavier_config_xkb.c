@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/param.h>
+#include <sys/wait.h>
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -33,9 +34,9 @@
 XkbRF_VarDefsRec _xklVarDefs;
 static XkbRF_RulesPtr _xklRules;
 static XkbComponentNamesRec componentNames;
-#endif
 
 static char *locale;
+#endif
 
 static char* _XklGetRulesSetName( void )
 {
@@ -91,17 +92,19 @@ static XkbRF_RulesPtr _XklLoadRulesSet( void )
 }
 #endif
 
+#ifdef XKB_HEADERS_PRESENT
 static void _XklFreeRulesSet( void )
 {
-#ifdef XKB_HEADERS_PRESENT
   if ( _xklRules )
     XkbRF_Free( _xklRules, True );
-#endif
 }
+#endif
 
 void _XklXkbConfigInit( void )
 {
+#ifdef XKB_HEADERS_PRESENT
   XkbInitAtoms( NULL );
+#endif
 }
 
 Bool XklConfigLoadRegistry( void )
@@ -124,9 +127,9 @@ Bool XklConfigLoadRegistry( void )
   return XklConfigLoadRegistryFromFile( fileName );
 }
 
+#ifdef XKB_HEADERS_PRESENT
 static Bool _XklConfigPrepareBeforeKbd( const XklConfigRecPtr data )
 {
-#ifdef XKB_HEADERS_PRESENT
   XkbRF_RulesPtr rulesPtr = _XklLoadRulesSet();
 
   memset( &_xklVarDefs, 0, sizeof( _xklVarDefs ) );
@@ -160,13 +163,11 @@ static Bool _XklConfigPrepareBeforeKbd( const XklConfigRecPtr data )
     XklDebug( 200, "symbols: %s\n", componentNames.symbols );
     XklDebug( 200, "geometry: %s\n", componentNames.geometry );
   }
-#endif
   return True;
 }
 
 static void _XklConfigCleanAfterKbd(  )
 {
-#ifdef XKB_HEADERS_PRESENT
   _XklFreeRulesSet();
 
   free( locale );
@@ -183,10 +184,8 @@ static void _XklConfigCleanAfterKbd(  )
   free(componentNames.types);
   free(componentNames.symbols);
   free(componentNames.geometry);
-#endif
 }
 
-#ifdef XKB_HEADERS_PRESENT
 static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
 {
   XkbDescPtr xkb = NULL;
