@@ -234,6 +234,16 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
     if( _xklCurClient != appWin )
     {
       Bool transparent;
+      XklState tmpState;
+
+      /**
+       *  For fast mouse movements - the state is probably not updated yet
+       *  (because of the group change notification being late).
+       *  so we'll enforce the update.
+       */
+      if( XklGetState( _xklCurClient, &tmpState ) )
+        _xklCurState = tmpState;
+
       _xklCurClient = appWin;
       XklDebug( 150, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
                 _xklCurClient, _XklGetDebugWindowTitle( _xklCurClient ) );

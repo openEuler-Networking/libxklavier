@@ -45,10 +45,8 @@ static XkbRF_RulesPtr rules;
 static XkbComponentNamesRec componentNames;
 static char *locale;
 
-static Bool _XklConfigInitialized(  )
-{
-  return theRegistry.xpathContext != NULL;
-}
+#define _XklConfigRegistryIsInitialized() \
+  ( theRegistry.xpathContext != NULL )
 
 static xmlChar *_XklNodeGetXmlLangAttr( xmlNodePtr nptr )
 {
@@ -181,7 +179,7 @@ static void _XklConfigEnumSimple( xmlXPathCompExprPtr xpathCompExpr,
 {
   xmlXPathObjectPtr xpathObj;
 
-  if( !_XklConfigInitialized(  ) )
+  if( !_XklConfigRegistryIsInitialized(  ) )
     return;
   xpathObj = xmlXPathCompiledEval( xpathCompExpr, theRegistry.xpathContext );
   if( xpathObj != NULL )
@@ -198,7 +196,7 @@ static void _XklConfigEnumDirect( const char *format,
   char xpathExpr[1024];
   xmlXPathObjectPtr xpathObj;
 
-  if( !_XklConfigInitialized(  ) )
+  if( !_XklConfigRegistryIsInitialized(  ) )
     return;
   snprintf( xpathExpr, sizeof xpathExpr, format, value );
   xpathObj = xmlXPathEval( xpathExpr, theRegistry.xpathContext );
@@ -219,7 +217,7 @@ static Bool _XklConfigFindObject( const char *format,
   Bool rv = False;
   char xpathExpr[1024];
 
-  if( !_XklConfigInitialized(  ) )
+  if( !_XklConfigRegistryIsInitialized(  ) )
     return False;
 
   snprintf( xpathExpr, sizeof xpathExpr, format, arg1, ptr->name );
@@ -446,20 +444,29 @@ void XklConfigInit( void )
 void XklConfigTerm( void )
 {
   if( modelsXPath != NULL )
+  {
     xmlXPathFreeCompExpr( modelsXPath );
+    modelsXPath = NULL;
+  }
   if( layoutsXPath != NULL )
+  {
     xmlXPathFreeCompExpr( layoutsXPath );
+    layoutsXPath = NULL;
+  }
   if( optionGroupsXPath != NULL )
+  {
     xmlXPathFreeCompExpr( optionGroupsXPath );
+    optionGroupsXPath = NULL;
+  }
 }
 
 Bool XklConfigLoadRegistry( void )
 {
   struct stat statBuf;
 
-  const char* fileName = XML_CFG_PATH; 
-  if ( stat( XML_CFG_PATH, &statBuf ) != 0 )
-     fileName = XML_CFG_FALLBACK_PATH;
+  const char *fileName = XML_CFG_PATH;
+  if( stat( XML_CFG_PATH, &statBuf ) != 0 )
+    fileName = XML_CFG_FALLBACK_PATH;
 
   theRegistry.doc = xmlParseFile( fileName );
   if( theRegistry.doc == NULL )
@@ -468,15 +475,17 @@ Bool XklConfigLoadRegistry( void )
     _xklLastErrorMsg = "Could not parse XKB configuration registry";
   } else
     theRegistry.xpathContext = xmlXPathNewContext( theRegistry.doc );
-  return _XklConfigInitialized(  );
+  return _XklConfigRegistryIsInitialized(  );
 }
 
 void XklConfigFreeRegistry( void )
 {
-  if( _XklConfigInitialized(  ) )
+  if( _XklConfigRegistryIsInitialized(  ) )
   {
     xmlXPathFreeContext( theRegistry.xpathContext );
     xmlFreeDoc( theRegistry.doc );
+    theRegistry.xpathContext = NULL;
+    theRegistry.doc = NULL;
   }
 }
 
@@ -503,7 +512,7 @@ void XklConfigEnumOptionGroups( GroupProcessFunc func, void *userData )
   xmlXPathObjectPtr xpathObj;
   int i;
 
-  if( !_XklConfigInitialized(  ) )
+  if( !_XklConfigRegistryIsInitialized(  ) )
     return;
   xpathObj =
     xmlXPathCompiledEval( optionGroupsXPath, theRegistry.xpathContext );
@@ -611,6 +620,22 @@ Bool XklConfigActivate( const XklConfigRecPtr data, XkbDescModifierFunc fun,
                         void *userData )
 {
   Bool rv = False;
+#if 0
+  {
+  int i;
+  XklDebug( 150, "New model: [%s]\n", data->model );
+  XklDebug( 150, "New layouts: %p\n", data->layouts );
+  for( i = data->numLayouts; --i >= 0; )
+    XklDebug( 150, "New layout[%d]: [%s]\n", i, data->layouts[i] );
+  XklDebug( 150, "New variants: %p\n", data->variants );
+  for( i = data->numVariants; --i >= 0; )
+    XklDebug( 150, "New variant[%d]: [%s]\n", i, data->variants[i] );
+  XklDebug( 150, "New options: %p\n", data->options );
+  for( i = data->numOptions; --i >= 0; )
+    XklDebug( 150, "New option[%d]: [%s]\n", i, data->options[i] );
+  }
+#endif
+
   if( _XklConfigPrepareBeforeKbd( data ) )
   {
     XkbDescPtr xkb;
@@ -626,12 +651,6 @@ Bool XklConfigActivate( const XklConfigRecPtr data, XkbDescModifierFunc fun,
       _XklApplyFun2XkbDesc( xkb, fun, userData, True );
 #if 0
       XklDumpXkbDesc( "config.xkb", xkb );
-      int i;
-      XklDebug( 150, "New model: [%s]\n", data->model );
-      XklDebug( 150, "New layout: [%s]\n", data->layout );
-      XklDebug( 150, "New variant: [%s]\n", data->variant );
-      for( i = data->numOptions; --i >= 0; )
-        XklDebug( 150, "New option[%d]: [%s]\n", i, data->options[i] );
 #endif
 
       if( XklSetNamesProp
