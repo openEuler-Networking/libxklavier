@@ -75,7 +75,7 @@ AC_ARG_WITH( xmodmap_base,
 AC_DEFINE_UNQUOTED(XMODMAP_BASE,"${xmodmap_base}",Base for xmodmap configuration)
 
 save_CFLAGS="$CFLAGS"
-CFLAGS="${CFLAGS} -I${x_includes}"
+CFLAGS="${CFLAGS} -I${ac_x_includes}"
 
 ac_xkblib_include="\
 #include <stdio.h>
