@@ -11,8 +11,10 @@
 
 #include "xklavier_private_xkb.h"
 
+#ifdef XKB_HEADERS_PRESENT
 #include <X11/extensions/XKBfile.h>
 #include <X11/extensions/XKM.h>
+#endif
 
 #define RULES_FILE "xfree86"
 
@@ -28,10 +30,13 @@
 #define XK_XKB_KEYS
 #include <X11/keysymdef.h>
 
+#ifdef XKB_HEADERS_PRESENT
 XkbRF_VarDefsRec _xklVarDefs;
 
 static XkbRF_RulesPtr rules;
 static XkbComponentNamesRec componentNames;
+#endif
+
 static char *locale;
 
 Bool XklConfigLoadRegistry( void )
@@ -47,6 +52,7 @@ Bool XklConfigLoadRegistry( void )
 
 static Bool _XklConfigPrepareBeforeKbd( const XklConfigRecPtr data )
 {
+#ifdef XKB_HEADERS_PRESENT
   memset( &_xklVarDefs, 0, sizeof( _xklVarDefs ) );
 
   _xklVarDefs.model = ( char * ) data->model;
@@ -77,12 +83,13 @@ static Bool _XklConfigPrepareBeforeKbd( const XklConfigRecPtr data )
     _xklLastErrorMsg = "Could not translate rules into components";
     return False;
   }
-
+#endif
   return True;
 }
 
 static void _XklConfigCleanAfterKbd(  )
 {
+#ifdef XKB_HEADERS_PRESENT
   XkbRF_Free( rules, True );
 
   if( locale != NULL )
@@ -100,6 +107,7 @@ static void _XklConfigCleanAfterKbd(  )
     free( _xklVarDefs.options );
     _xklVarDefs.options = NULL;
   }
+#endif
 }
 
 static void _XklApplyFun2XkbDesc( XkbDescPtr xkb, XkbDescModifierFunc fun,
@@ -157,6 +165,7 @@ Bool XklConfigActivate( const XklConfigRecPtr data, XkbDescModifierFunc fun,
   }
 #endif
 
+#ifdef XKB_HEADERS_PRESENT
   if( _XklConfigPrepareBeforeKbd( data ) )
   {
     XkbDescPtr xkb;
@@ -186,11 +195,13 @@ Bool XklConfigActivate( const XklConfigRecPtr data, XkbDescModifierFunc fun,
     }
   }
   _XklConfigCleanAfterKbd(  );
+#endif
   return rv;
 }
 
 int XklSetKeyAsSwitcher( XkbDescPtr kbd, void *userData )
 {
+#ifdef XKB_HEADERS_PRESENT
   if( kbd != NULL )
   {
     XkbClientMapPtr map = kbd->map;
@@ -215,6 +226,9 @@ int XklSetKeyAsSwitcher( XkbDescPtr kbd, void *userData )
       XklDebug( 160, "No client map in the keyboard description?\n" );
   }
   return XkbKeySymsMask | XkbKeyTypesMask | XkbKeyActionsMask;
+#else
+  return 0;
+#endif
 }
 
 Bool XklConfigWriteXKMFile( const char *fileName, const XklConfigRecPtr data,
@@ -222,6 +236,7 @@ Bool XklConfigWriteXKMFile( const char *fileName, const XklConfigRecPtr data,
 {
   Bool rv = False;
 
+#ifdef XKB_HEADERS_PRESENT
   FILE *output = fopen( fileName, "w" );
   XkbFileInfo dumpInfo;
 
@@ -253,5 +268,6 @@ Bool XklConfigWriteXKMFile( const char *fileName, const XklConfigRecPtr data,
   }
   _XklConfigCleanAfterKbd(  );
   fclose( output );
+#endif
   return rv;
 }

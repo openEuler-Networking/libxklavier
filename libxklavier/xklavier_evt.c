@@ -13,10 +13,12 @@ int XklFilterEvents( XEvent * xev )
   XAnyEvent *pe = ( XAnyEvent * ) xev;
   XklDebug( 400, "**> Filtering event %d of type %d from window %d\n",
             pe->serial, pe->type, pe->window );
+#ifdef XKB_HEADERS_PRESENT
   if( xev->type == _xklXkbEventType )
   {
     _XklXkbEvHandler( ( XkbEvent * ) xev );
   } else
+#endif
     switch ( xev->type )
     {                           /* core events */
       case FocusIn:
@@ -119,6 +121,7 @@ void _XklStdXkbHandler( int grp, XklStateChange changeType, unsigned inds,
   _XklSaveAppState( _xklCurClient, &_xklCurState );
 }
 
+#ifdef XKB_HEADERS_PRESENT
 /**
  * XKB event handler
  */
@@ -195,6 +198,7 @@ void _XklXkbEvHandler( XkbEvent * kev )
       break;
   }
 }
+#endif
 
 /**
  * FocusIn handler
@@ -285,6 +289,7 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
           }
         }
 
+#ifdef XKB_HEADERS_PRESENT
         if( XklGetIndicatorsHandling(  ) )
         {
           int i;
@@ -306,6 +311,7 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
                       selectedWindowState.indicators & bit, status );
           }
         } else
+#endif
           XklDebug( 150,
                     "Not restoring the indicators %X after gaining focus: indicator handling is not enabled\n",
                     _xklCurState.indicators );
@@ -411,6 +417,7 @@ void _XklPropertyEvHandler( XPropertyEvent * pev )
         XklDelState( pev->window );
       }
     }
+#ifdef XKB_HEADERS_PRESENT
   } else
     if( pev->atom == _xklAtoms[XKB_RF_NAMES_PROP_ATOM]
         && pev->window == _xklRootWindow )
@@ -423,6 +430,7 @@ void _XklPropertyEvHandler( XPropertyEvent * pev )
       _XklFreeAllInfo(  );
       _XklLoadAllInfo(  );
     }
+#endif
   }
 }
 

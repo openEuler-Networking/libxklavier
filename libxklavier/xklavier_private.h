@@ -97,9 +97,14 @@ extern char *_xklIndicatorNames[];
 #define WM_STATE 1
 #define XKLAVIER_STATE 2
 #define XKLAVIER_TRANSPARENT 3
-#define XKB_RF_NAMES_PROP_ATOM 4
-#define XKB_RF_NAMES_PROP_ATOM_BACKUP 5
-#define TOTAL_ATOMS 6
+
+#ifdef XKB_HEADERS_PRESENT
+  #define XKB_RF_NAMES_PROP_ATOM 4
+  #define XKB_RF_NAMES_PROP_ATOM_BACKUP 5
+  #define TOTAL_ATOMS 6
+#else
+  #define TOTAL_ATOMS 4
+#endif
 
 #define XKLAVIER_STATE_PROP_LENGTH 2
 

@@ -31,6 +31,10 @@ extern "C"
 {
 #endif                          /* __cplusplus */
 
+#ifndef XKB_HEADERS_PRESENT
+  typedef void * XkbDescPtr;
+#endif
+
 /**
  * The configuration item. Corresponds to XML element "configItem".
  */

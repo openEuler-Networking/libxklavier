@@ -19,6 +19,7 @@
 #include "xklavier_private.h"
 #include "xklavier_private_xkb.h"
 
+#ifdef XKB_HEADERS_PRESENT
 static void _XkbModsRecDump( FILE * fs, XkbModsRec * mods )
 {
   fprintf( fs, "flags: 0x%X\n", mods->mask );
@@ -234,9 +235,11 @@ static void _XkbClientMapDump( FILE * fs, int level, XkbClientMapPtr map,
   } else
     fprintf( fs, "%*sNO key_sym_map\n", level, "" );
 }
+#endif
 
 void _XkbDescDump( FILE * fs, int level, XkbDescPtr kbd )
 {
+#ifdef XKB_HEADERS_PRESENT
   fprintf( fs, "%*sflags: 0x%X\n", level, "", kbd->flags );
   fprintf( fs, "%*sdevice_spec: %d\n", level, "", kbd->device_spec );
   fprintf( fs, "%*smin_key_code: %d\n", level, "", kbd->min_key_code );
@@ -262,6 +265,9 @@ void _XkbDescDump( FILE * fs, int level, XkbDescPtr kbd )
     _XkbClientMapDump( fs, level + 2, kbd->map, kbd );
   } else
     fprintf( fs, "%*sNO map\n", level, "" );
+#else
+  fprintf( fs, "XKB libraries not present\n" );
+#endif
 }
 
 void XklDumpXkbDesc( const char *filename, XkbDescPtr kbd )

@@ -1,4 +1,8 @@
-AM_CFLAGS = -DDATA_DIR=\"$(datadir)/$(PACKAGE)\" -I. -I$(includedir) $(XML_CFLAGS) -I$(x_includes) -I$(top_srcdir)
+if XKB_HEADERS_PRESENT
+  XKB_HEADERS_PRESENT_CFLAG = -DXKB_HEADERS_PRESENT=1
+endif
+
+AM_CFLAGS = -DDATA_DIR=\"$(datadir)/$(PACKAGE)\" -I. -I$(includedir) $(XML_CFLAGS) -I$(x_includes) -I$(top_srcdir) $(XKB_HEADERS_PRESENT_CFLAG)
 
 lib_LTLIBRARIES = libxklavier.la
 noinst_HEADERS = xklavier_private.h xklavier_private_xkb.h

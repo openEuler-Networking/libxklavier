@@ -97,6 +97,7 @@ void XklConfigRecReset( XklConfigRecPtr data )
 
 Bool XklConfigGetFromServer( XklConfigRecPtr data )
 {
+#ifdef XKB_HEADERS_PRESENT
   char *rulesFile = NULL;
   Bool rv =
     XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], &rulesFile, data );
@@ -104,10 +105,14 @@ Bool XklConfigGetFromServer( XklConfigRecPtr data )
     free( rulesFile );
 
   return rv;
+#else
+  return False;
+#endif
 }
 
 Bool XklConfigGetFromBackup( XklConfigRecPtr data )
 {
+#ifdef XKB_HEADERS_PRESENT
   char *rulesFile = NULL;
   Bool rv =
     XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM_BACKUP], &rulesFile,
@@ -116,13 +121,17 @@ Bool XklConfigGetFromBackup( XklConfigRecPtr data )
     free( rulesFile );
 
   return rv;
+#else
+  return False;
+#endif
 }
 
 Bool XklBackupNamesProp(  )
 {
+  Bool rv = True;
+#ifdef XKB_HEADERS_PRESENT
   char *rf;
   XklConfigRec data;
-  Bool rv = True;
 
   XklConfigRecInit( &data );
   if( XklGetNamesProp
@@ -166,15 +175,16 @@ Bool XklBackupNamesProp(  )
     rv = False;
   }
   XklConfigRecDestroy( &data );
-
+#endif
   return rv;
 }
 
 Bool XklRestoreNamesProp(  )
 {
+  Bool rv = True;
+#ifdef XKB_HEADERS_PRESENT
   char *rf;
   XklConfigRec data;
-  Bool rv = True;
 
   XklConfigRecInit( &data );
   if( !XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM_BACKUP], &rf, &data ) )
@@ -192,7 +202,7 @@ Bool XklRestoreNamesProp(  )
     rv = False;
   }
   XklConfigRecDestroy( &data );
-
+#endif
   return rv;
 }
 
