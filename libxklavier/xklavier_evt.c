@@ -166,7 +166,7 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
             XklDebug( 150,
                       "Both old and new focused window have group %d so no point restoring it\n",
                       selectedWindowState.group );
-            _xklAllowSecondaryGroupOnce = False;
+            _XklOneSwitchToSecondaryGroupPerformed();
           }
         }
 

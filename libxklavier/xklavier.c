@@ -25,8 +25,6 @@ Atom _xklAtoms[TOTAL_ATOMS];
 
 Window _xklRootWindow;
 
-Bool _xklAllowSecondaryGroupOnce;
-
 int _xklDefaultGroup;
 
 Bool _xklSkipOneRestore;
@@ -82,10 +80,53 @@ Bool XklIsGroupPerApp( void )
   return groupPerApp;
 }
 
+static void _XklSetSwitchToSecondaryGroup( Bool val )
+{
+  CARD32 propval = (CARD32)val;
+  XChangeProperty( _xklDpy, _xklRootWindow, _xklAtoms[XKLAVIER_ALLOW_SECONDARY],
+                   XA_INTEGER, 32, PropModeReplace,
+                   (unsigned char*)&propval, 1 );
+  XSync( _xklDpy, False );
+}
+
 void XklAllowOneSwitchToSecondaryGroup( void )
 {
   XklDebug( 150, "Setting allowOneSwitchToSecondaryGroup flag\n" );
-  _xklAllowSecondaryGroupOnce = True;
+  _XklSetSwitchToSecondaryGroup( True );
+}
+
+Bool _XklIsOneSwitchToSecondaryGroupAllowed( void )
+{
+  Bool rv = False;
+  unsigned char *propval = NULL;
+  Atom actualType;
+  int actualFormat;
+  unsigned long bytesRemaining;
+  unsigned long actualItems;
+  int result;
+
+  result = XGetWindowProperty( _xklDpy, _xklRootWindow, 
+                               _xklAtoms[XKLAVIER_ALLOW_SECONDARY], 0L, 1L,
+                               False, XA_INTEGER, &actualType, &actualFormat,
+                               &actualItems, &bytesRemaining,
+                               &propval );
+
+  if( Success == result )
+  {
+    if( actualFormat == 32 && actualItems == 1 )
+    {
+      rv = *(Bool*)propval;
+    }
+    XFree( propval );
+  }
+
+  return rv;
+}
+
+void _XklOneSwitchToSecondaryGroupPerformed( void )
+{
+  XklDebug( 150, "Resetting allowOneSwitchToSecondaryGroup flag\n" );
+  _XklSetSwitchToSecondaryGroup( False );
 }
 
 void XklSetDefaultGroup( int group )
@@ -180,7 +221,6 @@ int XklInit( Display * a_dpy )
   scr = DefaultScreen( _xklDpy );
   _xklRootWindow = RootWindow( _xklDpy, scr );
 
-  _xklAllowSecondaryGroupOnce = False;
   _xklSkipOneRestore = False;
   _xklDefaultGroup = -1;
   _xklSecondaryGroupsMask = 0L;
@@ -191,6 +231,10 @@ int XklInit( Display * a_dpy )
   _xklAtoms[XKLAVIER_STATE] = XInternAtom( _xklDpy, "XKLAVIER_STATE", False );
   _xklAtoms[XKLAVIER_TRANSPARENT] =
     XInternAtom( _xklDpy, "XKLAVIER_TRANSPARENT", False );
+  _xklAtoms[XKLAVIER_ALLOW_SECONDARY] =
+    XInternAtom( _xklDpy, "XKLAVIER_ALLOW_SECONDARY", False );
+
+  _XklOneSwitchToSecondaryGroupPerformed();
 
   rv = -1;
   XklDebug( 150, "Trying all backends:\n" );
@@ -388,7 +432,7 @@ void _XklAddAppWindow( Window appWin, Window parent, Bool ignoreExistingState,
     if( _xklCurClient == appWin )
     {
       if( ( _xklSecondaryGroupsMask & ( 1 << defGroupToUse ) ) != 0 )
-        XklAllowOneSwitchToSecondaryGroup(  );
+        XklAllowOneSwitchToSecondaryGroup();
       XklLockGroup( defGroupToUse );
     }
   }
@@ -680,14 +724,14 @@ void _XklTryCallStateCallback( XklStateChange changeType,
   XklDebug( 150,
             "changeType: %d, group: %d, secondaryGroupMask: %X, allowsecondary: %d\n",
             changeType, group, _xklSecondaryGroupsMask,
-            _xklAllowSecondaryGroupOnce );
+            _XklIsOneSwitchToSecondaryGroupAllowed() );
 
   if( changeType == GROUP_CHANGED )
   {
     if( !restore )
     {
       if( ( _xklSecondaryGroupsMask & ( 1 << group ) ) != 0 &&
-          !_xklAllowSecondaryGroupOnce )
+          !_XklIsOneSwitchToSecondaryGroupAllowed() )
       {
         XklDebug( 150, "secondary -> go next\n" );
         group = XklGetNextGroup(  );
@@ -695,7 +739,7 @@ void _XklTryCallStateCallback( XklStateChange changeType,
         return;                 /* we do not need to revalidate */
       }
     }
-    _xklAllowSecondaryGroupOnce = False;
+    _XklOneSwitchToSecondaryGroupPerformed();
   }
   if( stateCallback != NULL )
   {

@@ -1,6 +1,11 @@
 2004-12-30 svu
 	
 	* libxklavier/xklavier_config_xkb.c: some memory leak nailed
+	* libxklavier/xklavier.c,
+	libxklavier/xklavier_evt.c,
+	libxklavier/xklavier_private.h,
+	libxklavier/xklavier_xmm.c: internal polish, 
+	secondary layouts are managed through the root window property.
 
 2004-12-27 svu
 	

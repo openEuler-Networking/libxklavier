@@ -171,22 +171,20 @@ void _XklXmmGetRealState( XklState * state )
                                &actualItems, &bytesRemaining, 
                                &propval );
   
-  if( Success != result )
+  if( Success == result )
+  {
+    if( actualFormat == 32 || actualItems == 1 )
+    {
+      state->group = *(CARD32*)propval;
+    } else
+    {  
+      XklDebug( 160, "Could not get the xmodmap current group\n" );
+    }
+    XFree( propval );
+  } else
   {
     XklDebug( 160, "Could not get the xmodmap current group: %d\n", result );
-    return;
   }
-
-  if( actualFormat != 32 ||
-      actualItems != 1 )
-  {  
-    XklDebug( 160, "Could not get the xmodmap current group\n" );
-    return;
-  }
-  
-  state->group = *(CARD32*)propval;
-  XFree( propval );
-  state->indicators = 0;  
 }
 
 void _XklXmmActualizeGroup( int group )

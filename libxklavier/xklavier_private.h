@@ -274,6 +274,10 @@ extern int _XklXkbInit( void );
 
 extern int _XklXmmInit( void );
 
+extern Bool _XklIsOneSwitchToSecondaryGroupAllowed( void );
+
+extern void _XklOneSwitchToSecondaryGroupPerformed( void );
+
 extern Display *_xklDpy;
 
 extern Window _xklRootWindow;
@@ -290,7 +294,11 @@ extern XErrorHandler _xklDefaultErrHandler;
 
 extern char *_xklIndicatorNames[];
 
-enum { WM_NAME, WM_STATE, XKLAVIER_STATE, XKLAVIER_TRANSPARENT,
+enum { WM_NAME,
+  WM_STATE,
+  XKLAVIER_STATE,
+  XKLAVIER_TRANSPARENT,
+  XKLAVIER_ALLOW_SECONDARY,
   TOTAL_ATOMS };
 
 #define XKLAVIER_STATE_PROP_LENGTH 2
