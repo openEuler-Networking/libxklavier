@@ -168,6 +168,12 @@ static void _XklConfigCleanAfterKbd(  )
     free( _xklVarDefs.options );
     _xklVarDefs.options = NULL;
   }
+  free(componentNames.keymap);
+  free(componentNames.keycodes);
+  free(componentNames.compat);
+  free(componentNames.types);
+  free(componentNames.symbols);
+  free(componentNames.geometry);
 #endif
 }
 
@@ -200,7 +206,16 @@ Bool XklMultipleLayoutsSupported( void )
         XklDebug( 100, "!!! Multiple layouts ARE supported\n" );
         supportState = SUPPORTED;
       } else
+      {
         XklDebug( 100, "!!! Multiple layouts ARE NOT supported\n" );
+      }
+      free(cNames.keymap);
+      free(cNames.keycodes);
+      free(cNames.compat);
+      free(cNames.types);
+      free(cNames.symbols);
+      free(cNames.geometry);
+
       _XklFreeRulesSet();
     }
 #endif
