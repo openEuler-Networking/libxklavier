@@ -110,42 +110,13 @@ static void _XklConfigCleanAfterKbd(  )
 #endif
 }
 
-static void _XklApplyFun2XkbDesc( XkbDescPtr xkb, XkbDescModifierFunc fun,
-                                  void *userData, Bool activeInServer )
-{
-  int mask;
-  // XklDumpXkbDesc( "comp.xkb", xkb );
-  if( fun == NULL )
-    return;
-
-  if( activeInServer )
-  {
-    mask = ( *fun ) ( NULL, NULL );
-    if( mask == 0 )
-      return;
-    XkbGetUpdatedMap( _xklDpy, mask, xkb );
-    // XklDumpXkbDesc( "restored1.xkb", xkb );
-  }
-
-  mask = ( *fun ) ( xkb, userData );
-  if( activeInServer )
-  {
-    // XklDumpXkbDesc( "comp+.xkb", xkb );
-    XkbSetMap( _xklDpy, mask, xkb );
-    XSync( _xklDpy, False );
-
-    // XkbGetUpdatedMap( _xklDpy, XkbAllMapComponentsMask, xkb );
-    // XklDumpXkbDesc( "restored2.xkb", xkb );
-  }
-}
-
 Bool XklMultipleLayoutsSupported( void )
 {
   struct stat buf;
   return 0 == stat( MULTIPLE_LAYOUTS_CHECK_PATH, &buf );
 }
 
-Bool XklConfigActivate( const XklConfigRecPtr data, XkbDescModifierFunc fun,
+Bool XklConfigActivate( const XklConfigRecPtr data,
                         void *userData )
 {
   Bool rv = False;
@@ -178,11 +149,6 @@ Bool XklConfigActivate( const XklConfigRecPtr data, XkbDescModifierFunc fun,
     //!! Do I need to free it anywhere?
     if( xkb != NULL )
     {
-      _XklApplyFun2XkbDesc( xkb, fun, userData, True );
-#if 0
-      XklDumpXkbDesc( "config.xkb", xkb );
-#endif
-
       if( XklSetNamesProp
           ( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], RULES_FILE, data ) )
         rv = True;
@@ -199,40 +165,8 @@ Bool XklConfigActivate( const XklConfigRecPtr data, XkbDescModifierFunc fun,
   return rv;
 }
 
-int XklSetKeyAsSwitcher( XkbDescPtr kbd, void *userData )
-{
-#ifdef XKB_HEADERS_PRESENT
-  if( kbd != NULL )
-  {
-    XkbClientMapPtr map = kbd->map;
-    if( map != NULL )
-    {
-      KeySym keysym = ( KeySym ) userData;
-      KeySym *psym = map->syms;
-      int symno;
-
-      for( symno = map->num_syms; --symno >= 0; psym++ )
-      {
-        if( *psym == keysym )
-        {
-          XklDebug( 160, "Changing %s to %s at %d\n",
-                    XKeysymToString( *psym ),
-                    XKeysymToString( XK_ISO_Next_Group ), psym - map->syms );
-          *psym = XK_ISO_Next_Group;
-          break;
-        }
-      }
-    } else
-      XklDebug( 160, "No client map in the keyboard description?\n" );
-  }
-  return XkbKeySymsMask | XkbKeyTypesMask | XkbKeyActionsMask;
-#else
-  return 0;
-#endif
-}
-
 Bool XklConfigWriteXKMFile( const char *fileName, const XklConfigRecPtr data,
-                            XkbDescModifierFunc fun, void *userData )
+                            void *userData )
 {
   Bool rv = False;
 
@@ -256,8 +190,6 @@ Bool XklConfigWriteXKMFile( const char *fileName, const XklConfigRecPtr data,
                             ( ~XkbGBN_GeometryMask ), False );
     if( xkb != NULL )
     {
-      _XklApplyFun2XkbDesc( xkb, fun, userData, False );
-
       dumpInfo.defined = 0;
       dumpInfo.xkb = xkb;
       dumpInfo.type = XkmKeymapFile;

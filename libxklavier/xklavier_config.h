@@ -31,10 +31,6 @@ extern "C"
 {
 #endif                          /* __cplusplus */
 
-#ifndef XKB_HEADERS_PRESENT
-  typedef void * XkbDescPtr;
-#endif
-
 /**
  * The configuration item. Corresponds to XML element "configItem".
  */
@@ -148,15 +144,6 @@ extern "C"
   typedef void ( *GroupProcessFunc ) ( const XklConfigItemPtr configItem,
                                        Bool allowMultipleSelection,
                                        void *userData );
-/**
- * Callback used to modify/patch the keyboard description before the 
- * activation. The function should be able to work without kbd ( kbd = NULL ).
- * In this case, it should just return the mask of possible changes.
- * @param kbd is the keyboard description
- * @param userData is anything which can be stored into the pointer
- * @return the mask of the changes
- */
-  typedef int ( *XkbDescModifierFunc ) ( XkbDescPtr kbd, void *userData );
 /**
  * Enumerates keyboard models from the XML configuration registry
  * @param func is a callback to call for every model
@@ -281,15 +268,7 @@ extern "C"
  * At the moment, accepts only _ONE_ layout. Later probably I'll improve this..
  */
   extern Bool XklConfigActivate( const XklConfigRecPtr data,
-                                 XkbDescModifierFunc fun, void *userData );
-
-/**
- * One of possible XkbDescModifierFunc
- * Handy for setting one key as a group switcher
- * @param kbd is the keyboard to modify
- * @param userData is a keysym to make a group switcher
- */
-  extern int XklSetKeyAsSwitcher( XkbDescPtr kbd, void *userData );
+                                 void *userData );
 
 /**
  * Loads the current XKB configuration (from X server)
@@ -318,7 +297,6 @@ extern "C"
  */
   extern Bool XklConfigWriteXKMFile( const char *fileName,
                                      const XklConfigRecPtr data,
-                                     XkbDescModifierFunc fun,
                                      void *userData );
 
 /** @} */

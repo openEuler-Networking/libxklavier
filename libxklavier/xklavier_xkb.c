@@ -8,8 +8,9 @@
 #include "xklavier_private.h"
 #include "xklavier_private_xkb.h"
 
-XkbDescPtr _xklXkb;
 #ifdef XKB_HEADERS_PRESENT
+XkbDescPtr _xklXkb;
+
 char *_xklIndicatorNames[XkbNumIndicators];
 
 unsigned _xklPhysIndicatorsMask;

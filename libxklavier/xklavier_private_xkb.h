@@ -18,12 +18,12 @@ extern int _xklXkbEventType, _xklXkbError;
 
 extern XkbRF_VarDefsRec _xklVarDefs;
 
-#endif
-
-extern Bool _xklXkbExtPresent;
-
 extern XkbDescPtr _xklXkb;
 
 extern void XklDumpXkbDesc( const char *filename, XkbDescPtr kbd );
+
+#endif
+
+extern Bool _xklXkbExtPresent;
 
 #endif

@@ -333,35 +333,6 @@ void _XklConfigRecSplitByComma( char ***array,
   }
 }
 
-static void _XklApplyFun2XkbDesc( XkbDescPtr xkb, XkbDescModifierFunc fun,
-                                  void *userData, Bool activeInServer )
-{
-  int mask;
-  // XklDumpXkbDesc( "comp.xkb", xkb );
-  if( fun == NULL )
-    return;
-
-  if( activeInServer )
-  {
-    mask = ( *fun ) ( NULL, NULL );
-    if( mask == 0 )
-      return;
-    XkbGetUpdatedMap( _xklDpy, mask, xkb );
-    // XklDumpXkbDesc( "restored1.xkb", xkb );
-  }
-
-  mask = ( *fun ) ( xkb, userData );
-  if( activeInServer )
-  {
-    // XklDumpXkbDesc( "comp+.xkb", xkb );
-    XkbSetMap( _xklDpy, mask, xkb );
-    XSync( _xklDpy, False );
-
-    // XkbGetUpdatedMap( _xklDpy, XkbAllMapComponentsMask, xkb );
-    // XklDumpXkbDesc( "restored2.xkb", xkb );
-  }
-}
-
 void XklConfigInit( void )
 {
   xmlXPathInit(  );
