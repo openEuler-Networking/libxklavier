@@ -39,9 +39,14 @@ int XklInit( Display * a_dpy )
   _xklDefaultErrHandler =
     XSetErrorHandler( ( XErrorHandler ) _XklErrHandler );
 
+  if( !a_dpy )
+  {
+    return -1;
+  }
+  _xklDpy = a_dpy;
 #ifdef XKB_HEADERS_PRESENT
   /* Lets begin */
-  _xklXkbExtPresent = XkbQueryExtension( _xklDpy = a_dpy,
+  _xklXkbExtPresent = XkbQueryExtension( _xklDpy,
                                          &opcode, &_xklXkbEventType,
                                          &_xklXkbError, NULL, NULL );
   if( !_xklXkbExtPresent )
