@@ -148,26 +148,14 @@ static void _XklConfigCleanAfterKbd(  )
 #ifdef XKB_HEADERS_PRESENT
   _XklFreeRulesSet();
 
-  if( locale != NULL )
-  {
-    free( locale );
-    locale = NULL;
-  }
-  if( _xklVarDefs.layout != NULL )
-  {
-    free( _xklVarDefs.layout );
-    _xklVarDefs.layout = NULL;
-  }
-  if( _xklVarDefs.variant != NULL )
-  {
-    free( _xklVarDefs.variant );
-    _xklVarDefs.variant = NULL;
-  }
-  if( _xklVarDefs.options != NULL )
-  {
-    free( _xklVarDefs.options );
-    _xklVarDefs.options = NULL;
-  }
+  free( locale );
+  locale = NULL;
+
+  free( _xklVarDefs.layout );
+  free( _xklVarDefs.variant );
+  free( _xklVarDefs.options );
+  memset( &_xklVarDefs, 0, sizeof( _xklVarDefs ) );
+
   free(componentNames.keymap);
   free(componentNames.keycodes);
   free(componentNames.compat);
