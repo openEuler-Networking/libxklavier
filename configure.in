@@ -2,7 +2,7 @@ AC_INIT(libxklavier/xklavier.c)
 
 PACKAGE=libxklavier
 MAJOR_VERSION=0
-MINOR_VERSION=95
+MINOR_VERSION=96
 VERSION=$MAJOR_VERSION.$MINOR_VERSION
 VERSION_INFO=7:0:0
 
@@ -51,6 +51,7 @@ jm_LANGINFO_CODESET
 AC_CHECK_FUNCS(setlocale)
 AC_PATH_X
 AC_SUBST(x_libraries)
+AC_SUBST(x_includes)
 AC_ARG_WITH( xkb_base,
              [  --with-xkb-base=DIR        XKB base path (by default it is /usr/X11R6/lib/X11/xkb)],
              xkb_base="$withval", 
