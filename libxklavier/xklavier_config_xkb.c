@@ -287,7 +287,7 @@ static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
               }
               fclose( tmpxkm );
               XklDebug( 160, "Unlinking the temporary xkm file %s\n", xkmFN );
-              //if ( remove( xkmFN ) == -1 )
+              if ( remove( xkmFN ) == -1 )
                 XklDebug( 0, "Could not unlink the temporary xkm file %s: %d\n", 
                              xkmFN, errno );
             } else /* could not open the file */
@@ -303,7 +303,7 @@ static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
           break;
       }
       XklDebug( 160, "Unlinking the temporary xkb file %s\n", xkbFN );
-      //if ( remove( xkbFN ) == -1 )
+      if ( remove( xkbFN ) == -1 )
         XklDebug( 0, "Could not unlink the temporary xkb file %s: %d\n", 
                   xkbFN, errno );
     } else /* could not open input tmp file */
