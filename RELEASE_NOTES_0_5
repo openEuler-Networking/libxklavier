@@ -1,0 +1,7 @@
+The maintenance/bugfix release of libxklavier XKB utility library.
+
+- Some minor API/ABI changes (sorry for new .so version). In particular, ability to use custom logging callback.
+
+- Usage of pkgconfig (libxklavier.pc created)
+
+- Little fixes and polishing (related to GSwitchIt applet reincarnation as a shared library)

@@ -1,0 +1,25 @@
+The third development release of libxklavier XKB utility library.
+
+Now libxklavier is in a nearly "feature freeze"/"API freeze" state till 1.0
+release.
+
+Since the only using it application (gswitchit toolkit) is going to have
+massive architectural changes associated with porting to GNOME 2 platform, no
+major changes are planned for the nearest future. Sure, if anyone would be
+interested in adding something useful...
+
+This version adds some extra configuration handling sugar. Now an application
+can backup and restore XKB configuration using X root window's properties in a
+generic way. The standard way X Window is doing this (in "_XKB_RULES_NAMES"
+property only) is not generic enough. Now an application can be sure that the
+property  "_XKB_RULES_NAMES_BACKUP" contains the original XKB configuration,
+straight from XF86Config (taking that XklBackupNamesProp is called properly).
+Also, any arbitrary property can be used to keep XKB configuration - if
+necessary. 
+
+About the deadlines. I think 1.0 is not going to be released before the
+XFree86 version which would incorporate multiple layouts, XML-based
+configuration registry (now in xfree86_xkb_xml). Only after that great event,
+some testing and user feedback, the world will hopefully see libxklavier 1.0.
+
+Some fixes for the latest gcc/autoconf/automake were done too.

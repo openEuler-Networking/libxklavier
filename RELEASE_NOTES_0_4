@@ -1,0 +1,11 @@
+The forth development release of libxklavier XKB utility library.
+
+Libxklavier is in a nearly "feature freeze"/"API freeze" state till 1.0
+release (not earlier than XFree86 4.3.0 release).
+
+This maintenance release fixes one major bag (which could cause some crashes) 
+and one possible memory leak. Also, some code/headers reorganization was 
+done - all the header files include all the necessary system headers 
+(X11/X???.h) themselves.
+
+Users of libxklavier 0.3 are strongly advised to upgrade.

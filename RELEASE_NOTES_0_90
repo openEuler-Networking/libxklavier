@@ -1,0 +1,1 @@
+This release is devoted to bugfixing. Some memory problems, fixed compatibility with setxkmap, a bit of optimization (in atom handling)
