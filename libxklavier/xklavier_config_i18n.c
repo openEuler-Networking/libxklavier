@@ -101,13 +101,13 @@ static Bool _XklGetCharset( const char **a )
 
 char *_XklLocaleFromUtf8( const char *utf8string )
 {
-  int len;
+  size_t len;
 
   iconv_t converter;
   static char converted[XKL_MAX_CI_DESC_LENGTH];
   char *convertedStart = converted;
   char *utfStart = ( char * ) utf8string;
-  int clen = XKL_MAX_CI_DESC_LENGTH - 1;
+  size_t clen = XKL_MAX_CI_DESC_LENGTH - 1;
   const char *charset;
 
   static Bool alreadyWarned = False;

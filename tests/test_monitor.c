@@ -15,7 +15,7 @@ static void printUsage()
   printf( "         -h - Show this help\n" );
 }
 
-static void dump( XklConfigRecPtr ptr )
+void dump( XklConfigRecPtr ptr )
 {
   int i,j;
   char**p;
@@ -87,7 +87,6 @@ int main( int argc, char * argv[] )
 
     while (1) 
     {
-      int grp;
       XNextEvent( dpy, &ev.core );
       if ( XklFilterEvents( &ev.core ) )
         XklDebug( 200, "Unknown event %d\n", ev.type );
