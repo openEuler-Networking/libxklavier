@@ -33,10 +33,10 @@ typedef struct
   XklConfigInitHandler xklConfigInitHandler; /* private */
   XklConfigMultipleLayoutsSupportedHandler xklConfigMultipleLayoutsSupportedHandler; 
   XklConfigWriteFileHandler xklConfigWriteFileHandler;
-  XklFreeAllInfoHandler xklFreeAllInfoHandler;
+  XklFreeAllInfoHandler xklFreeAllInfoHandler; /* private */
   XklGetGroupNamesHandler xklGetGroupNamesHandler;
   XklGetNumGroupsHandler xklGetNumGroupsHandler;
-  XklLoadAllInfoHandler xklLoadAllInfoHandler;
+  XklLoadAllInfoHandler xklLoadAllInfoHandler; /* private */
   XklLockGroupHandler xklLockGroupHandler;
   XklPauseResumeListenHandler xklPauseListenHandler;
   XklPauseResumeListenHandler xklResumeListenHandler;
