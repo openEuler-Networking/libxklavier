@@ -206,9 +206,6 @@ Bool XklRestoreNamesProp(  )
   return rv;
 }
 
-// taken from XFree86 maprules.c
-#define _XKB_RF_NAMES_PROP_MAXLEN 1024
-
 Bool XklGetNamesProp( Atom rulesAtom,
                       char **rulesFileOut, XklConfigRecPtr data )
 {

@@ -108,6 +108,9 @@ extern char *_xklIndicatorNames[];
 
 #define XKLAVIER_STATE_PROP_LENGTH 2
 
+// taken from XFree86 maprules.c
+#define _XKB_RF_NAMES_PROP_MAXLEN 1024
+
 extern Atom _xklAtoms[];
 
 extern Bool _xklAllowSecondaryGroupOnce;

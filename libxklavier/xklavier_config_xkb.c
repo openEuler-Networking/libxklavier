@@ -36,13 +36,17 @@ static char *locale;
 
 static char* _XklGetRulesSet( void )
 {
-  static char* rf = NULL;
-  if ( rf == NULL )
-    if( !XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], &rf, NULL ) )
+  static char rulesSet[_XKB_RF_NAMES_PROP_MAXLEN] = "";
+  if ( !rulesSet[0] )
+  {
+    char* rf = NULL;
+    if( !XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], &rf, NULL ) || ( rf == NULL ) )
       return NULL;
-  XklDebug( 100, "Rules set: [%s]\n", rf );
-  return rf;
-//!! tiny memory leak which hopefully can be afforded
+    strncpy( rulesSet, rf, sizeof rulesSet );
+    free( rf );
+  }
+  XklDebug( 100, "Rules set: [%s]\n", rulesSet );
+  return rulesSet;
 }
 
 Bool XklConfigLoadRegistry( void )
