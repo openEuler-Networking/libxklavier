@@ -215,7 +215,7 @@ Bool XklGetNamesProp( Atom rulesAtom,
   Atom realPropType;
   int fmt;
   unsigned long nitems, extraBytes;
-  char *propData, *out;
+  char *propData = NULL, *out;
   Status rtrn;
 
   // no such atom!
@@ -248,11 +248,25 @@ Bool XklGetNamesProp( Atom rulesAtom,
     _xklLastErrorMsg = "Wrong property format";
     return False;
   }
+
+  if( !propData )
+  {
+    _xklLastErrorMsg = "No properties returned";
+    return False;
+  }
+
   // rules file
   out = propData;
   if( out && ( *out ) && rulesFileOut )
     *rulesFileOut = strdup( out );
   out += strlen( out ) + 1;
+
+  // if user is interested in rules only - don't waste the time
+  if( !data )
+  {
+    XFree( propData );
+    return True;
+  }
 
   if( ( out - propData ) < nitems )
   {

@@ -2,7 +2,7 @@ AC_INIT(libxklavier/xklavier.c)
 
 PACKAGE=libxklavier
 MAJOR_VERSION=1
-MINOR_VERSION=01
+MINOR_VERSION=02
 VERSION=$MAJOR_VERSION.$MINOR_VERSION
 VERSION_INFO=8:0:0
 
@@ -63,13 +63,6 @@ if ! test -d $xkb_base; then
 fi
 
 AC_DEFINE_UNQUOTED(XKB_BASE,"${xkb_base}",Base for XKB configuration)
-
-AC_ARG_WITH( xkb_rules_set,
-             [  --with-xkb-rules-set=SET        Set of XKB rules: xfree86, xorg, ... (by default it is xfree86)],
-             xkb_rules_set="$withval", 
-             xkb_rules_set="xfree86" )
-
-AC_DEFINE_UNQUOTED(XKB_RULES_SET,"${xkb_rules_set}",Set of XKB rules)
 
 ac_xkblib_include="\
 #include <stdio.h>
