@@ -1,3 +1,7 @@
+2005-01-07 svu
+	
+	* libxklavier: a lot of optimizations (and some small fixes)
+
 2004-12-30 svu
 	
 	* libxklavier/xklavier_config_xkb.c: some memory leak nailed

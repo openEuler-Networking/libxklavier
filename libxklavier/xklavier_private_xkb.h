@@ -50,6 +50,8 @@ extern unsigned _XklXkbGetNumGroups( void );
 
 extern void _XklXkbGetRealState( XklState * curState_return );
 
+extern Bool _XklXkbIfCachedInfoEqualsActual( void );
+
 extern Bool _XklXkbLoadAllInfo( void );
 
 extern void _XklXkbLockGroup( int group );

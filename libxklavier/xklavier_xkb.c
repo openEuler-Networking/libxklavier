@@ -12,6 +12,8 @@
 #ifdef XKB_HEADERS_PRESENT
 XkbDescPtr _xklXkb;
 
+static XkbDescPtr precachedXkb = NULL;
+
 char *_xklIndicatorNames[XkbNumIndicators];
 
 unsigned _xklPhysIndicatorsMask;
@@ -111,6 +113,78 @@ void _XklXkbFreeAllInfo(  )
     XkbFreeKeyboard( _xklXkb, XkbAllComponentsMask, True );
     _xklXkb = NULL;
   }
+
+  /* just in case - never actually happens...*/
+  if( precachedXkb != NULL )
+  {
+    XkbFreeKeyboard( precachedXkb, XkbAllComponentsMask, True );
+    precachedXkb = NULL;
+  }
+}
+
+static Bool _XklXkbLoadPrecachedXkb( void )
+{
+  Bool rv = False;
+  Status status;
+
+  precachedXkb = XkbGetMap( _xklDpy, KBD_MASK, XkbUseCoreKbd );
+  if( precachedXkb != NULL )
+  {
+    rv = Success == ( status = XkbGetControls( _xklDpy, CTRLS_MASK, precachedXkb ) ) &&
+         Success == ( status = XkbGetNames( _xklDpy, NAMES_MASK, precachedXkb ) ) &&
+         Success == ( status = XkbGetIndicatorMap( _xklDpy, XkbAllIndicatorsMask, precachedXkb ) );
+    if( !rv )
+    {
+      _xklLastErrorMsg = "Could not load controls/names/indicators";
+      XklDebug( 0, "%s: %d\n", _xklLastErrorMsg, status );
+      XkbFreeKeyboard( precachedXkb, XkbAllComponentsMask, True );
+    }
+  }
+  return rv;
+}
+
+Bool _XklXkbIfCachedInfoEqualsActual( )
+{
+  int i;
+  Atom *pa1, *pa2;
+  Bool rv = False;
+
+  if( _XklXkbLoadPrecachedXkb() )
+  {
+    /* First, compare the number of groups */
+    if( _xklXkb->ctrls->num_groups == precachedXkb->ctrls->num_groups )
+    {
+      /* Then, compare group names, just atoms */
+      pa1 = _xklXkb->names->groups;
+      pa2 = precachedXkb->names->groups;
+      for( i = _xklXkb->ctrls->num_groups; --i >= 0; pa1++, pa2++ )
+        if( *pa1 != *pa2 )
+          break;
+
+      /* Then, compare indicator names, just atoms */
+      if( i < 0 )
+      {
+        pa1 = _xklXkb->names->indicators;
+        pa2 = precachedXkb->names->indicators;
+        for( i = XkbNumIndicators; --i >= 0; pa1++, pa2++ )
+          if( *pa1 != *pa2 )
+            break;
+        rv = i < 0;
+      }
+    }
+    /** 
+     * in case of success, let's reuse - not free! 
+     */
+    if( !rv )
+    {
+      XkbFreeKeyboard( precachedXkb, XkbAllComponentsMask, True );
+      precachedXkb = NULL;
+    }
+  } else
+  {
+    XklDebug( 0, "Could not load the XkbDescPtr for comparison\n" );
+  }
+  return rv;
 }
 
 /**
@@ -119,43 +193,32 @@ void _XklXkbFreeAllInfo(  )
 Bool _XklXkbLoadAllInfo(  )
 {
   int i;
-  Atom *gna;
-  Atom *pia;
+  Atom *pa;
   char **groupName;
   char **pi = _xklIndicatorNames;
 
-  _xklXkb = XkbGetMap( _xklDpy, KBD_MASK, XkbUseCoreKbd );
-  if( _xklXkb == NULL )
-  {
-    _xklLastErrorMsg = "Could not load keyboard";
-    return False;
-  }
+  if ( precachedXkb == NULL )
+    if ( !_XklXkbLoadPrecachedXkb() )
+    {
+      _xklLastErrorMsg = "Could not load keyboard";
+      return False;
+    }
 
-  _xklLastErrorCode = XkbGetControls( _xklDpy, CTRLS_MASK, _xklXkb );
+  /* take it from the cache (in most cases LoadAll is called from ResetAll which in turn ...)*/
+  _xklXkb = precachedXkb;
+  precachedXkb = NULL;
 
-  if( _xklLastErrorCode != Success )
-  {
-    _xklLastErrorMsg = "Could not load controls";
-    return False;
-  }
-
+  /* First, output the number of the groups */
   XklDebug( 200, "found %d groups\n", _xklXkb->ctrls->num_groups );
 
-  _xklLastErrorCode = XkbGetNames( _xklDpy, NAMES_MASK, _xklXkb );
-
-  if( _xklLastErrorCode != Success )
-  {
-    _xklLastErrorMsg = "Could not load names";
-    return False;
-  }
-
-  gna = _xklXkb->names->groups;
+  /* Then, cache (and output) the names of the groups */
+  pa = _xklXkb->names->groups;
   groupName = groupNames;
-  for( i = _xklXkb->ctrls->num_groups; --i >= 0; gna++, groupName++ )
+  for( i = _xklXkb->ctrls->num_groups; --i >= 0; pa++, groupName++ )
   {
     *groupName = XGetAtomName( _xklDpy,
-                               *gna == None ?
-                               XInternAtom( _xklDpy, "-", False ) : *gna );
+                               *pa == None ?
+                               XInternAtom( _xklDpy, "-", False ) : *pa );
     XklDebug( 200, "group %d has name [%s]\n", i, *groupName );
   }
 
@@ -168,10 +231,11 @@ Bool _XklXkbLoadAllInfo(  )
     return False;
   }
 
-  pia = _xklXkb->names->indicators;
-  for( i = XkbNumIndicators; --i>=0; pi++, pia++ )
+  /* Then, cache (and output) the names of the indicators */
+  pa = _xklXkb->names->indicators;
+  for( i = XkbNumIndicators; --i >= 0; pi++, pa++ )
   {
-    Atom a = *pia;
+    Atom a = *pa;
     if( a != None )
       *pi = XGetAtomName( _xklDpy, a );
     else
@@ -392,6 +456,7 @@ int _XklXkbInit( void )
     _XklXkbGetMaxNumGroups,
     _XklXkbGetNumGroups,
     _XklXkbGetRealState,
+    _XklXkbIfCachedInfoEqualsActual,
     _XklXkbLoadAllInfo,
     _XklXkbLockGroup,
     _XklXkbPauseListen,

@@ -63,6 +63,8 @@ extern unsigned _XklXmmGetNumGroups( void );
 
 extern void _XklXmmGetRealState( XklState * curState_return );
 
+extern Bool _XklXmmIfCachedInfoEqualsActual( void );
+
 extern Bool _XklXmmLoadAllInfo( void );
 
 extern void _XklXmmLockGroup( int group );

@@ -296,7 +296,6 @@ void _XklPropertyEvHandler( XPropertyEvent * pev )
     {
       if( pev->state == PropertyNewValue )
       {
-        XklDebug( 160, "New value of *_NAMES_PROP_ATOM on root window\n" );
         /* If root window got new *_NAMES_PROP_ATOM -
          it most probably means new keyboard config is loaded by somebody */
         _XklResetAllInfo( "New value of *_NAMES_PROP_ATOM on root window" );

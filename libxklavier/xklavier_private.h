@@ -27,6 +27,8 @@ typedef unsigned ( *XklGetNumGroupsHandler )( void );
 
 typedef void ( *XklGetRealStateHandler)( XklState * curState_return );
 
+typedef Bool ( *XklIfCachedInfoEqualsActualHandler) ( void );
+
 typedef Bool ( *XklLoadAllInfoHandler )( void );
 
 typedef void ( *XklLockGroupHandler )( int group );
@@ -118,6 +120,13 @@ typedef struct
    * xmodmap: check the root window property (regarding the group)
    */
   XklGetRealStateHandler xklGetRealStateHandler;
+
+  /**
+   * Compares the cached info with the actual one, from the server
+   * xkb: Compares some parts of XkbDescPtr
+   * xmodmap: returns False
+   */
+  XklIfCachedInfoEqualsActualHandler xklIfCachedInfoEqualsActualHandler;
 
   /**
    * Loads the configuration info from the server

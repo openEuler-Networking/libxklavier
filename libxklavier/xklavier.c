@@ -790,9 +790,14 @@ int XklGetBackendFeatures( void )
 
 void _XklResetAllInfo( const char reason[] )
 {
-  XklDebug( 150, "Resetting all the info, reason: [%s]\n", reason );
-  _XklFreeAllInfo();
-  _XklLoadAllInfo();
+  XklDebug( 150, "Resetting all the cached info, reason: [%s]\n", reason );
+  _XklEnsureVTableInited();
+  if( !(*xklVTable->xklIfCachedInfoEqualsActualHandler)() )
+  {
+    (*xklVTable->xklFreeAllInfoHandler)();
+    (*xklVTable->xklLoadAllInfoHandler)();
+  } else
+    XklDebug( 100, "NOT Resetting the cache: same configuration\n" );
 }
 
 /**

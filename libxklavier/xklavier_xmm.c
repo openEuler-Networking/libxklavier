@@ -150,6 +150,11 @@ void _XklXmmFreeAllInfo(  )
   XklConfigRecReset( &currentXmmConfig );
 }
 
+Bool _XklXmmIfCachedInfoEqualsActual( void )
+{
+  return False;
+}
+
 Bool _XklXmmLoadAllInfo(  )
 {
   return _XklConfigGetFullFromServer( &currentXmmRules, &currentXmmConfig );
@@ -245,6 +250,7 @@ int _XklXmmInit( void )
     _XklXmmGetMaxNumGroups,
     _XklXmmGetNumGroups,
     _XklXmmGetRealState,
+    _XklXmmIfCachedInfoEqualsActual,
     _XklXmmLoadAllInfo,
     _XklXmmLockGroup,
     _XklXmmPauseListen,
