@@ -261,6 +261,5 @@ int _XklXmmInit( void )
 
   xklVTable = &xklXmmVTable;
 
-  XklDebug( 0, "XMM backend inited\n" );
   return 0;
 }

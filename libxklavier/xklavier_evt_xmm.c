@@ -40,19 +40,45 @@ static int _XklXmmPropertyEventHandler( XPropertyEvent* kpe )
 {
   XklDebug( 200, "Processing the PropertyNotify event: %d/%d\n", 
             kpe->atom, xmmStateAtom );
+  /**
+   * Group is changed!
+   */
   if( kpe->atom == xmmStateAtom )
   {
+    XklState state;
+    _XklXmmGetRealState( &state );
+    
     if( _xklListenerType & XKLL_MANAGE_LAYOUTS )
     {
-      XklState state;
-      _XklXmmGetRealState( &state );
       XklDebug( 150, "Current group from the root window property %d\n", state.group );
       _XklXmmUngrabShortcuts();
       _XklXmmActualizeGroup( state.group );
       _XklXmmGrabShortcuts();
       return 1;
     }
+    
+    if( _xklListenerType &
+       ( XKLL_MANAGE_WINDOW_STATES | XKLL_TRACK_KEYBOARD_STATE ) )
+    {
+      XklDebug( 150,
+                "XMM state changed, new 'group' %d\n",
+                state.group );
+      
+      _XklStateModificationHandler( GROUP_CHANGED, 
+                                    state.group, 
+                                    0, 
+                                    False );
+    }
+  } else
+  /**
+   * Configuration is changed!
+   */
+  if( kpe->atom == xklVTable->baseConfigAtom )
+  {
+    _XklFreeAllInfo();
+    _XklLoadAllInfo();
   }
+  
   return 0;
 }
 

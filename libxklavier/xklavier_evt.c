@@ -51,8 +51,8 @@ int XklFilterEvents( XEvent * xev )
         break;                  /* Ignore these events */
       default:
       {
-        XklDebug( 200, "Unknown event %d [%s]\n", xev->type,
-                       _XklGetEventName( xev->type ) );
+        XklDebug( 200, "Unknown event %d [%s]\n", 
+                       xev->type, _XklGetEventName( xev->type ) );
         return 1;
       }
     }
@@ -365,4 +365,70 @@ void _XklErrHandler( Display * dpy, XErrorEvent * evt )
     default:
       ( *_xklDefaultErrHandler ) ( dpy, evt );
   }
+}
+
+/**
+ * Some common functionality for Xkb handler
+ */
+void _XklStateModificationHandler( XklStateChange changeType, 
+                                   int grp, 
+                                   unsigned inds,
+                                   Bool setInds )
+{
+  Window focused, focusedApp;
+  XklState oldState;
+  int revert;
+  Bool haveState;
+  Bool setGroup = changeType == GROUP_CHANGED;
+
+  XGetInputFocus( _xklDpy, &focused, &revert );
+
+  if( ( focused == None ) || ( focused == PointerRoot ) )
+  {
+    XklDebug( 160, "Something with focus: " WINID_FORMAT "\n", focused );
+    return;
+  }
+
+  if( !_XklGetAppWindow( focused, &focusedApp ) )
+    focusedApp = _xklCurClient; /* what else can I do */
+
+  XklDebug( 150, "Focused window: " WINID_FORMAT ", '%s'\n", focusedApp,
+            _XklGetDebugWindowTitle( focusedApp ) );
+  XklDebug( 150, "CurClient: " WINID_FORMAT ", '%s'\n", _xklCurClient,
+            _XklGetDebugWindowTitle( _xklCurClient ) );
+
+  if( focusedApp != _xklCurClient )
+  {
+    if ( !_XklGetAppState( focusedApp, &oldState ) )
+    {
+      _XklUpdateCurState( grp, inds, 
+                          "Updating the state from new focused window" );
+      if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
+        _XklAddAppWindow( focusedApp, ( Window ) NULL, False, &_xklCurState );
+    }
+    else
+    {
+      grp = oldState.group;
+      inds = oldState.indicators;
+    }
+    _xklCurClient = focusedApp;
+    XklDebug( 160, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
+              _xklCurClient, _XklGetDebugWindowTitle( _xklCurClient ) );
+  }
+  /* if the window already has this this state - we are just restoring it!
+    (see the second parameter of stateCallback */
+  haveState = _XklGetAppState( _xklCurClient, &oldState );
+
+  if( setGroup || haveState )
+  {
+    _XklUpdateCurState( setGroup ? grp : oldState.group,
+                        setInds ? inds : oldState.indicators,
+                        "Restoring the state from the window" );
+  }
+
+  if( haveState )
+    _XklTryCallStateCallback( changeType, &oldState );
+
+  if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
+    _XklSaveAppState( _xklCurClient, &_xklCurState );
 }

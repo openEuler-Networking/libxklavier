@@ -1,3 +1,8 @@
+2004-11-27 16:00  svu
+	
+	* libxklavier: Some fixes in xmodmap. First version,
+	working somehow
+
 2004-11-25 23:00  svu
 	
 	* libxklavier, tests: MASSIVE commit. First version

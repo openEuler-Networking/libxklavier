@@ -243,6 +243,11 @@ extern Bool _XklIsTransparentAppWindow( Window appWin );
 
 extern void _XklUpdateCurState( int group, unsigned indicators, const char reason[] );
 
+extern void _XklStateModificationHandler( XklStateChange changeType, 
+                                          int grp, 
+                                          unsigned inds,
+                                          Bool setInds );
+
 extern int _XklXkbInit( void );
 
 extern int _XklXmmInit( void );

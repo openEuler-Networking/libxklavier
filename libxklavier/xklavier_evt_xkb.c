@@ -8,72 +8,6 @@
 #include "xklavier_private.h"
 #include "xklavier_private_xkb.h"
 
-#ifdef XKB_HEADERS_PRESENT
-/**
- * Some common functionality for Xkb handler
- */
-static void _XklStdXkbHandler( int grp, XklStateChange changeType, unsigned inds,
-                               Bool setInds )
-{
-  Window focused, focusedApp;
-  XklState oldState;
-  int revert;
-  Bool haveState;
-  Bool setGroup = changeType == GROUP_CHANGED;
-
-  XGetInputFocus( _xklDpy, &focused, &revert );
-
-  if( ( focused == None ) || ( focused == PointerRoot ) )
-  {
-    XklDebug( 160, "Something with focus: " WINID_FORMAT "\n", focused );
-    return;
-  }
-
-  if( !_XklGetAppWindow( focused, &focusedApp ) )
-    focusedApp = _xklCurClient; /* what else can I do */
-
-  XklDebug( 150, "Focused window: " WINID_FORMAT ", '%s'\n", focusedApp,
-            _XklGetDebugWindowTitle( focusedApp ) );
-  XklDebug( 150, "CurClient: " WINID_FORMAT ", '%s'\n", _xklCurClient,
-            _XklGetDebugWindowTitle( _xklCurClient ) );
-
-  if( focusedApp != _xklCurClient )
-  {
-    if ( !_XklGetAppState( focusedApp, &oldState ) )
-    {
-      _XklUpdateCurState( grp, inds, 
-                          "Updating the state from new focused window" );
-      if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
-        _XklAddAppWindow( focusedApp, ( Window ) NULL, False, &_xklCurState );
-    }
-    else
-    {
-      grp = oldState.group;
-      inds = oldState.indicators;
-    }
-    _xklCurClient = focusedApp;
-    XklDebug( 160, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
-              _xklCurClient, _XklGetDebugWindowTitle( _xklCurClient ) );
-  }
-  /* if the window already has this this state - we are just restoring it!
-    (see the second parameter of stateCallback */
-  haveState = _XklGetAppState( _xklCurClient, &oldState );
-
-  if( setGroup || haveState )
-  {
-    _XklUpdateCurState( setGroup ? grp : oldState.group,
-                        setInds ? inds : oldState.indicators,
-                        "Restoring the state from the window" );
-  }
-
-  if( haveState )
-    _XklTryCallStateCallback( changeType, &oldState );
-
-  if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
-    _XklSaveAppState( _xklCurClient, &_xklCurState );
-}
-#endif
-
 /**
  * XKB event handler
  */
@@ -96,6 +30,9 @@ int _XklXkbEventHandler( XEvent *xev )
   
   switch ( kev->any.xkb_type )
   {
+    /**
+     * Group is changed!
+     */
     case XkbStateNotify:
 #define GROUP_CHANGE_MASK \
     ( XkbGroupStateMask | XkbGroupBaseMask | XkbGroupLatchMask | XkbGroupLockMask )
@@ -106,8 +43,11 @@ int _XklXkbEventHandler( XEvent *xev )
                 kev->state.locked_group );
 
       if( kev->state.changed & GROUP_CHANGE_MASK )
-        _XklStdXkbHandler( kev->state.locked_group, GROUP_CHANGED, 0, False );
-      else
+        _XklStateModificationHandler( GROUP_CHANGED, 
+                                      kev->state.locked_group, 
+                                      0, 
+                                      False );
+      else /* ...not interested... */
       {
         XklDebug( 200,
                   "This type of state notification is not regarding groups\n" );
@@ -120,6 +60,9 @@ int _XklXkbEventHandler( XEvent *xev )
 
       break;
 
+    /**
+     * Indicators are changed!
+     */
     case XkbIndicatorStateNotify:
 
       XklDebug( 150, "XkbIndicatorStateNotify\n" );
@@ -134,35 +77,31 @@ int _XklXkbEventHandler( XEvent *xev )
           inds &= ~bit;
       }
 
-      _XklStdXkbHandler( 0, INDICATORS_CHANGED, inds, True );
+      _XklStateModificationHandler( INDICATORS_CHANGED, 
+                                    0, 
+                                    inds, 
+                                    True );
       break;
 
+    /**
+     * The configuration is changed!
+     */
     case XkbIndicatorMapNotify:
-      XklDebug( 150, "XkbIndicatorMapNotify\n" );
-      _XklFreeAllInfo(  );
-      _XklLoadAllInfo(  );
-      break;
-
     case XkbControlsNotify:
-      XklDebug( 150, "XkbControlsNotify\n" );
-      _XklFreeAllInfo(  );
-      _XklLoadAllInfo(  );
-      break;
-
     case XkbNamesNotify:
-      XklDebug( 150, "XkbNamesNotify\n" );
-      _XklFreeAllInfo(  );
-      _XklLoadAllInfo(  );
-      break;
-
     case XkbNewKeyboardNotify:
-      XklDebug( 150, "XkbNewKeyboardNotify\n" );
-      _XklFreeAllInfo(  );
-      _XklLoadAllInfo(  );
+      XklDebug( 150, "%s\n",
+                _XklXkbGetXkbEventName( kev->any.xkb_type ) );
+      _XklFreeAllInfo();
+      _XklLoadAllInfo();
       break;
 
+    /**
+     * ...Not interested...
+     */
     default:
-      XklDebug( 150, "Unknown xkb event %d\n", kev->any.xkb_type );
+      XklDebug( 150, "Unknown XKB event %d [%s]\n", 
+                kev->any.xkb_type, _XklXkbGetXkbEventName( kev->any.xkb_type ) );
       return 0;
   }
   return 1;

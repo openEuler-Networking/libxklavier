@@ -199,10 +199,23 @@ int XklInit( Display * a_dpy )
   rv = _XklXkbInit();
 #endif
 #ifdef ENABLE_XMM_SUPPORT
-  XklDebug( 150, "Trying XMM backend\n" );
   if( rv != 0 ) 
+  {
+    XklDebug( 150, "Trying XMM backend\n" );
     rv = _XklXmmInit();
+  }
 #endif
+  if( rv == 0 )
+  {
+    XklDebug( 150, "Actual backend: %s\n",
+              XklGetBackendName() );
+  }
+  else
+  {
+    XklDebug( 0, "All backends failed, last result: %d\n", rv );
+    _xklDpy = NULL;
+  }
+
   return ( rv == 0 ) ?
     ( _XklLoadAllInfo() ? 0 : _xklLastErrorCode ) : -1;
 }

@@ -387,7 +387,6 @@ int _XklXkbInit( void )
                                          &_xklXkbError, NULL, NULL );
   if( !_xklXkbExtPresent )
   {
-    _xklDpy = NULL;
     XSetErrorHandler( ( XErrorHandler ) _xklDefaultErrHandler );
     return -1;
   }
@@ -419,4 +418,30 @@ int _XklXkbInit( void )
             "\n", _xklDpy, _xklRootWindow );
   return -1;
 #endif
+}
+
+const char *_XklXkbGetXkbEventName( int xkb_type )
+{
+  /* Not really good to use the fact of consecutivity
+     but XKB protocol extension is already standartized so... */
+  static const char *evtNames[] = {
+    "XkbNewKeyboardNotify",
+    "XkbMapNotify",
+    "XkbStateNotify",
+    "XkbControlsNotify",
+    "XkbIndicatorStateNotify",
+    "XkbIndicatorMapNotify",
+    "XkbNamesNotify",
+    "XkbCompatMapNotify",
+    "XkbBellNotify",
+    "XkbActionMessage",
+    "XkbAccessXNotify",
+    "XkbExtensionDeviceNotify",
+    "LASTEvent"
+  };
+  xkb_type -= XkbNewKeyboardNotify;
+  if( xkb_type < 0 || 
+      xkb_type >= ( sizeof( evtNames ) / sizeof( evtNames[0] ) ) )
+    return "UNKNOWN";
+  return evtNames[xkb_type];
 }

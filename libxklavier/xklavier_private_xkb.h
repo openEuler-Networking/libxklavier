@@ -20,6 +20,8 @@ extern void XklDumpXkbDesc( const char *filename, XkbDescPtr kbd );
 
 extern Bool _XklXkbConfigMultipleLayoutsSupported( void );
 
+extern const char *_XklXkbGetXkbEventName( int xkb_type );
+
 /* Start VTable methods */
 
 extern Bool _XklXkbConfigActivate( const XklConfigRecPtr data );

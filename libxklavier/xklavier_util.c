@@ -255,7 +255,8 @@ const char *_XklGetEventName( int type )
     "ColormapNotify", "ClientMessage", "MappingNotify", "LASTEvent"
   };
   type -= KeyPress;
-  if( type < 0 || type > ( sizeof( evtNames ) / sizeof( evtNames[0] ) ) )
+  if( type < 0 || 
+      type >= ( sizeof( evtNames ) / sizeof( evtNames[0] ) ) )
     return "UNKNOWN";
   return evtNames[type];
 }
