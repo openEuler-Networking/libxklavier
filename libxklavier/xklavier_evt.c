@@ -6,6 +6,7 @@
 #include <X11/Xlibint.h>
 
 #include "xklavier_private.h"
+#include "xklavier_private_xkb.h"
 
 int XklFilterEvents( XEvent * xev )
 {

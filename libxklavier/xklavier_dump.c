@@ -14,10 +14,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <stdio.h>
 #include <string.h>
 
 #include "xklavier_private.h"
+#include "xklavier_private_xkb.h"
 
 static void _XkbModsRecDump( FILE * fs, XkbModsRec * mods )
 {

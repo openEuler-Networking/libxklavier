@@ -105,6 +105,13 @@ extern "C"
 
 /**
  * Loads XML configuration registry
+ * @param fileName file name to load
+ * @return true on success
+ */
+  extern Bool XklConfigLoadRegistryFromFile( const char* fileName );
+
+/**
+ * Loads XML configuration registry
  * @return true on success
  */
   extern Bool XklConfigLoadRegistry( void );

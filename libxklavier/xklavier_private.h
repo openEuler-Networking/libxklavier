@@ -5,17 +5,12 @@
 
 #include <libxklavier/xklavier_config.h>
 
-#include <X11/extensions/XKBrules.h>
-
 extern void _XklGetRealState( XklState * curState_return );
 extern void _XklAddAppWindow( Window win, Window parent, Bool force,
                               XklState * initState );
 extern Bool _XklGetAppWindowBottomToTop( Window win, Window * appWin_return );
 extern Bool _XklGetAppWindow( Window win, Window * appWin_return );
 
-extern void _XklStdXkbHandler( int grp, XklStateChange changeType,
-                               unsigned inds, Bool setInds );
-extern void _XklXkbEvHandler( XkbEvent * kev );
 extern void _XklFocusInEvHandler( XFocusChangeEvent * fev );
 extern void _XklFocusOutEvHandler( XFocusChangeEvent * fev );
 extern void _XklPropertyEvHandler( XPropertyEvent * rev );
@@ -78,19 +73,13 @@ extern void _XklConfigRecSplitVariants( XklConfigRecPtr data,
 extern void _XklConfigRecSplitOptions( XklConfigRecPtr data,
                                        const char *merged );
 
-extern void XklDumpXkbDesc( const char *filename, XkbDescPtr kbd );
-
 extern const char *_XklGetEventName( int type );
 
 extern Bool _XklIsTransparentAppWindow( Window appWin );
 
 extern Display *_xklDpy;
 
-extern Bool _xklXkbExtPresent;
-
 extern Window _xklRootWindow;
-
-extern XkbDescPtr _xklXkb;
 
 extern XklState _xklCurState;
 
@@ -104,12 +93,6 @@ extern XErrorHandler _xklDefaultErrHandler;
 
 extern char *_xklIndicatorNames[];
 
-#define ForPhysIndicators( i, bit ) \
-    for ( i=0, bit=1; i<XkbNumIndicators; i++, bit<<=1 ) \
-          if ( _xklXkb->indicators->phys_indicators & bit )
-
-extern int _xklXkbEventType, _xklXkbError;
-
 #define WM_NAME 0
 #define WM_STATE 1
 #define XKLAVIER_STATE 2
@@ -118,9 +101,9 @@ extern int _xklXkbEventType, _xklXkbError;
 #define XKB_RF_NAMES_PROP_ATOM_BACKUP 5
 #define TOTAL_ATOMS 6
 
-extern Atom _xklAtoms[];
+#define XKLAVIER_STATE_PROP_LENGTH 2
 
-extern XkbRF_VarDefsRec _xklVarDefs;
+extern Atom _xklAtoms[];
 
 extern Bool _xklAllowSecondaryGroupOnce;
 
@@ -128,12 +111,16 @@ extern int _xklDefaultGroup;
 
 extern Bool _xklSkipOneRestore;
 
-extern int _xklSecondaryGroupMask;
+extern int _xklSecondaryGroupsMask;
 
 extern int _xklDebugLevel;
 
 extern Window _xklPrevAppWindow;
 
 #define WINID_FORMAT "%lx"
+
+extern XklConfigCallback _xklConfigCallback;
+
+extern void *_xklConfigCallbackData;
 
 #endif

@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <time.h>
 
 #include <X11/Xatom.h>
@@ -12,8 +11,6 @@ Display *_xklDpy;
 
 Bool _xklXkbExtPresent;
 
-XkbDescPtr _xklXkb;
-
 XklState _xklCurState;
 
 Window _xklCurClient;
@@ -23,14 +20,6 @@ Status _xklLastErrorCode;
 const char *_xklLastErrorMsg;
 
 XErrorHandler _xklDefaultErrHandler;
-
-char *_xklIndicatorNames[XkbNumIndicators];
-
-Atom _xklIndicatorAtoms[XkbNumIndicators];
-
-unsigned _xklPhysIndicatorsMask;
-
-int _xklXkbEventType, _xklXkbError;
 
 Atom _xklAtoms[TOTAL_ATOMS];
 
@@ -48,8 +37,8 @@ int _xklDebugLevel = 160;
 
 Window _xklPrevAppWindow;
 
-static XklConfigCallback configCallback = NULL;
-static void *configCallbackData;
+XklConfigCallback _xklConfigCallback = NULL;
+void *_xklConfigCallbackData;
 
 static XklStateCallback stateCallback = NULL;
 static void *stateCallbackData;
@@ -58,8 +47,6 @@ static XklWinCallback winCallback = NULL;
 static void *winCallbackData;
 
 static XklLogAppender logAppender = XklDefaultLogAppender;
-
-static char *groupNames[XkbNumKbdGroups];
 
 static Bool groupPerApp = True;
 
@@ -73,11 +60,6 @@ void XklSetIndicatorsHandling( Bool whetherHandle )
 Bool XklGetIndicatorsHandling( void )
 {
   return handleIndicators;
-}
-
-const char **XklGetGroupNames( void )
-{
-  return ( const char ** ) groupNames;
 }
 
 void XklSetDebugLevel( int level )
@@ -123,8 +105,8 @@ int XklGetSecondaryGroupsMask( void )
 
 int XklRegisterConfigCallback( XklConfigCallback fun, void *data )
 {
-  configCallback = fun;
-  configCallbackData = data;
+  _xklConfigCallback = fun;
+  _xklConfigCallbackData = data;
   return 0;
 }
 
@@ -147,101 +129,11 @@ void XklSetLogAppender( XklLogAppender fun )
   logAppender = fun;
 }
 
-int XklInit( Display * a_dpy )
-{
-  int opcode;
-  int scr;
-
-  _xklDefaultErrHandler =
-    XSetErrorHandler( ( XErrorHandler ) _XklErrHandler );
-
-  /* Lets begin */
-  _xklXkbExtPresent = XkbQueryExtension( _xklDpy = a_dpy,
-                                         &opcode, &_xklXkbEventType,
-                                         &_xklXkbError, NULL, NULL );
-  if( !_xklXkbExtPresent )
-  {
-    return -1;
-  }
-
-  scr = DefaultScreen( _xklDpy );
-  _xklRootWindow = RootWindow( _xklDpy, scr );
-  XklDebug( 160,
-            "xkbEvenType: %X, xkbError: %X, display: %p, root: " WINID_FORMAT
-            "\n", _xklXkbEventType, _xklXkbError, _xklDpy, _xklRootWindow );
-
-  _xklAtoms[WM_NAME] = XInternAtom( _xklDpy, "WM_NAME", False );
-  _xklAtoms[WM_STATE] = XInternAtom( _xklDpy, "WM_STATE", False );
-  _xklAtoms[XKLAVIER_STATE] = XInternAtom( _xklDpy, "XKLAVIER_STATE", False );
-  _xklAtoms[XKLAVIER_TRANSPARENT] =
-    XInternAtom( _xklDpy, "XKLAVIER_TRANSPARENT", False );
-  _xklAtoms[XKB_RF_NAMES_PROP_ATOM] =
-    XInternAtom( _xklDpy, _XKB_RF_NAMES_PROP_ATOM, False );
-  _xklAtoms[XKB_RF_NAMES_PROP_ATOM_BACKUP] =
-    XInternAtom( _xklDpy, "_XKB_RULES_NAMES_BACKUP", False );
-
-  _xklAllowSecondaryGroupOnce = False;
-  _xklSkipOneRestore = False;
-  _xklDefaultGroup = -1;
-  _xklSecondaryGroupsMask = 0L;
-  _xklPrevAppWindow = 0;
-
-  return _XklLoadAllInfo(  )? 0 : _xklLastErrorCode;
-}
-
 int XklStartListen(  )
 {
   XklResumeListen(  );
   _XklLoadWindowTree(  );
   XFlush( _xklDpy );
-  return 0;
-}
-
-int XklPauseListen(  )
-{
-  XkbSelectEvents( _xklDpy, XkbUseCoreKbd, XkbAllEventsMask, 0 );
-//  XkbSelectEventDetails( _xklDpy,
-  //                       XkbUseCoreKbd,
-  //                     XkbStateNotify,
-  //                   0,
-  //                 0 );
-
-  //!!_XklSelectInput( _xklRootWindow, 0 );
-  return 0;
-}
-
-int XklResumeListen(  )
-{
-  /* What events we want */
-#define XKB_EVT_MASK \
-         (XkbStateNotifyMask| \
-          XkbNamesNotifyMask| \
-          XkbControlsNotifyMask| \
-          XkbIndicatorStateNotifyMask| \
-          XkbIndicatorMapNotifyMask| \
-          XkbNewKeyboardNotifyMask)
-
-  XkbSelectEvents( _xklDpy, XkbUseCoreKbd, XKB_EVT_MASK, XKB_EVT_MASK );
-
-#define XKB_STATE_EVT_DTL_MASK \
-         (XkbGroupStateMask)
-
-  XkbSelectEventDetails( _xklDpy,
-                         XkbUseCoreKbd,
-                         XkbStateNotify,
-                         XKB_STATE_EVT_DTL_MASK, XKB_STATE_EVT_DTL_MASK );
-
-#define XKB_NAMES_EVT_DTL_MASK \
-         (XkbGroupNamesMask|XkbIndicatorNamesMask)
-
-  XkbSelectEventDetails( _xklDpy,
-                         XkbUseCoreKbd,
-                         XkbNamesNotify,
-                         XKB_NAMES_EVT_DTL_MASK, XKB_NAMES_EVT_DTL_MASK );
-
-  _XklSelectInputMerging( _xklRootWindow,
-                          SubstructureNotifyMask | PropertyChangeMask );
-  _XklGetRealState( &_xklCurState );
   return 0;
 }
 
@@ -254,7 +146,7 @@ int XklStopListen(  )
 int XklTerm(  )
 {
   XSetErrorHandler( ( XErrorHandler ) _xklDefaultErrHandler );
-  configCallback = NULL;
+  _xklConfigCallback = NULL;
   stateCallback = NULL;
   winCallback = NULL;
 
@@ -305,22 +197,6 @@ Bool XklUngrabKey( int key, unsigned modifiers )
     return False;
 
   return Success == XUngrabKey( _xklDpy, keyCode, 0, _xklRootWindow );
-}
-
-unsigned XklGetNumGroups(  )
-{
-  return _xklXkb->ctrls->num_groups;
-}
-
-int XklGetNextGroup(  )
-{
-  return ( _xklCurState.group + 1 ) % _xklXkb->ctrls->num_groups;
-}
-
-int XklGetPrevGroup(  )
-{
-  int n = _xklXkb->ctrls->num_groups;
-  return ( _xklCurState.group + n - 1 ) % n;
 }
 
 int XklGetRestoreGroup(  )
@@ -584,101 +460,6 @@ Bool _XklLoadWindowTree(  )
   return retval;
 }
 
-#define KBD_MASK \
-    ( 0 )
-#define CTRLS_MASK \
-  ( XkbSlowKeysMask )
-#define NAMES_MASK \
-  ( XkbGroupNamesMask | XkbIndicatorNamesMask )
-
-void _XklFreeAllInfo(  )
-{
-  if( _xklXkb != NULL )
-  {
-    int i;
-    char **groupName = groupNames;
-    for( i = _xklXkb->ctrls->num_groups; --i >= 0; groupName++ )
-      if( *groupName )
-        XFree( *groupName );
-    XkbFreeKeyboard( _xklXkb, XkbAllComponentsMask, True );
-    _xklXkb = NULL;
-  }
-}
-
-/**
- * Load some XKB parameters
- */
-Bool _XklLoadAllInfo(  )
-{
-  int i;
-  unsigned bit;
-  Atom *gna;
-  char **groupName;
-
-  _xklXkb = XkbGetMap( _xklDpy, KBD_MASK, XkbUseCoreKbd );
-  if( _xklXkb == NULL )
-  {
-    _xklLastErrorMsg = "Could not load keyboard";
-    return False;
-  }
-
-  _xklLastErrorCode = XkbGetControls( _xklDpy, CTRLS_MASK, _xklXkb );
-
-  if( _xklLastErrorCode != Success )
-  {
-    _xklLastErrorMsg = "Could not load controls";
-    return False;
-  }
-
-  XklDebug( 200, "found %d groups\n", _xklXkb->ctrls->num_groups );
-
-  _xklLastErrorCode = XkbGetNames( _xklDpy, NAMES_MASK, _xklXkb );
-
-  if( _xklLastErrorCode != Success )
-  {
-    _xklLastErrorMsg = "Could not load names";
-    return False;
-  }
-
-  gna = _xklXkb->names->groups;
-  groupName = groupNames;
-  for( i = _xklXkb->ctrls->num_groups; --i >= 0; gna++, groupName++ )
-  {
-    *groupName = XGetAtomName( _xklDpy,
-                               *gna == None ?
-                               XInternAtom( _xklDpy, "-", False ) : *gna );
-    XklDebug( 200, "group %d has name [%s]\n", i, *groupName );
-  }
-
-  _xklLastErrorCode =
-    XkbGetIndicatorMap( _xklDpy, XkbAllIndicatorsMask, _xklXkb );
-
-  if( _xklLastErrorCode != Success )
-  {
-    _xklLastErrorMsg = "Could not load indicator map";
-    return False;
-  }
-
-  for( i = 0, bit = 1; i < XkbNumIndicators; i++, bit <<= 1 )
-  {
-    Atom a = _xklXkb->names->indicators[i];
-    if( a != None )
-      _xklIndicatorNames[i] = XGetAtomName( _xklDpy, a );
-    else
-      _xklIndicatorNames[i] = "";
-
-    XklDebug( 200, "Indicator[%d] is %s\n", i, _xklIndicatorNames[i] );
-  }
-
-  XklDebug( 200, "Real indicators are %X\n",
-            _xklXkb->indicators->phys_indicators );
-
-  if( configCallback != NULL )
-    ( *configCallback ) ( configCallbackData );
-
-  return True;
-}
-
 void _XklDebug( const char file[], const char function[], int level,
                 const char format[], ... )
 {
@@ -701,57 +482,6 @@ void XklDefaultLogAppender( const char file[], const char function[],
   vfprintf( stdout, format, args );
 }
 
-#define PROP_LENGTH 2
-
-/**
- * Gets the state from the window property
- */
-Bool _XklGetAppState( Window appWin, XklState * state_return )
-{
-  Atom type_ret;
-  int format_ret;
-  unsigned long nitems, rest;
-  CARD32 *prop = NULL;
-  Bool ret = False;
-
-  int grp = -1;
-  unsigned inds = -1;
-
-  if( ( XGetWindowProperty
-        ( _xklDpy, appWin, _xklAtoms[XKLAVIER_STATE], 0L, PROP_LENGTH, False,
-          XA_INTEGER, &type_ret, &format_ret, &nitems, &rest,
-          ( unsigned char ** ) &prop ) == Success )
-      && ( type_ret == XA_INTEGER ) && ( format_ret == 32 ) )
-  {
-    grp = prop[0];
-    if( grp >= _xklXkb->ctrls->num_groups || grp < 0 )
-      grp = 0;
-
-    inds = prop[1];
-
-    if( state_return != NULL )
-    {
-      state_return->group = grp;
-      state_return->indicators = inds;
-    }
-    if( prop != NULL )
-      XFree( prop );
-
-    ret = True;
-  }
-
-  if( ret )
-    XklDebug( 150,
-              "Appwin " WINID_FORMAT
-              ", '%s' has the group %d, indicators %X\n", appWin,
-              _XklGetDebugWindowTitle( appWin ), grp, inds );
-  else
-    XklDebug( 150, "Appwin " WINID_FORMAT ", '%s' does not have state\n",
-              appWin, _XklGetDebugWindowTitle( appWin ) );
-
-  return ret;
-}
-
 /**
  * Deletes the state from the window properties
  */
@@ -765,14 +495,14 @@ void _XklDelAppState( Window appWin )
  */
 void _XklSaveAppState( Window appWin, XklState * state )
 {
-  CARD32 prop[PROP_LENGTH];
+  CARD32 prop[XKLAVIER_STATE_PROP_LENGTH];
 
   prop[0] = state->group;
   prop[1] = state->indicators;
 
   XChangeProperty( _xklDpy, appWin, _xklAtoms[XKLAVIER_STATE], XA_INTEGER,
                    32, PropModeReplace, ( const unsigned char * ) prop,
-                   PROP_LENGTH );
+                   XKLAVIER_STATE_PROP_LENGTH );
 
   XklDebug( 160,
             "Saved the group %d, indicators %X for appwin " WINID_FORMAT "\n",
