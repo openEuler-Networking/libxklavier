@@ -105,6 +105,7 @@ libxklavier.spec
 Doxyfile
 doc/Makefile
 doc/html/Makefile
+tests/Makefile
 libxklavier.pc
 ])
 
