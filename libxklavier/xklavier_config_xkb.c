@@ -190,7 +190,7 @@ static void _XklConfigCleanAfterKbd(  )
 static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
 {
   XkbDescPtr xkb = NULL;
-#if 1
+#if 0
   xkb = XkbGetKeyboardByName( _xklDpy, 
                               XkbUseCoreKbd, 
                               &componentNames,
@@ -254,49 +254,50 @@ static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
           pid = wait( &status );
           XklDebug( 150, "Return status of %d (well, started %d): %d\n", pid, cpid, status );
           memset( (char *)&result, 0, sizeof(result) );
+          result.xkb = XkbAllocKeyboard();
 
-          if( (tmpxkm = fopen( xkmFN, "r" )) != NULL )
+          if( Success == XkbChangeKbdDisplay( _xklDpy, &result ) )
           {
-            xkmloadres = XkmReadFile( tmpxkm, XkmKeymapLegal, XkmKeymapLegal, &result);
-            XklDebug( 150, "Loaded %s output as XKM file, got %d (comparing to %d)\n", 
-                      XKBCOMP, (int)xkmloadres, (int)XkmKeymapLegal );
-            if ( (int)xkmloadres != (int)XkmKeymapLegal )
+            XklDebug( 150, "Hacked the kbddesc - set the display...\n" );
+            if( (tmpxkm = fopen( xkmFN, "r" )) != NULL )
             {
-              XklDebug( 150, "Loaded legal keymap\n" );
-              if( activate )
+              xkmloadres = XkmReadFile( tmpxkm, XkmKeymapLegal, XkmKeymapLegal, &result);
+              XklDebug( 150, "Loaded %s output as XKM file, got %d (comparing to %d)\n", 
+                        XKBCOMP, (int)xkmloadres, (int)XkmKeymapLegal );
+              if ( (int)xkmloadres != (int)XkmKeymapLegal )
               {
-                XklDebug( 150, "Activating it...\n" );
-                if( Success == XkbChangeKbdDisplay( _xklDpy, &result ) )
+                XklDebug( 150, "Loaded legal keymap\n" );
+                if( activate )
                 {
-                  XklDebug( 150, "Hacked the kbddesc - set the display...\n" );
+                  XklDebug( 150, "Activating it...\n" );
                   if( XkbWriteToServer(&result) )
                   {
-                    XklDebug( 150, "Updating the keyboard...\n" );
-                    xkb = result.xkb;
+                     XklDebug( 150, "Updating the keyboard...\n" );
+                     xkb = result.xkb;
                   } else
                   {
-                    XklDebug( 0, "Could not write keyboard description to the server\n" );
+                     XklDebug( 0, "Could not write keyboard description to the server\n" );
                   }
-                } else
-                {
-                  XklDebug( 0, "Could not change the keyboard description to display\n" );
-                } 
-              } else /* no activate, just load */
-                xkb = result.xkb;
-            } else /* could not load properly */
+                } else /* no activate, just load */
+                  xkb = result.xkb;
+              } else /* could not load properly */
+              {
+                XklDebug( 0, "Could not load %s output as XKM file, got %d (asked %d)\n", 
+                             XKBCOMP, (int)xkmloadres, (int)XkmKeymapLegal );
+              }
+              fclose( tmpxkm );
+              XklDebug( 160, "Unlinking the temporary xkm file %s\n", xkmFN );
+              //if ( remove( xkmFN ) == -1 )
+                XklDebug( 0, "Could not unlink the temporary xkm file %s: %d\n", 
+                             xkmFN, errno );
+            } else /* could not open the file */
             {
-              XklDebug( 0, "Could not load %s output as XKM file, got %d (asked %d)\n", 
-                    XKBCOMP, (int)xkmloadres, (int)XkmKeymapLegal );
+              XklDebug( 0, "Could not open the temporary xkm file %s\n", xkmFN );
             }
-            fclose( tmpxkm );
-            XklDebug( 160, "Unlinking the temporary xkm file %s\n", xkmFN );
-            //if ( remove( xkmFN ) == -1 )
-              XklDebug( 0, "Could not unlink the temporary xkm file %s: %d\n", 
-                        xkmFN, errno );
-          } else /* could not open the file */
+          } else /* could not assign to display */
           {
-            XklDebug( 0, "Could not open the temporary xkm file %s\n", xkmFN );
-          }
+            XklDebug( 0, "Could not change the keyboard description to display\n" );
+          } 
           if ( xkb == NULL )
             XkbFreeKeyboard( result.xkb, XkbAllComponentsMask, True );
           break;
