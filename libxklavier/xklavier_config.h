@@ -365,12 +365,12 @@ extern "C"
 
 /**
  * @defgroup xklconfig XklConfigRec management utilities
- * Little utilities for initing/destroying/resetting XklConfigRec.
+ * Little utilities for managing XklConfigRec.
  * @{
  */
 
 /**
- * Initializes the record (actually, fills it with 0-s
+ * Initializes the record (actually, fills it with 0-s)
  * @param data is a record to initialize
  */
   extern void XklConfigRecInit( XklConfigRecPtr data );
@@ -386,6 +386,14 @@ extern "C"
  * @param data is a record to clean
  */
   extern void XklConfigRecDestroy( XklConfigRecPtr data );
+
+/**
+ * Compares the records
+ * @param data1 is a record to compare
+ * @param data2 is another record
+ * @return True if records are same
+ */
+  extern Bool XklConfigRecEquals( XklConfigRecPtr data1, XklConfigRecPtr data2 );
 
 /** @} */
 

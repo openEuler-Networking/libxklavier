@@ -19,6 +19,42 @@ void XklConfigRecInit( XklConfigRecPtr data )
   memset( ( void * ) data, 0, sizeof( XklConfigRec ) );
 }
 
+static Bool PtrsEqual( char* p1, char* p2 )
+{
+  if ( p1 == NULL && p2 == NULL )
+    return True;
+  if ( ( p1 == NULL && p2 != NULL ) ||
+       ( p1 != NULL && p2 == NULL ) )
+    return False;
+  return !strcmp( p1, p2 );
+}
+
+static Bool ListsEqual( int numItems1, char** items1, 
+                        int numItems2, char** items2 )
+{
+  int i;
+  if ( numItems1 != numItems2 )
+    return False;
+  for( i = numItems1; --i >= 0; )
+     if ( !PtrsEqual( *items1++ , *items2++ ) )
+       return False;
+  return True;
+}
+
+Bool XklConfigRecEquals( XklConfigRecPtr data1, XklConfigRecPtr data2 )
+{
+  if ( !PtrsEqual( data1->model, data2->model ) )
+    return False;
+  if ( !ListsEqual( data1->numLayouts, data1->layouts, 
+                    data2->numLayouts, data2->layouts ) )
+    return False;
+  if ( !ListsEqual( data1->numVariants, data1->variants, 
+                    data2->numVariants, data2->variants ) )
+    return False;
+  return ListsEqual( data1->numOptions, data1->options, 
+                     data2->numOptions, data2->options );
+}
+
 void XklConfigRecDestroy( XklConfigRecPtr data )
 {
   int i;
