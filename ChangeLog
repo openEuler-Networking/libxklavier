@@ -1,3 +1,7 @@
+2004-12-08 18:30  svu
+	
+	* configure.in, NEWS: Preparing 1.13
+
 2004-12-07 01:30  svu
 	
 	* libxklavier, tests: introducing XklGetMaxNumGroups. 
@@ -38,8 +42,6 @@
 	with somewhat working xmodmap support. Broken API
 
 2004-11-04 19:00  svu
-
-	* libxklavier/Makefile.am,
 
 	* libxklavier/Makefile.am,
 	libxklavier/xklavier.c,

@@ -1,3 +1,5 @@
+1.13	Some build process cleanup and fixes. One more "virtual function"
+	introduced.
 1.12	First version with real xmodmap support. Sure, bugs are possible.
 	I did it again - broke API. Really hope no API changes in 1.1x 
 	series any more.

@@ -1,7 +1,0 @@
-Some big big changes in API:
-
-- Handling of secondary groups
-
-- Support for XKB keyboard description patching
-
-- Fixes in root window's _XKB_RF_NAMES_PROP_ATOM property handling
