@@ -27,29 +27,67 @@
 
 #ifdef XKB_HEADERS_PRESENT
 XkbRF_VarDefsRec _xklVarDefs;
-
-static XkbRF_RulesPtr rules;
+static XkbRF_RulesPtr _xklRules;
 static XkbComponentNamesRec componentNames;
 #endif
 
 static char *locale;
 
-static char* _XklGetRulesSet( void )
+static char* _XklGetRulesSetName( void )
 {
 #ifdef XKB_HEADERS_PRESENT
-  static char rulesSet[_XKB_RF_NAMES_PROP_MAXLEN] = "";
-  if ( !rulesSet[0] )
+  static char rulesSetName[_XKB_RF_NAMES_PROP_MAXLEN] = "";
+  if ( !rulesSetName[0] )
   {
     char* rf = NULL;
     if( !XklGetNamesProp( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], &rf, NULL ) || ( rf == NULL ) )
       return NULL;
-    strncpy( rulesSet, rf, sizeof rulesSet );
+    strncpy( rulesSetName, rf, sizeof rulesSetName );
     free( rf );
   }
-  XklDebug( 100, "Rules set: [%s]\n", rulesSet );
-  return rulesSet;
+  XklDebug( 100, "Rules set: [%s]\n", rulesSetName );
+  return rulesSetName;
 #else
   return NULL;
+#endif
+}
+
+static XkbRF_RulesPtr _XklLoadRulesSet( void )
+{
+#ifdef XKB_HEADERS_PRESENT
+  char fileName[MAXPATHLEN] = "";
+  char* rf = _XklGetRulesSetName();
+
+  _xklRules = NULL;
+  if( rf == NULL )
+  {
+    _xklLastErrorMsg = "Could not find the XKB rules set";
+    return NULL;
+  }
+
+  locale = setlocale( LC_ALL, NULL );
+  if( locale != NULL )
+    locale = strdup( locale );
+
+  snprintf( fileName, sizeof fileName, XKB_BASE "/rules/%s", rf );
+  _xklRules = XkbRF_Load( fileName, locale, True, True );
+
+  if( _xklRules == NULL )
+  {
+    _xklLastErrorMsg = "Could not load rules";
+    return NULL;
+  }
+#else
+  _xklRules = NULL;
+#endif
+  return _xklRules;
+}
+
+static void _XklFreeRulesSet( void )
+{
+#ifdef XKB_HEADERS_PRESENT
+  if ( _xklRules )
+    XkbRF_Free( _xklRules, True );
 #endif
 }
 
@@ -57,7 +95,7 @@ Bool XklConfigLoadRegistry( void )
 {
   struct stat statBuf;
   char fileName[MAXPATHLEN] = "";
-  char* rf = _XklGetRulesSet();
+  char* rf = _XklGetRulesSetName();
 
   if ( rf == NULL )
     return False;
@@ -76,16 +114,12 @@ Bool XklConfigLoadRegistry( void )
 static Bool _XklConfigPrepareBeforeKbd( const XklConfigRecPtr data )
 {
 #ifdef XKB_HEADERS_PRESENT
-  char fileName[MAXPATHLEN] = "";
-  char* rf = _XklGetRulesSet();
-
-  if( rf == NULL )
-  {
-    _xklLastErrorMsg = "Could not find the XKB rules set";
-    return False;
-  }
+  XkbRF_RulesPtr rulesPtr = _XklLoadRulesSet();
 
   memset( &_xklVarDefs, 0, sizeof( _xklVarDefs ) );
+
+  if( !rulesPtr )
+    return False;
 
   _xklVarDefs.model = ( char * ) data->model;
 
@@ -98,20 +132,7 @@ static Bool _XklConfigPrepareBeforeKbd( const XklConfigRecPtr data )
   if( data->options != NULL )
     _xklVarDefs.options = _XklConfigRecMergeOptions( data );
 
-  locale = setlocale( LC_ALL, NULL );
-  if( locale != NULL )
-    locale = strdup( locale );
-
-  snprintf( fileName, sizeof fileName, XKB_BASE "/rules/%s", rf );
-  rules = XkbRF_Load( fileName, locale, True, True );
-
-  if( rules == NULL )
-  {
-    _xklLastErrorMsg = "Could not load rules";
-    return False;
-  }
-
-  if( !XkbRF_GetComponents( rules, &_xklVarDefs, &componentNames ) )
+  if( !XkbRF_GetComponents( rulesPtr, &_xklVarDefs, &componentNames ) )
   {
     _xklLastErrorMsg = "Could not translate rules into components";
     return False;
@@ -123,7 +144,7 @@ static Bool _XklConfigPrepareBeforeKbd( const XklConfigRecPtr data )
 static void _XklConfigCleanAfterKbd(  )
 {
 #ifdef XKB_HEADERS_PRESENT
-  XkbRF_Free( rules, True );
+  _XklFreeRulesSet();
 
   if( locale != NULL )
   {
@@ -143,10 +164,39 @@ static void _XklConfigCleanAfterKbd(  )
 #endif
 }
 
+// check only client side support
 Bool XklMultipleLayoutsSupported( void )
 {
-  struct stat buf;
-  return 0 == stat( MULTIPLE_LAYOUTS_CHECK_PATH, &buf );
+  enum { NON_SUPPORTED, SUPPORTED, UNCHECKED };
+
+  static int supportState = UNCHECKED;
+
+  if ( supportState == UNCHECKED )
+  {
+    XklDebug( 100, "!!! Checking multiple layouts support\n" );
+    supportState = NON_SUPPORTED;
+    XkbRF_RulesPtr rulesPtr = _XklLoadRulesSet();
+    if ( rulesPtr )
+    {
+      XkbRF_VarDefsRec varDefs;
+      XkbComponentNamesRec cNames;
+      memset( &varDefs, 0, sizeof( varDefs ) );
+
+      varDefs.model = "pc105";
+      varDefs.layout = "a,b";
+      varDefs.variant = "";
+      varDefs.options = "";
+
+      if( XkbRF_GetComponents( rulesPtr, &varDefs, &cNames ) )
+      {
+        XklDebug( 100, "!!! Multiple layouts ARE supported\n" );
+        supportState = SUPPORTED;
+      } else
+        XklDebug( 100, "!!! Multiple layouts ARE NOT supported\n" );
+      _XklFreeRulesSet();
+    }
+  }
+  return supportState == SUPPORTED;
 }
 
 Bool XklConfigActivate( const XklConfigRecPtr data,
@@ -183,8 +233,8 @@ Bool XklConfigActivate( const XklConfigRecPtr data,
     if( xkb != NULL )
     {
       if( XklSetNamesProp
-          ( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], _XklGetRulesSet(), data ) )
-          // We do not need to check the result of _XklGetRulesSet - 
+          ( _xklAtoms[XKB_RF_NAMES_PROP_ATOM], _XklGetRulesSetName(), data ) )
+          // We do not need to check the result of _XklGetRulesSetName - 
           // because PrepareBeforeKbd did it for us
         rv = True;
       else

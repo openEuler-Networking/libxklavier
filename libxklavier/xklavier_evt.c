@@ -256,7 +256,8 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
       transparent = _XklIsTransparentAppWindow( appWin );
       if( transparent )
         XklDebug( 150, "Entering transparent window\n" );
-      if( XklIsGroupPerApp(  ) && !transparent )
+
+      if( XklIsGroupPerApp() == !transparent )
       {
         // We skip restoration only if we return to the same app window
         Bool doSkip = False;
@@ -317,7 +318,7 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
                     _xklCurState.indicators );
       } else
         XklDebug( 150,
-                  "Not restoring the group %d after gaining focus: global layout (or transparent window)\n",
+                  "Not restoring the group %d after gaining focus: global layout (xor transparent window)\n",
                   _xklCurState.group );
     } else
       XklDebug( 150, "Same app window - just do nothing\n" );
