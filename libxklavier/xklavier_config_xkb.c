@@ -337,7 +337,7 @@ Bool _XklXkbConfigMultipleLayoutsSupported( void )
       free(cNames.symbols);
       free(cNames.geometry);
 
-      _XklFreeRulesSet();
+      XkbRF_Free( rulesPtr, True );
     }
 #endif
   }

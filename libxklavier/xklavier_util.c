@@ -86,7 +86,7 @@ char *_XklGetDebugWindowTitle( Window win )
     if( name != NULL )
     {
       snprintf( sname, sizeof( sname ), "%.32s", name );
-      XFree( name );
+      free( name );
     }
   }
   return sname;

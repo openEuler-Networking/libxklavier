@@ -1,3 +1,8 @@
+2004-12-08 23:30  svu
+	
+	* libxklavier/xklavier_util.c, 
+	libxklavier/xklavier_config_xkb.c: Fixing memory leaks.
+
 2004-12-08 18:30  svu
 	
 	* configure.in, NEWS: Preparing 1.13
