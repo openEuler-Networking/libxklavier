@@ -245,15 +245,6 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
     if( _xklCurClient != appWin )
     {
       Bool transparent;
-      XklState tmpState;
-
-      /**
-       *  For fast mouse movements - the state is probably not updated yet
-       *  (because of the group change notification being late).
-       *  so we'll enforce the update. But this should only happen in GPA mode
-       */
-      if( XklIsGroupPerApp() && XklGetState( _xklCurClient, &tmpState ) )
-        _XklUpdateCurState( tmpState.group, tmpState.indicators );
 
       _xklCurClient = appWin;
       XklDebug( 150, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
@@ -286,6 +277,12 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
             XklDebug( 150,
                       "Restoring the group from %d to %d after gaining focus\n",
                       _xklCurState.group, selectedWindowState.group );
+            /**
+             *  For fast mouse movements - the state is probably not updated yet
+             *  (because of the group change notification being late).
+             *  so we'll enforce the update. But this should only happen in GPA mode
+             */
+            _XklUpdateCurState( selectedWindowState.group, selectedWindowState.indicators );
             XklLockGroup( selectedWindowState.group );
           } else
           {
