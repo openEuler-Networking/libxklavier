@@ -97,7 +97,8 @@ void _XklStdXkbHandler( int grp, XklStateChange changeType, unsigned inds,
 
   if( focusedApp != _xklCurClient )
   {
-    _XklUpdateCurState( grp, inds );
+    _XklUpdateCurState( grp, inds, 
+                        "Updating the state from new focused window" );
 
     _XklAddAppWindow( focusedApp, ( Window ) NULL, False, &_xklCurState );
     _xklCurClient = focusedApp;
@@ -111,7 +112,8 @@ void _XklStdXkbHandler( int grp, XklStateChange changeType, unsigned inds,
   if( setGroup || haveState )
   {
     _XklUpdateCurState( setGroup ? grp : oldState.group,
-                        setInds ? inds : oldState.indicators );
+                        setInds ? inds : oldState.indicators,
+                        "Restoring the state from the window" );
   }
 
   if( haveState )
@@ -282,7 +284,9 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
              *  (because of the group change notification being late).
              *  so we'll enforce the update. But this should only happen in GPA mode
              */
-            _XklUpdateCurState( selectedWindowState.group, selectedWindowState.indicators );
+            _XklUpdateCurState( selectedWindowState.group, 
+                                selectedWindowState.indicators,
+                                "Enforcing fast update of the current state" );
             XklLockGroup( selectedWindowState.group );
           } else
           {
