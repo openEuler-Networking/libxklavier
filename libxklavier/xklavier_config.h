@@ -260,7 +260,6 @@ extern "C"
 /**
  * Activates some XKB configuration
  * @param data is a valid XKB configuration
- * @param fun is a callback function for modifying the XKB keyboard 
  * description. Can be NULL
  * @param userData is a data to pass to the callback
  * @return True on success
@@ -289,7 +288,6 @@ extern "C"
  * Writes some XKB configuration into XKM file
  * @param fileName is a name of the file to create
  * @param data is a valid XKB configuration
- * @param fun is a callback function for modifying the XKB keyboard 
  * description. Can be NULL
  * @param userData is a data to pass to the callback
  * @return True on success
