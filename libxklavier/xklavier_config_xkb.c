@@ -158,6 +158,11 @@ static void _XklConfigCleanAfterKbd(  )
     free( _xklVarDefs.layout );
     _xklVarDefs.layout = NULL;
   }
+  if( _xklVarDefs.variant != NULL )
+  {
+    free( _xklVarDefs.variant );
+    _xklVarDefs.variant = NULL;
+  }
   if( _xklVarDefs.options != NULL )
   {
     free( _xklVarDefs.options );

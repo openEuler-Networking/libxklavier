@@ -373,6 +373,9 @@ Bool XklSetNamesProp( Atom rulesAtom,
   if( !pval )
   {
     _xklLastErrorMsg = "Could not allocate buffer";
+    if ( allLayouts != NULL ) free( allLayouts );
+    if ( allVariants != NULL ) free( allVariants );
+    if ( allOptions != NULL ) free( allOptions );
     return False;
   }
   if( rulesFile )
@@ -408,8 +411,9 @@ Bool XklSetNamesProp( Atom rulesAtom,
   if( ( next - pval ) != len )
   {
     XklDebug( 150, "Illegal final position: %d/%d\n", ( next - pval ), len );
-    if( allOptions != NULL )
-      free( allOptions );
+    if ( allLayouts != NULL ) free( allLayouts );
+    if ( allVariants != NULL ) free( allVariants );
+    if ( allOptions != NULL ) free( allOptions );
     free( pval );
     _xklLastErrorMsg = "Internal property parsing error";
     return False;
@@ -425,8 +429,9 @@ Bool XklSetNamesProp( Atom rulesAtom,
   XklDebug( 150, "Stored [%s] of length %d to [%s] of %X: %d\n", pval, len,
             propName, _xklRootWindow, rv );
 #endif
-  if( allOptions != NULL )
-    free( allOptions );
+  if ( allLayouts != NULL ) free( allLayouts );
+  if ( allVariants != NULL ) free( allVariants );
+  if ( allOptions != NULL ) free( allOptions );
   free( pval );
   return True;
 }
