@@ -1,0 +1,1 @@
+Due to the high demand, libxklavier is now able to detect the default xkb rules set at runtime. The option --with-xkb-rules-set is not necessary any more. Sorry for bother:)
