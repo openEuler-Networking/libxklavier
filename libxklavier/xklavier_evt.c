@@ -97,10 +97,17 @@ void _XklStdXkbHandler( int grp, XklStateChange changeType, unsigned inds,
 
   if( focusedApp != _xklCurClient )
   {
-    _XklUpdateCurState( grp, inds, 
-                        "Updating the state from new focused window" );
-
-    _XklAddAppWindow( focusedApp, ( Window ) NULL, False, &_xklCurState );
+    if ( !_XklGetAppState( focusedApp, &oldState ) )
+    {
+      _XklUpdateCurState( grp, inds, 
+                          "Updating the state from new focused window" );
+      _XklAddAppWindow( focusedApp, ( Window ) NULL, False, &_xklCurState );
+    }
+    else
+    {
+      grp = oldState.group;
+      inds = oldState.indicators;
+    }
     _xklCurClient = focusedApp;
     XklDebug( 160, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
               _xklCurClient, _XklGetDebugWindowTitle( _xklCurClient ) );
@@ -247,6 +254,10 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
     if( _xklCurClient != appWin )
     {
       Bool transparent;
+      XklState tmpState;
+
+      if ( XklGetState ( _xklCurClient, &tmpState ) )
+        _xklCurState = tmpState;
 
       _xklCurClient = appWin;
       XklDebug( 150, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
