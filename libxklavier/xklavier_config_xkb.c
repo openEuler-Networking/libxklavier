@@ -52,9 +52,9 @@ static char* _XklGetRulesSetName( void )
 #endif
 }
 
+#ifdef XKB_HEADERS_PRESENT
 static XkbRF_RulesPtr _XklLoadRulesSet( void )
 {
-#ifdef XKB_HEADERS_PRESENT
   char fileName[MAXPATHLEN] = "";
   char* rf = _XklGetRulesSetName();
 
@@ -77,11 +77,9 @@ static XkbRF_RulesPtr _XklLoadRulesSet( void )
     _xklLastErrorMsg = "Could not load rules";
     return NULL;
   }
-#else
-  _xklRules = NULL;
-#endif
   return _xklRules;
 }
+#endif
 
 static void _XklFreeRulesSet( void )
 {
@@ -175,6 +173,7 @@ Bool XklMultipleLayoutsSupported( void )
   {
     XklDebug( 100, "!!! Checking multiple layouts support\n" );
     supportState = NON_SUPPORTED;
+#ifdef XKB_HEADERS_PRESENT
     XkbRF_RulesPtr rulesPtr = _XklLoadRulesSet();
     if ( rulesPtr )
     {
@@ -195,6 +194,7 @@ Bool XklMultipleLayoutsSupported( void )
         XklDebug( 100, "!!! Multiple layouts ARE NOT supported\n" );
       _XklFreeRulesSet();
     }
+#endif
   }
   return supportState == SUPPORTED;
 }

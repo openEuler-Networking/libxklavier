@@ -97,9 +97,17 @@ void _XklStdXkbHandler( int grp, XklStateChange changeType, unsigned inds,
 
   if( focusedApp != _xklCurClient )
   {
-    _XklUpdateCurState( grp, inds );
-
-    _XklAddAppWindow( focusedApp, ( Window ) NULL, False, &_xklCurState );
+    if ( !_XklGetAppState( focusedApp, &oldState ) )
+    {
+      _XklUpdateCurState( grp, inds, 
+                          "Updating the state from new focused window" );
+      _XklAddAppWindow( focusedApp, ( Window ) NULL, False, &_xklCurState );
+    }
+    else
+    {
+      grp = oldState.group;
+      inds = oldState.indicators;
+    }
     _xklCurClient = focusedApp;
     XklDebug( 160, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
               _xklCurClient, _XklGetDebugWindowTitle( _xklCurClient ) );
@@ -111,7 +119,8 @@ void _XklStdXkbHandler( int grp, XklStateChange changeType, unsigned inds,
   if( setGroup || haveState )
   {
     _XklUpdateCurState( setGroup ? grp : oldState.group,
-                        setInds ? inds : oldState.indicators );
+                        setInds ? inds : oldState.indicators,
+                        "Restoring the state from the window" );
   }
 
   if( haveState )
@@ -245,6 +254,10 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
     if( _xklCurClient != appWin )
     {
       Bool transparent;
+      XklState tmpState;
+
+      if ( XklGetState ( _xklCurClient, &tmpState ) )
+        _xklCurState = tmpState;
 
       _xklCurClient = appWin;
       XklDebug( 150, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
@@ -282,7 +295,9 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
              *  (because of the group change notification being late).
              *  so we'll enforce the update. But this should only happen in GPA mode
              */
-            _XklUpdateCurState( selectedWindowState.group, selectedWindowState.indicators );
+            _XklUpdateCurState( selectedWindowState.group, 
+                                selectedWindowState.indicators,
+                                "Enforcing fast update of the current state" );
             XklLockGroup( selectedWindowState.group );
           } else
           {
