@@ -78,6 +78,8 @@ static XkbRF_RulesPtr _XklLoadRulesSet( void )
     locale = strdup( locale );
 
   snprintf( fileName, sizeof fileName, XKB_BASE "/rules/%s", rf );
+  XklDebug( 160, "Loading rules from [%s]\n", fileName );
+
   _xklRules = XkbRF_Load( fileName, locale, True, True );
 
   if( _xklRules == NULL )
@@ -188,11 +190,12 @@ static void _XklConfigCleanAfterKbd(  )
 static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
 {
   XkbDescPtr xkb = NULL;
-#if 0
+#if 1
   xkb = XkbGetKeyboardByName( _xklDpy, 
                               XkbUseCoreKbd, 
                               &componentNames,
-                              XkbGBN_AllComponentsMask,
+                              XkbGBN_AllComponentsMask &
+                              ( ~XkbGBN_GeometryMask ), 
                               XkbGBN_AllComponentsMask &
                               ( ~XkbGBN_GeometryMask ), 
                               activate );
@@ -203,7 +206,8 @@ static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
   XkbFileInfo result;
   int xkmloadres;
 
-  if ( tmpnam( xkmFN ) != NULL && tmpnam( xkbFN ) )
+  if ( tmpnam( xkmFN ) != NULL && 
+       tmpnam( xkbFN ) != NULL )
   {
     pid_t cpid, pid;
     int status = 0;
@@ -221,6 +225,18 @@ static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
       fprintf( tmpxkb, "};\n" );
       fclose( tmpxkb );
     
+      XklDebug( 150, "xkb_keymap {\n"
+        "        xkb_keycodes  { include \"%s\" };\n"
+        "        xkb_types     { include \"%s\" };\n"
+        "        xkb_compat    { include \"%s\" };\n"
+        "        xkb_symbols   { include \"%s\" };\n"
+        "        xkb_geometry  { include \"%s\" };\n};\n", 
+        componentNames.keycodes,
+        componentNames.types,
+        componentNames.compat,
+        componentNames.symbols,
+        componentNames.geometry );
+       
       cpid=fork();
       switch( cpid )
       {
@@ -237,27 +253,13 @@ static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
           /* parent */
           pid = wait( &status );
           XklDebug( 150, "Return status of %d (well, started %d): %d\n", pid, cpid, status );
-          XklDebug( 150, "xkb_keymap {\n"
-            "        xkb_keycodes  { include \"%s\" };\n"
-            "        xkb_types     { include \"%s\" };\n"
-            "        xkb_compat    { include \"%s\" };\n"
-            "        xkb_symbols   { include \"%s\" };\n"
-            "        xkb_geometry  { include \"%s\" };\n};\n", 
-            componentNames.keycodes,
-            componentNames.types,
-            componentNames.compat,
-            componentNames.symbols,
-            componentNames.geometry );
-       
           memset( (char *)&result, 0, sizeof(result) );
-          result.xkb = XkbAllocKeyboard();
 
           if( (tmpxkm = fopen( xkmFN, "r" )) != NULL )
           {
-            xkmloadres = XkmReadFile( tmpxkm, 0, XkmKeymapLegal, &result);
-            XklDebug( 150, "Loaded %s output as XKM file, got %d (comparing to %d : %d)\n", 
-                      XKBCOMP, (int)xkmloadres, (int)XkmKeymapLegal,
-                      ( (int)xkmloadres != (int)XkmKeymapLegal ) );
+            xkmloadres = XkmReadFile( tmpxkm, XkmKeymapLegal, XkmKeymapLegal, &result);
+            XklDebug( 150, "Loaded %s output as XKM file, got %d (comparing to %d)\n", 
+                      XKBCOMP, (int)xkmloadres, (int)XkmKeymapLegal );
             if ( (int)xkmloadres != (int)XkmKeymapLegal )
             {
               XklDebug( 150, "Loaded legal keymap\n" );
@@ -266,7 +268,7 @@ static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
                 XklDebug( 150, "Activating it...\n" );
                 if( Success == XkbChangeKbdDisplay( _xklDpy, &result ) )
                 {
-                  XklDebug( 150, "Hacked the kbddesc...\n" );
+                  XklDebug( 150, "Hacked the kbddesc - set the display...\n" );
                   if( XkbWriteToServer(&result) )
                   {
                     XklDebug( 150, "Updating the keyboard...\n" );
@@ -287,17 +289,22 @@ static XkbDescPtr _XklConfigGetKeyboard( Bool activate )
                     XKBCOMP, (int)xkmloadres, (int)XkmKeymapLegal );
             }
             fclose( tmpxkm );
-            unlink( xkmFN );
+            XklDebug( 160, "Unlinking the temporary xkm file %s\n", xkmFN );
+            //if ( remove( xkmFN ) == -1 )
+              XklDebug( 0, "Could not unlink the temporary xkm file %s: %d\n", 
+                        xkmFN, errno );
           } else /* could not open the file */
           {
-            XklDebug( 0, "Could not open the temporary xkm file %s\n", 
-                   xkmFN );
+            XklDebug( 0, "Could not open the temporary xkm file %s\n", xkmFN );
           }
           if ( xkb == NULL )
             XkbFreeKeyboard( result.xkb, XkbAllComponentsMask, True );
           break;
       }
-      unlink( xkbFN );
+      XklDebug( 160, "Unlinking the temporary xkb file %s\n", xkbFN );
+      //if ( remove( xkbFN ) == -1 )
+        XklDebug( 0, "Could not unlink the temporary xkb file %s: %d\n", 
+                  xkbFN, errno );
     } else /* could not open input tmp file */
     {
       XklDebug( 0, "Could not open tmp XKB file [%s]: %d\n", xkbFN, errno );
