@@ -104,7 +104,7 @@ char *_XklLocaleFromUtf8( const char *utf8string )
   size_t len;
 
   iconv_t converter;
-  static char converted[XKL_MAX_CI_DESC_LENGTH];
+  char converted[XKL_MAX_CI_DESC_LENGTH];
   char *convertedStart = converted;
   char *utfStart = ( char * ) utf8string;
   size_t clen = XKL_MAX_CI_DESC_LENGTH - 1;
@@ -144,7 +144,7 @@ char *_XklLocaleFromUtf8( const char *utf8string )
 
   iconv_close( converter );
 
-  return converted;
+  return strdup( converted );
 }
 
 /*
