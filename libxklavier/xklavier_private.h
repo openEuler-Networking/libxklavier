@@ -227,7 +227,7 @@ extern Status _XklStatusQueryTree( Display * display,
                                    Window * root_return,
                                    Window * parent_return,
                                    Window ** children_return,
-                                   signed int *nchildren_return );
+                                   unsigned int *nchildren_return );
 
 extern Bool _XklSetIndicator( int indicatorNum, Bool set );
 

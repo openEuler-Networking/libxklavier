@@ -16,8 +16,6 @@ static XkbDescPtr precachedXkb = NULL;
 
 char *_xklIndicatorNames[XkbNumIndicators];
 
-unsigned _xklPhysIndicatorsMask;
-
 int _xklXkbEventType, _xklXkbError;
 
 static char *groupNames[XkbNumKbdGroups];
@@ -27,7 +25,7 @@ const char **_XklXkbGetGroupNames( void )
   return ( const char ** ) groupNames;
 }
 
-int _XklXkbPauseListen(  )
+int _XklXkbPauseListen( void )
 {
   XkbSelectEvents( _xklDpy, XkbUseCoreKbd, XkbAllEventsMask, 0 );
 /*  XkbSelectEventDetails( _xklDpy,
@@ -41,7 +39,7 @@ int _XklXkbPauseListen(  )
   return 0;
 }
 
-int _XklXkbResumeListen(  )
+int _XklXkbResumeListen( void )
 {
   /* What events we want */
 #define XKB_EVT_MASK \
@@ -90,7 +88,7 @@ unsigned _XklXkbGetNumGroups( void )
 #define NAMES_MASK \
   ( XkbGroupNamesMask | XkbIndicatorNamesMask )
 
-void _XklXkbFreeAllInfo(  )
+void _XklXkbFreeAllInfo( void )
 {
   int i;
   char **pi = _xklIndicatorNames;
@@ -138,12 +136,13 @@ static Bool _XklXkbLoadPrecachedXkb( void )
       _xklLastErrorMsg = "Could not load controls/names/indicators";
       XklDebug( 0, "%s: %d\n", _xklLastErrorMsg, status );
       XkbFreeKeyboard( precachedXkb, XkbAllComponentsMask, True );
+
     }
   }
   return rv;
 }
 
-Bool _XklXkbIfCachedInfoEqualsActual( )
+Bool _XklXkbIfCachedInfoEqualsActual( void )
 {
   int i;
   Atom *pa1, *pa2;
@@ -191,7 +190,7 @@ Bool _XklXkbIfCachedInfoEqualsActual( )
 /**
  * Load some XKB parameters
  */
-Bool _XklXkbLoadAllInfo(  )
+Bool _XklXkbLoadAllInfo( void )
 {
   int i;
   Atom *pa;
@@ -441,8 +440,9 @@ int _XklXkbInit( void )
 {
 #ifdef XKB_HEADERS_PRESENT
   int opcode;
+  Bool _xklXkbExtPresent;
   static XklVTable xklXkbVTable =
-  {
+{
     "XKB",
     XKLF_CAN_TOGGLE_INDICATORS |
       XKLF_CAN_OUTPUT_CONFIG_AS_ASCII |

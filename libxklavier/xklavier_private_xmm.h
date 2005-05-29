@@ -35,13 +35,13 @@ extern void _XklXmmUngrabShortcuts( void );
 
 extern const char* _XklXmmGetCurrentShortcutOptionName( void );
 
-extern const XmmSwitchOptionPtr _XklXmmGetCurrentShortcut( void );
+XmmSwitchOptionPtr _XklXmmGetCurrentShortcut( void );
 
 extern void _XklXmmActualizeGroup( int group );
 
-extern const XmmSwitchOptionPtr _XklXmmFindSwitchOption( unsigned keycode, 
-                                                         unsigned state,
-                                                         int * currentShortcut_rv );
+XmmSwitchOptionPtr _XklXmmFindSwitchOption( unsigned keycode, 
+                                            unsigned state,
+                                            int * currentShortcut_rv );
 
 /* Start VTable methods */
 

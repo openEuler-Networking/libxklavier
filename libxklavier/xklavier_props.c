@@ -135,7 +135,7 @@ Bool XklConfigGetFromBackup( XklConfigRecPtr data )
   return rv;
 }
 
-Bool XklBackupNamesProp(  )
+Bool XklBackupNamesProp( void )
 {
   Bool rv = True;
   char *rf = NULL;
@@ -187,7 +187,7 @@ Bool XklBackupNamesProp(  )
   return rv;
 }
 
-Bool XklRestoreNamesProp(  )
+Bool XklRestoreNamesProp( void )
 {
   Bool rv = True;
   char *rf = NULL;

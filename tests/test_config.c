@@ -19,7 +19,7 @@ extern void XklConfigDump( FILE* file,
 
 enum { ACTION_NONE, ACTION_GET, ACTION_SET, ACTION_WRITE };
 
-static void printUsage()
+static void printUsage(void)
 {
   printf( "Usage: test_config (-g)|(-s -m <model> -l <layouts> -o <options>)|(-h)|(-ws)|(-wb)(-d <debugLevel>)\n" );
   printf( "Options:\n" );

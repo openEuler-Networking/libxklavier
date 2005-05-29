@@ -150,7 +150,7 @@ char *_XklLocaleFromUtf8( const char *utf8string )
 /*
  * country[_LANG[.ENCODING]] - any other ideas?
  */
-void _XklI18NInit(  )
+void _XklI18NInit( void )
 {
   char *dotPos;
   char *underscorePos;

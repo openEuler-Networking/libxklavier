@@ -1,3 +1,19 @@
+2005-05-29 svu
+	
+	* libxklavier/xklavier.c,
+	libxklavier/xklavier.h,
+	libxklavier/xklavier_config.c,
+	libxklavier/xklavier_config_i18n.c,
+	libxklavier/xklavier_dump.c,
+	libxklavier/xklavier_private.h,
+	libxklavier/xklavier_private_xmm.h,
+	libxklavier/xklavier_props.c,
+	libxklavier/xklavier_util.c,
+	libxklavier/xklavier_xkb.c,
+	libxklavier/xklavier_xmm.c,
+	tests/test_config.c: patches for gcc4.
+	Thanks to kmaraas
+
 2005-03-11 svu
 	
 	* libxklavier/xklavier_xkb.c: fixed memory leak, precachedXkb.

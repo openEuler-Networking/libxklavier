@@ -17,7 +17,7 @@ const char *XklGetLastError(  )
   return _xklLastErrorMsg;
 }
 
-char *XklGetWindowTitle( Window w )
+unsigned char *XklGetWindowTitle( Window w )
 {
   Atom type_ret;
   int format_ret;
@@ -78,7 +78,7 @@ void XklSaveState( Window win, XklState * state )
 char *_XklGetDebugWindowTitle( Window win )
 {
   static char sname[33];
-  char *name;
+  unsigned char *name;
   strcpy( sname, "NULL" );
   if( win != ( Window ) NULL )
   {
@@ -106,7 +106,7 @@ Bool _XklLoadSubtree( Window window, int level, XklState * initState )
 {
   Window rwin = ( Window ) NULL,
     parent = ( Window ) NULL, *children = NULL, *child;
-  int num = 0;
+  unsigned int num = 0;
   Bool retval = True;
 
   _xklLastErrorCode =
@@ -178,7 +178,7 @@ Bool _XklHasWmState( Window win )
 Window _XklGetRegisteredParent( Window win )
 {
   Window parent = ( Window ) NULL, rw = ( Window ) NULL, *children = NULL;
-  unsigned nchildren = 0;
+  unsigned int nchildren = 0;
 
   _xklLastErrorCode =
     _XklStatusQueryTree( _xklDpy, win, &rw, &parent, &children, &nchildren );
@@ -197,7 +197,7 @@ Status _XklStatusQueryTree( Display * display,
                             Window * root_return,
                             Window * parent_return,
                             Window ** children_return,
-                            signed int *nchildren_return )
+                            unsigned int *nchildren_return )
 {
   Bool result;
 

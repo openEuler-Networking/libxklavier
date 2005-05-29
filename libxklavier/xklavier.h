@@ -214,7 +214,7 @@ extern "C"
  * @return the window title of some window or NULL. 
  * If not NULL, it should be freed with XFree
  */
-  extern char *XklGetWindowTitle( Window w );
+  extern unsigned char *XklGetWindowTitle( Window w );
 
 /** 
  * Finds the state for a given window (for its "App window").

@@ -20,6 +20,7 @@
 #include "xklavier_private_xkb.h"
 
 #ifdef XKB_HEADERS_PRESENT
+#if 0
 static void _XkbModsRecDump( FILE * fs, XkbModsRec * mods )
 {
   fprintf( fs, "flags: 0x%X\n", mods->mask );
@@ -27,7 +28,7 @@ static void _XkbModsRecDump( FILE * fs, XkbModsRec * mods )
   fprintf( fs, "vmods: 0x%X\n", mods->vmods );
 }
 
-extern void _XkbControlsDump( FILE * fs, XkbControlsPtr ctrls )
+static void _XkbControlsDump( FILE * fs, XkbControlsPtr ctrls )
 {
   int i;
   char buf[1024];
@@ -65,6 +66,7 @@ extern void _XkbControlsDump( FILE * fs, XkbControlsPtr ctrls )
   }
   fprintf( fs, "  %s\n", buf );
 }
+#endif
 
 static const char *actionTypeNames[] = {
   "XkbSA_NoAction",
@@ -236,7 +238,7 @@ static void _XkbClientMapDump( FILE * fs, int level, XkbClientMapPtr map,
     fprintf( fs, "%*sNO key_sym_map\n", level, "" );
 }
 
-void _XkbDescDump( FILE * fs, int level, XkbDescPtr kbd )
+static void _XkbDescDump( FILE * fs, int level, XkbDescPtr kbd )
 {
   fprintf( fs, "%*sflags: 0x%X\n", level, "", kbd->flags );
   fprintf( fs, "%*sdevice_spec: %d\n", level, "", kbd->device_spec );

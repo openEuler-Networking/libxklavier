@@ -26,7 +26,7 @@ const char **_XklXmmGetGroupNames( void )
   return (const char **)currentXmmConfig.layouts;
 }
 
-void _XklXmmGrabShortcuts( )
+void _XklXmmGrabShortcuts( void )
 {
   int i;
   XmmShortcutPtr shortcut;
@@ -45,7 +45,7 @@ void _XklXmmGrabShortcuts( )
   }
 }
 
-void _XklXmmUngrabShortcuts( )
+void _XklXmmUngrabShortcuts( void )
 {
   int i;
   XmmShortcutPtr shortcut;
@@ -63,13 +63,13 @@ void _XklXmmUngrabShortcuts( )
   }
 }
 
-const XmmSwitchOptionPtr _XklXmmGetCurrentShortcut()
+XmmSwitchOptionPtr _XklXmmGetCurrentShortcut( void )
 {
   const char* optionName = _XklXmmGetCurrentShortcutOptionName();
+  XmmSwitchOptionPtr switchOption = allSwitchOptions;
   XklDebug( 150, "Configured switch option: [%s]\n", optionName );
   if( optionName == NULL )
     return NULL;
-  XmmSwitchOptionPtr switchOption = allSwitchOptions;
   while( switchOption->optionName != NULL )
   {
     if( !strcmp( switchOption->optionName, optionName ) )
@@ -79,7 +79,7 @@ const XmmSwitchOptionPtr _XklXmmGetCurrentShortcut()
   return NULL;
 }
 
-const char* _XklXmmGetCurrentShortcutOptionName( )
+const char* _XklXmmGetCurrentShortcutOptionName( void )
 {
   int i;
   char** option = currentXmmConfig.options;
@@ -94,7 +94,7 @@ const char* _XklXmmGetCurrentShortcutOptionName( )
   return NULL;
 }
 
-const XmmSwitchOptionPtr _XklXmmFindSwitchOption( unsigned keycode, 
+XmmSwitchOptionPtr _XklXmmFindSwitchOption( unsigned keycode, 
                                                   unsigned state, 
                                                   int* currentShortcut_rv )
 {
@@ -116,14 +116,14 @@ const XmmSwitchOptionPtr _XklXmmFindSwitchOption( unsigned keycode,
   return NULL;
 }
 
-int _XklXmmResumeListen(  )
+int _XklXmmResumeListen( void )
 {
   if( _xklListenerType & XKLL_MANAGE_LAYOUTS )
     _XklXmmGrabShortcuts();
   return 0;
 }
 
-int _XklXmmPauseListen(  )
+int _XklXmmPauseListen( void )
 {
   if( _xklListenerType & XKLL_MANAGE_LAYOUTS )
     _XklXmmUngrabShortcuts();
@@ -140,7 +140,7 @@ unsigned _XklXmmGetNumGroups( void )
   return currentXmmConfig.numLayouts;
 }
   
-void _XklXmmFreeAllInfo(  )
+void _XklXmmFreeAllInfo( void )
 {
   if( currentXmmRules != NULL )
   {

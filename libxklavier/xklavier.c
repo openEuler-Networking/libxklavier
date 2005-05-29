@@ -9,8 +9,6 @@
 
 Display *_xklDpy;
 
-Bool _xklXkbExtPresent;
-
 XklState _xklCurState;
 
 Window _xklCurClient;
@@ -190,7 +188,7 @@ int XklStartListen( int what )
   return 0;
 }
 
-int XklStopListen(  )
+int XklStopListen( void )
 {
   XklPauseListen(  );
   return 0;
@@ -264,7 +262,7 @@ int XklInit( Display * a_dpy )
     ( _XklLoadAllInfo() ? 0 : _xklLastErrorCode ) : -1;
 }
 
-int XklTerm(  )
+int XklTerm( void )
 {
   XSetErrorHandler( ( XErrorHandler ) _xklDefaultErrHandler );
   _xklConfigCallback = NULL;
@@ -316,18 +314,18 @@ Bool XklUngrabKey( int keycode, unsigned modifiers )
   return Success == XUngrabKey( _xklDpy, keycode, 0, _xklRootWindow );
 }
 
-int XklGetNextGroup(  )
+int XklGetNextGroup( void )
 {
   return ( _xklCurState.group + 1 ) % XklGetNumGroups(  );
 }
                                                                                           
-int XklGetPrevGroup(  )
+int XklGetPrevGroup( void )
 {
   int n = XklGetNumGroups(  );
   return ( _xklCurState.group + n - 1 ) % n;
 }
 
-int XklGetRestoreGroup(  )
+int XklGetRestoreGroup( void )
 {
   XklState state;
   if( _xklCurClient == ( Window ) NULL )
@@ -449,7 +447,7 @@ void _XklAddAppWindow( Window appWin, Window parent, Bool ignoreExistingState,
 Bool _XklGetAppWindowBottomToTop( Window win, Window * appWin_return )
 {
   Window parent = ( Window ) NULL, rwin = ( Window ) NULL, *children = NULL;
-  int num = 0;
+  unsigned int num = 0;
 
   if( win == ( Window ) NULL || win == _xklRootWindow )
   {
@@ -490,7 +488,7 @@ Bool _XklGetAppWindow( Window win, Window * appWin_return )
 {
   Window parent = ( Window ) NULL,
     rwin = ( Window ) NULL, *children = NULL, *child;
-  int num = 0;
+  unsigned int num = 0;
   Bool rv;
 
   if( win == ( Window ) NULL || win == _xklRootWindow )
@@ -555,7 +553,7 @@ Bool _XklGetAppWindow( Window win, Window * appWin_return )
 /**
  * Loads the tree recursively.
  */
-Bool _XklLoadWindowTree(  )
+Bool _XklLoadWindowTree( void )
 {
   Window focused;
   int revert;
@@ -770,11 +768,12 @@ Bool _XklIsTransparentAppWindow( Window appWin )
 
 void _XklEnsureVTableInited( void )
 {
+  char *p;
   if ( xklVTable == NULL )
   {
     XklDebug( 0, "ERROR: XKL VTable is NOT initialized.\n" );
     /* force the crash! */
-    char *p = NULL; *p = '\0';
+    p = NULL; *p = '\0';
   }
 }
 
