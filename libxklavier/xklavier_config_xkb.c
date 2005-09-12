@@ -218,6 +218,8 @@ static XkbDescPtr _XklConfigGetKeyboard( XkbComponentNamesPtr componentNamesPtr,
         case 0:
           /* child */
           XklDebug( 160, "Executing %s\n", XKBCOMP );
+          XklDebug( 160, "%s %s %s %s %s %s %s\n",
+            XKBCOMP, XKBCOMP, "-I", "-I" XKB_BASE, "-xkm", xkbFN, xkmFN );
           execl( XKBCOMP, XKBCOMP, "-I", "-I" XKB_BASE, "-xkm", xkbFN, xkmFN, NULL );
           XklDebug( 0, "Could not exec %s: %d\n", XKBCOMP, errno );
           exit( 1 );
