@@ -225,7 +225,7 @@ static XkbDescPtr _XklConfigGetKeyboard( XkbComponentNamesPtr componentNamesPtr,
           exit( 1 );
         default:
           /* parent */
-          pid = wait( &status );
+          pid = waitpid( cpid, &status, 0 );
           XklDebug( 150, "Return status of %d (well, started %d): %d\n", pid, cpid, status );
           memset( (char *)&result, 0, sizeof(result) );
           result.xkb = XkbAllocKeyboard();
@@ -261,9 +261,13 @@ static XkbDescPtr _XklConfigGetKeyboard( XkbComponentNamesPtr componentNamesPtr,
               }
               fclose( tmpxkm );
               XklDebug( 160, "Unlinking the temporary xkm file %s\n", xkmFN );
-              if ( remove( xkmFN ) == -1 )
-                XklDebug( 0, "Could not unlink the temporary xkm file %s: %d\n", 
-                             xkmFN, errno );
+              if ( _xklDebugLevel < 500 ) /* don't remove on high debug levels! */
+              {
+                if ( remove( xkmFN ) == -1 )
+                  XklDebug( 0, "Could not unlink the temporary xkm file %s: %d\n", 
+                               xkmFN, errno );
+              } else
+                XklDebug( 500, "Well, not really - the debug level is too high: %d\n", _xklDebugLevel );
             } else /* could not open the file */
             {
               XklDebug( 0, "Could not open the temporary xkm file %s\n", xkmFN );
@@ -277,9 +281,13 @@ static XkbDescPtr _XklConfigGetKeyboard( XkbComponentNamesPtr componentNamesPtr,
           break;
       }
       XklDebug( 160, "Unlinking the temporary xkb file %s\n", xkbFN );
-      if ( remove( xkbFN ) == -1 )
-        XklDebug( 0, "Could not unlink the temporary xkb file %s: %d\n", 
-                  xkbFN, errno );
+      if ( _xklDebugLevel < 500 ) /* don't remove on high debug levels! */
+      {
+        if ( remove( xkbFN ) == -1 )
+          XklDebug( 0, "Could not unlink the temporary xkb file %s: %d\n", 
+                    xkbFN, errno );
+      } else
+        XklDebug( 500, "Well, not really - the debug level is too high: %d\n", _xklDebugLevel );
     } else /* could not open input tmp file */
     {
       XklDebug( 0, "Could not open tmp XKB file [%s]: %d\n", xkbFN, errno );

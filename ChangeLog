@@ -1,3 +1,13 @@
+2005-12-03 svu
+	
+	* libxklavier/xklavier_config_xkb.c:
+	wait -> waitpid, fixed http://bugzilla.gnome.org/show_bug.cgi?id=322955
+
+2005-09-22 svu
+	
+	* libxklavier/xklavier_config_xkb.c:
+	don't remove tmp files on debug level >= 500
+
 2005-05-29 svu
 	
 	* libxklavier/xklavier.c,
