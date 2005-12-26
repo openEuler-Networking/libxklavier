@@ -57,8 +57,15 @@ AC_ARG_WITH( xkb_base,
              [  --with-xkb-base=DIR        XKB base path (by default it is /usr/X11R6/lib/X11/xkb)],
              xkb_base="$withval", 
              xkb_base="$x_libraries/X11/xkb" )
-			 
+
 AC_DEFINE_UNQUOTED(XKB_BASE,"${xkb_base}",Base for XKB configuration)
+
+AC_ARG_WITH( xkb_bin_base,
+             [  --with-xkb-bin-base=DIR        XKB executables base path],
+             xkb_bin_base="$withval", 
+             xkb_bin_base="$xkb_base" )
+			 
+AC_DEFINE_UNQUOTED(XKB_BIN_BASE,"${xkb_bin_base}",Base for XKB executables)
 
 AC_ARG_WITH( xkb_default_ruleset,
              [  --with-xkb-default-ruleset=RULES        XKB default set of rules (by default it is base)],

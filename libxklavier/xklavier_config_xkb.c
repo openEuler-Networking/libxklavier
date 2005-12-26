@@ -24,7 +24,7 @@
 /* For "bad" X servers we hold our own copy */
 #define XML_CFG_FALLBACK_PATH ( DATA_DIR "/xfree86.xml" )
 
-#define XKBCOMP ( XKB_BASE "/xkbcomp" )
+#define XKBCOMP ( XKB_BIN_BASE "/xkbcomp" )
 
 #define XK_XKB_KEYS
 #include <X11/keysymdef.h>
