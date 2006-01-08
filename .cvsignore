@@ -30,4 +30,5 @@ depcomp
 install-sh
 missing
 mkinstalldirs
+libxklavier-*.tar.*
 
