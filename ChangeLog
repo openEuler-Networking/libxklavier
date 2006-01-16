@@ -1,3 +1,7 @@
+2006-01-16 svu
+	
+	* libxklavier/xklavier_config.c: handling XML comments
+
 2005-12-26 svu
 	
 	* configure.in, libxklavier/xklavier_config_xkb.c: adding XKB_BIN_BASE,

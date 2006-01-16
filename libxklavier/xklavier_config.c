@@ -60,6 +60,7 @@ static Bool _XklReadConfigItem( xmlNodePtr iptr, XklConfigItemPtr pci )
           break;
         return False;
       case XML_TEXT_NODE:
+      case XML_COMMENT_NODE:
         ptr = ptr->next;
         continue;
       default:
