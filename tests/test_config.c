@@ -8,6 +8,10 @@
 #include <libxklavier/xklavier.h>
 #include <libxklavier/xklavier_config.h>
 
+#ifdef HAVE_SETLOCALE
+# include <locale.h>
+#endif
+
 #ifdef __STRICT_ANSI__
 /* these are functions which are NOT in ANSI C. 
    Probably we should provide the implementation */
@@ -86,6 +90,10 @@ int main( int argc, char * const argv[] )
     printUsage();
     exit( 0 );
   }
+
+#ifdef HAVE_SETLOCALE
+  setlocale( LC_ALL, "" );
+#endif
 
   dpy = XOpenDisplay( NULL );
   if ( dpy == NULL )
