@@ -13,363 +13,331 @@
 #include "xklavier_config.h"
 #include "xklavier_private.h"
 
-void XklConfigRecInit( XklConfigRecPtr data )
+void xkl_config_rec_init( XklConfigRec * data )
 {
   /* clear the structure VarDefsPtr... */
   memset( ( void * ) data, 0, sizeof( XklConfigRec ) );
 }
 
-static Bool PtrsEqual( char* p1, char* p2 )
+static gboolean xkl_strings_equal( gchar* p1, gchar* p2 )
 {
   if ( p1 == p2 )
-    return True;
+    return TRUE;
   if ( ( p1 == NULL && p2 != NULL ) ||
        ( p1 != NULL && p2 == NULL ) )
-    return False;
-  return !strcmp( p1, p2 );
+    return FALSE;
+  return !g_ascii_strcasecmp( p1, p2 );
 }
 
-static Bool ListsEqual( int numItems1, char** items1, 
-                        int numItems2, char** items2 )
+static gboolean xkl_lists_equal( gchar **items1, gchar **items2 )
 {
-  int i;
-  if ( numItems1 != numItems2 )
-    return False;
   if ( items1 == items2 )
-    return True;
-  for( i = numItems1; --i >= 0; )
-     if ( !PtrsEqual( *items1++ , *items2++ ) )
-       return False;
-  return True;
+    return TRUE;
+
+  if ( ( items1 == NULL && items2 != NULL ) ||
+       ( items1 != NULL && items2 == NULL ) )
+    return FALSE;
+
+  while ( *items1 != NULL && *items2 != NULL )
+     if ( !xkl_strings_equal( *items1++ , *items2++ ) )
+       return FALSE;
+
+  return ( *items1 == NULL && *items2 == NULL );
 }
 
-static Bool _XklGetDefaultNamesProp( char **rulesFileOut, XklConfigRecPtr data )
+static gboolean xkl_get_default_names_prop( char **rules_file_out,
+                                            XklConfigRec *data )
 {
-  if ( rulesFileOut != NULL )
-    *rulesFileOut = strdup( XKB_DEFAULT_RULESET );
-  data->model = strdup( xklVTable->defaultModel );
+  if ( rules_file_out != NULL )
+    *rules_file_out = strdup( XKB_DEFAULT_RULESET );
+  data->model = g_strdup( xkl_vtable->default_model );
 /* keeping Nvariants = Nlayouts */
-  data->numLayouts = data->numVariants = 1;
-  data->layouts = malloc( sizeof( char * ) );
-  data->layouts[0] = strdup( xklVTable->defaultLayout );
-  data->variants = malloc( sizeof( char * ) );
-  data->variants[0] = strdup( "" );
-  data->numOptions = 0;
+  data->layouts = g_new0 ( char *, 2 );
+  data->layouts[0] = g_strdup( xkl_vtable->default_layout );
+  data->variants = g_new0 ( char *, 2 );
+  data->variants[0] = g_strdup( "" );
   data->options = NULL;
-  return True;
+  return TRUE;
 }
 
-Bool _XklConfigGetFullFromServer( char **rulesFileOut, XklConfigRecPtr data )
+gboolean xkl_config_get_full_from_server( char **rules_file_out,
+                                          XklConfigRec *data )
 {
-  Bool rv =
-    XklGetNamesProp( xklVTable->baseConfigAtom, rulesFileOut, data );
+  gboolean rv =
+    xkl_get_names_prop( xkl_vtable->base_config_atom, rules_file_out, data );
 
   if( !rv )
-    rv = _XklGetDefaultNamesProp( rulesFileOut, data );
+    rv = xkl_get_default_names_prop( rules_file_out, data );
 
   return rv;
 }
 
-Bool XklConfigRecEquals( XklConfigRecPtr data1, XklConfigRecPtr data2 )
+gboolean xkl_config_rec_equals( XklConfigRec *data1, XklConfigRec *data2 )
 {
   if ( data1 == data2 )
-    return True;
-  if ( !PtrsEqual( data1->model, data2->model ) )
-    return False;
-  if ( !ListsEqual( data1->numLayouts, data1->layouts, 
-                    data2->numLayouts, data2->layouts ) )
-    return False;
-  if ( !ListsEqual( data1->numVariants, data1->variants, 
-                    data2->numVariants, data2->variants ) )
-    return False;
-  return ListsEqual( data1->numOptions, data1->options, 
-                     data2->numOptions, data2->options );
+    return TRUE;
+  if ( !xkl_strings_equal( data1->model, data2->model ) )
+    return FALSE;
+  if ( !xkl_lists_equal( data1->layouts, 
+                         data2->layouts ) )
+    return FALSE;
+  if ( !xkl_lists_equal( data1->variants, 
+                         data2->variants ) )
+    return FALSE;
+  return xkl_lists_equal( data1->options, 
+                          data2->options );
 }
 
-void XklConfigRecDestroy( XklConfigRecPtr data )
+void xkl_config_rec_destroy( XklConfigRec * data )
 {
-  int i;
-  char **p;
-
   if( data->model != NULL )
-    free( data->model );
+    g_free( data->model );
 
-  if( ( p = data->layouts ) != NULL )
-  {
-    for( i = data->numLayouts; --i >= 0; )
-      free( *p++ );
-    free( data->layouts );
-  }
-
-  if( ( p = data->variants ) != NULL )
-  {
-    for( i = data->numVariants; --i >= 0; )
-      free( *p++ );
-    free( data->variants );
-  }
-
-  if( ( p = data->options ) != NULL )
-  {
-    for( i = data->numOptions; --i >= 0; )
-      free( *p++ );
-    free( data->options );
-  }
+  g_strfreev ( data->layouts );
+  g_strfreev ( data->variants );
+  g_strfreev ( data->options );
+  data->layouts =
+  data->variants =
+  data->options = NULL;
 }
 
-void XklConfigRecReset( XklConfigRecPtr data )
+void xkl_config_rec_reset( XklConfigRec * data )
 {
-  XklConfigRecDestroy( data );
-  XklConfigRecInit( data );
+  xkl_config_rec_destroy( data );
+  xkl_config_rec_init( data );
 }
 
-Bool XklConfigGetFromServer( XklConfigRecPtr data )
+gboolean xkl_config_get_from_server( XklConfigRec * data )
 {
-  return _XklConfigGetFullFromServer( NULL, data );
+  return xkl_config_get_full_from_server( NULL, data );
 }
 
-Bool XklConfigGetFromBackup( XklConfigRecPtr data )
+gboolean xkl_config_get_from_backup( XklConfigRec * data )
 {
-  Bool rv =
-    XklGetNamesProp( xklVTable->backupConfigAtom, NULL, data );
-
-  return rv;
+  return xkl_get_names_prop( xkl_vtable->backup_config_atom, NULL, data );
 }
 
-Bool XklBackupNamesProp( void )
+gboolean xkl_backup_names_prop( void )
 {
-  Bool rv = True;
-  char *rf = NULL;
+  gboolean rv = TRUE;
+  gchar *rf = NULL;
   XklConfigRec data;
-  Bool cgp = False;
+  gboolean cgp = FALSE;
 
-  XklConfigRecInit( &data );
-  if( XklGetNamesProp
-      ( xklVTable->backupConfigAtom, NULL, &data ) )
+  xkl_config_rec_init( &data );
+  if( xkl_get_names_prop
+      ( xkl_vtable->backup_config_atom, NULL, &data ) )
   {
-    XklConfigRecDestroy( &data );
-    return True;
+    xkl_config_rec_destroy( &data );
+    return TRUE;
   }
   /* "backup" property is not defined */
-  XklConfigRecReset( &data );
-  cgp = _XklConfigGetFullFromServer( &rf, &data );
+  xkl_config_rec_reset( &data );
+  cgp = xkl_config_get_full_from_server( &rf, &data );
 
   if ( cgp )
   {
-#if 0
-    int i;
-    XklDebug( 150, "Original model: [%s]\n", data.model );
-
-    XklDebug( 150, "Original layouts(%d):\n", data.numLayouts );
-    for( i = data.numLayouts; --i >= 0; )
-      XklDebug( 150, "%d: [%s]\n", i, data.layouts[i] );
-
-    XklDebug( 150, "Original variants(%d):\n", data.numVariants );
-    for( i = data.numVariants; --i >= 0; )
-      XklDebug( 150, "%d: [%s]\n", i, data.variants[i] );
-
-    XklDebug( 150, "Original options(%d):\n", data.numOptions );
-    for( i = data.numOptions; --i >= 0; )
-      XklDebug( 150, "%d: [%s]\n", i, data.options[i] );
-#endif
-    if( !XklSetNamesProp( xklVTable->backupConfigAtom, rf, &data ) )
+    if( !xkl_set_names_prop( xkl_vtable->backup_config_atom, rf, &data ) )
     {
-      XklDebug( 150, "Could not backup the configuration" );
-      rv = False;
+      xkl_debug( 150, "Could not backup the configuration" );
+      rv = FALSE;
     }
     if( rf != NULL )
-      free( rf );
+      g_free( rf );
   } else
   {
-    XklDebug( 150, "Could not get the configuration for backup" );
-    rv = False;
+    xkl_debug( 150, "Could not get the configuration for backup" );
+    rv = FALSE;
   }
-  XklConfigRecDestroy( &data );
+  xkl_config_rec_destroy( &data );
   return rv;
 }
 
-Bool XklRestoreNamesProp( void )
+gboolean xkl_restore_names_prop( void )
 {
-  Bool rv = True;
-  char *rf = NULL;
+  gboolean rv = TRUE;
+  gchar *rf = NULL;
   XklConfigRec data;
 
-  XklConfigRecInit( &data );
-  if( !XklGetNamesProp( xklVTable->backupConfigAtom, NULL, &data ) )
+  xkl_config_rec_init( &data );
+  if( !xkl_get_names_prop( xkl_vtable->backup_config_atom, NULL, &data ) )
   {
-    XklConfigRecDestroy( &data );
-    return False;
+    xkl_config_rec_destroy( &data );
+    return FALSE;
   }
 
-  if( !XklSetNamesProp( xklVTable->baseConfigAtom, rf, &data ) )
+  if( !xkl_set_names_prop( xkl_vtable->base_config_atom, rf, &data ) )
   {
-    XklDebug( 150, "Could not backup the configuration" );
-    rv = False;
+    xkl_debug( 150, "Could not backup the configuration" );
+    rv = FALSE;
   }
-  XklConfigRecDestroy( &data );
+  xkl_config_rec_destroy( &data );
   return rv;
 }
 
-Bool XklGetNamesProp( Atom rulesAtom,
-                      char **rulesFileOut, XklConfigRecPtr data )
+gboolean xkl_get_names_prop( Atom rules_atom,
+                             gchar **rules_file_out, 
+                             XklConfigRec *data )
 {
-  Atom realPropType;
+  Atom real_prop_type;
   int fmt;
-  unsigned long nitems, extraBytes;
-  char *propData = NULL, *out;
+  unsigned long nitems, extra_bytes;
+  char *prop_data = NULL, *out;
   Status rtrn;
 
   /* no such atom! */
-  if( rulesAtom == None )       /* property cannot exist */
+  if( rules_atom == None )       /* property cannot exist */
   {
-    _xklLastErrorMsg = "Could not find the atom";
-    return False;
+    xkl_last_error_message = "Could not find the atom";
+    return FALSE;
   }
 
   rtrn =
-    XGetWindowProperty( _xklDpy, _xklRootWindow, rulesAtom, 0L,
-                        _XKB_RF_NAMES_PROP_MAXLEN, False, XA_STRING,
-                        &realPropType, &fmt, &nitems, &extraBytes,
-                        ( unsigned char ** ) ( void * ) &propData );
+    XGetWindowProperty( xkl_display, xkl_root_window, rules_atom, 0L,
+                        XKB_RF_NAMES_PROP_MAXLEN, False, XA_STRING,
+                        &real_prop_type, &fmt, &nitems, &extra_bytes,
+                        ( unsigned char ** ) ( void * ) &prop_data );
   /* property not found! */
   if( rtrn != Success )
   {
-    _xklLastErrorMsg = "Could not get the property";
-    return False;
+    xkl_last_error_message = "Could not get the property";
+    return FALSE;
   }
   /* set rules file to "" */
-  if( rulesFileOut )
-    *rulesFileOut = NULL;
+  if( rules_file_out )
+    *rules_file_out = NULL;
 
   /* has to be array of strings */
-  if( ( extraBytes > 0 ) || ( realPropType != XA_STRING ) || ( fmt != 8 ) )
+  if( ( extra_bytes > 0 ) || ( real_prop_type != XA_STRING ) || ( fmt != 8 ) )
   {
-    if( propData )
-      XFree( propData );
-    _xklLastErrorMsg = "Wrong property format";
-    return False;
+    if( prop_data )
+      XFree( prop_data );
+    xkl_last_error_message = "Wrong property format";
+    return FALSE;
   }
 
-  if( !propData )
+  if( !prop_data )
   {
-    _xklLastErrorMsg = "No properties returned";
-    return False;
+    xkl_last_error_message = "No properties returned";
+    return FALSE;
   }
 
   /* rules file */
-  out = propData;
-  if( out && ( *out ) && rulesFileOut )
-    *rulesFileOut = strdup( out );
+  out = prop_data;
+  if( out && ( *out ) && rules_file_out )
+    *rules_file_out = g_strdup( out );
   out += strlen( out ) + 1;
 
   /* if user is interested in rules only - don't waste the time */
   if( !data )
   {
-    XFree( propData );
-    return True;
+    XFree( prop_data );
+    return TRUE;
   }
 
-  if( ( out - propData ) < nitems )
+  if( ( out - prop_data ) < nitems )
   {
     if( *out )
-      data->model = strdup( out );
+      data->model = g_strdup( out );
     out += strlen( out ) + 1;
   }
 
-  if( ( out - propData ) < nitems )
+  if( ( out - prop_data ) < nitems )
   {
-    _XklConfigRecSplitLayouts( data, out );
+    xkl_config_rec_split_layouts( data, out );
     out += strlen( out ) + 1;
   }
 
-  if( ( out - propData ) < nitems )
+  if( ( out - prop_data ) < nitems )
   {
-    int i;
-    char **theLayout, **theVariant;
-    _XklConfigRecSplitVariants( data, out );
+    gint nv, nl;
+    gchar **layout, **variant;
+    xkl_config_rec_split_variants( data, out );
     /*
        Now have to ensure that number of variants matches the number of layouts
        The 'remainder' is filled with NULLs (not ""s!)
      */
-    if( data->numVariants < data->numLayouts )
+    
+    nv = g_strv_length( data->variants );
+    nl = g_strv_length( data->layouts );
+    if( nv < nl )
     {
-      data->variants =
-        realloc( data->variants, data->numLayouts * sizeof( char * ) );
-      memset( data->variants + data->numVariants, 0,
-              ( data->numLayouts - data->numVariants ) * sizeof( char * ) );
-      data->numVariants = data->numLayouts;
+      data->variants = g_realloc( data->variants,
+                                  ( nl + 1 ) * sizeof( char * ) );
+      memset( data->variants + nv + 1, 0,
+              ( nl - nv ) * sizeof( char * ) );
     }
     /* take variants from layouts like ru(winkeys) */
-    theLayout = data->layouts;
-    theVariant = data->variants;
-    for( i = data->numLayouts; --i >= 0; theLayout++, theVariant++ )
+    layout = data->layouts;
+    variant = data->variants;
+    while ( layout != NULL && variant != NULL )
     {
-      if( *theLayout != NULL )
+      gchar *varstart = g_strstr_len( *layout, -1, "(" );
+      if( varstart != NULL )
       {
-        char *varstart = strchr( *theLayout, '(' );
-        if( varstart != NULL )
+        gchar *varend = g_strstr_len( varstart, -1, ")" );
+        if( varend != NULL )
         {
-          char *varend = strchr( varstart, ')' );
-          if( varend != NULL )
-          {
-            int varlen = varend - varstart;
-            int laylen = varstart - *theLayout;
-            /* I am not sure - but I assume variants in layout have priority */
-            char *var = *theVariant = ( *theVariant != NULL ) ?
-              realloc( *theVariant, varlen ) : malloc( varlen );
-            memcpy( var, varstart + 1, --varlen );
-            var[varlen] = '\0';
-            
-            ( (char*)realloc( *theLayout, laylen + 1 ) )[laylen] = '\0';
-          }
+          gint varlen = varend - varstart;
+          gint laylen = varstart - *layout;
+          /* I am not sure - but I assume variants in layout have priority */
+          gchar *var = *variant = ( *variant != NULL ) ?
+              g_realloc( *variant, varlen ) : g_new( gchar, varlen );
+          memcpy( var, varstart + 1, --varlen );
+          var[varlen] = '\0';
+          /* Resize the original layout */ 
+          ( (char*)g_realloc( *layout, laylen + 1 ) )[laylen] = '\0';
         }
       }
+      layout++;
+      variant++;
     }
     out += strlen( out ) + 1;
   }
 
-  if( ( out - propData ) < nitems )
+  if( ( out - prop_data ) < nitems )
   {
-    _XklConfigRecSplitOptions( data, out );
-/*    out += strlen( out ) + 1; */
+    xkl_config_rec_split_options( data, out );
   }
-  XFree( propData );
-  return True;
+  XFree( prop_data );
+  return TRUE;
 }
 
 /* taken from XFree86 maprules.c */
-Bool XklSetNamesProp( Atom rulesAtom,
-                      char *rulesFile, const XklConfigRecPtr data )
+gboolean xkl_set_names_prop( Atom rules_atom,
+                             gchar *rules_file,
+                             const XklConfigRec * data )
 {
-  int len, rv;
-  char *pval;
-  char *next;
-  char *allLayouts = _XklConfigRecMergeLayouts( data );
-  char *allVariants = _XklConfigRecMergeVariants( data );
-  char *allOptions = _XklConfigRecMergeOptions( data );
+  gint len, rv;
+  gchar *pval;
+  gchar *next;
+  gchar *all_layouts = xkl_config_rec_merge_layouts( data );
+  gchar *all_variants = xkl_config_rec_merge_variants( data );
+  gchar *all_options = xkl_config_rec_merge_options( data );
 
-  len = ( rulesFile ? strlen( rulesFile ) : 0 );
+  len = ( rules_file ? strlen( rules_file ) : 0 );
   len += ( data->model ? strlen( data->model ) : 0 );
-  len += ( allLayouts ? strlen( allLayouts ) : 0 );
-  len += ( allVariants ? strlen( allVariants ) : 0 );
-  len += ( allOptions ? strlen( allOptions ) : 0 );
+  len += ( all_layouts ? strlen( all_layouts ) : 0 );
+  len += ( all_variants ? strlen( all_variants ) : 0 );
+  len += ( all_options ? strlen( all_options ) : 0 );
   if( len < 1 )
-    return True;
+    return TRUE;
 
   len += 5;                     /* trailing NULs */
 
-  pval = next = ( char * ) malloc( len + 1 );
+  pval = next = g_new( char, len + 1 );
   if( !pval )
   {
-    _xklLastErrorMsg = "Could not allocate buffer";
-    if ( allLayouts != NULL ) free( allLayouts );
-    if ( allVariants != NULL ) free( allVariants );
-    if ( allOptions != NULL ) free( allOptions );
-    return False;
+    xkl_last_error_message = "Could not allocate buffer";
+    if ( all_layouts != NULL ) g_free( all_layouts );
+    if ( all_variants != NULL ) g_free( all_variants );
+    if ( all_options != NULL ) g_free( all_options );
+    return FALSE;
   }
-  if( rulesFile )
+  if( rules_file )
   {
-    strcpy( next, rulesFile );
-    next += strlen( rulesFile );
+    strcpy( next, rules_file );
+    next += strlen( rules_file );
   }
   *next++ = '\0';
   if( data->model )
@@ -380,36 +348,36 @@ Bool XklSetNamesProp( Atom rulesAtom,
   *next++ = '\0';
   if( data->layouts )
   {
-    strcpy( next, allLayouts );
-    next += strlen( allLayouts );
+    strcpy( next, all_layouts );
+    next += strlen( all_layouts );
   }
   *next++ = '\0';
   if( data->variants )
   {
-    strcpy( next, allVariants );
-    next += strlen( allVariants );
+    strcpy( next, all_variants );
+    next += strlen( all_variants );
   }
   *next++ = '\0';
   if( data->options )
   {
-    strcpy( next, allOptions );
-    next += strlen( allOptions );
+    strcpy( next, all_options );
+    next += strlen( all_options );
   }
   *next++ = '\0';
   if( ( next - pval ) != len )
   {
-    XklDebug( 150, "Illegal final position: %d/%d\n", ( next - pval ), len );
-    if ( allLayouts != NULL ) free( allLayouts );
-    if ( allVariants != NULL ) free( allVariants );
-    if ( allOptions != NULL ) free( allOptions );
-    free( pval );
-    _xklLastErrorMsg = "Internal property parsing error";
-    return False;
+    xkl_debug( 150, "Illegal final position: %d/%d\n", ( next - pval ), len );
+    if ( all_layouts != NULL ) g_free( all_layouts );
+    if ( all_variants != NULL ) g_free( all_variants );
+    if ( all_options != NULL ) g_free( all_options );
+    g_free( pval );
+    xkl_last_error_message = "Internal property parsing error";
+    return FALSE;
   }
 
-  rv = XChangeProperty( _xklDpy, _xklRootWindow, rulesAtom, XA_STRING, 8,
+  rv = XChangeProperty( xkl_display, xkl_root_window, rules_atom, XA_STRING, 8,
                         PropModeReplace, ( unsigned char * ) pval, len );
-  XSync( _xklDpy, False );
+  XSync( xkl_display, False );
 #if 0
   for( i = len - 1; --i >= 0; )
     if( pval[i] == '\0' )
@@ -417,9 +385,9 @@ Bool XklSetNamesProp( Atom rulesAtom,
   XklDebug( 150, "Stored [%s] of length %d to [%s] of %X: %d\n", pval, len,
             propName, _xklRootWindow, rv );
 #endif
-  if ( allLayouts != NULL ) free( allLayouts );
-  if ( allVariants != NULL ) free( allVariants );
-  if ( allOptions != NULL ) free( allOptions );
-  free( pval );
-  return True;
+  if ( all_layouts != NULL ) g_free( all_layouts );
+  if ( all_variants != NULL ) g_free( all_variants );
+  if ( all_options != NULL ) g_free( all_options );
+  g_free( pval );
+  return TRUE;
 }

@@ -96,7 +96,7 @@ Bool _XklXkbConfigLoadRegistry( void )
 }
 
 #ifdef XKB_HEADERS_PRESENT
-Bool _XklXkbConfigPrepareNative( const XklConfigRecPtr data, XkbComponentNamesPtr componentNamesPtr )
+Bool _XklXkbConfigPrepareNative( const XklConfigRec * data, XkbComponentNamesPtr componentNamesPtr )
 {
   XkbRF_VarDefsRec _xklVarDefs;
   Bool gotComponents;
@@ -301,7 +301,7 @@ static XkbDescPtr _XklConfigGetKeyboard( XkbComponentNamesPtr componentNamesPtr,
   return xkb;
 }
 #else /* no XKB headers */
-Bool _XklXkbConfigPrepareNative( const XklConfigRecPtr data, void * componentNamesPtr )
+Bool _XklXkbConfigPrepareNative( const XklConfigRec * data, void * componentNamesPtr )
 {
   return False;
 }
@@ -353,7 +353,7 @@ Bool _XklXkbConfigMultipleLayoutsSupported( void )
   return supportState == SUPPORTED;
 }
 
-Bool _XklXkbConfigActivate( const XklConfigRecPtr data )
+Bool _XklXkbConfigActivate( const XklConfigRec * data )
 {
   Bool rv = False;
 #if 0
@@ -401,7 +401,7 @@ Bool _XklXkbConfigActivate( const XklConfigRecPtr data )
 }
 
 Bool _XklXkbConfigWriteFile( const char *fileName, 
-                             const XklConfigRecPtr data,
+                             const XklConfigRec * data,
                              const Bool binary )
 {
   Bool rv = False;

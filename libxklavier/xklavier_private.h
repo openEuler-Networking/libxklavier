@@ -5,71 +5,71 @@
 
 #include <libxklavier/xklavier_config.h>
 
-typedef Bool ( *XklConfigActivateHandler )( const XklConfigRecPtr data );
+typedef gboolean ( *XklVTConfigActivateFunc )( const XklConfigRec * data );
 
-typedef void ( *XklConfigInitHandler )( void );
+typedef void ( *XklVTConfigInitFunc )( void );
 
-typedef Bool ( *XklConfigLoadRegistryHandler )( void );
+typedef gboolean ( *XklVTConfigLoadRegistryFunc )( void );
 
-typedef Bool ( *XklConfigWriteFileHandler )( const char *fileName,
-                                             const XklConfigRecPtr data,
-                                             const Bool binary );
+typedef gboolean ( *XklVTConfigWriteFileFunc )( const gchar *file_name,
+                                                const XklConfigRec * data,
+                                                const gboolean binary );
 
-typedef int ( *XklEventHandler )( XEvent *xev );
+typedef gint ( *XklVTEventFunc )( XEvent *xev );
 
-typedef void ( *XklFreeAllInfoHandler )( void );
+typedef void ( *XklVTFreeAllInfoFunc )( void );
 
-typedef const char **( *XklGetGroupNamesHandler )( void );
+typedef const gchar **( *XklVTGetGroupNamesFunc )( void );
 
-typedef unsigned ( *XklGetMaxNumGroupsHandler )( void );
+typedef gint ( *XklVTGetMaxNumGroupsFunc )( void );
 
-typedef unsigned ( *XklGetNumGroupsHandler )( void );
+typedef gint ( *XklVTGetNumGroupsFunc )( void );
 
-typedef void ( *XklGetRealStateHandler)( XklState * curState_return );
+typedef void ( *XklVTGetServerStateFunc)( XklState * current_state_out );
 
-typedef Bool ( *XklIfCachedInfoEqualsActualHandler) ( void );
+typedef gboolean ( *XklVTIfCachedInfoEqualsActualFunc) ( void );
 
-typedef Bool ( *XklLoadAllInfoHandler )( void );
+typedef gboolean ( *XklVTLoadAllInfoFunc )( void );
 
-typedef void ( *XklLockGroupHandler )( int group );
+typedef void ( *XklVTLockGroupFunc )( gint group );
 
-typedef int ( *XklPauseResumeListenHandler )( void );
+typedef gint ( *XklVTPauseResumeListenFunc )( void );
 
-typedef void ( *XklSetIndicatorsHandler )( const XklState *windowState );
+typedef void ( *XklVTSetIndicatorsFunc )( const XklState *window_state );
 
 typedef struct
 {
   /**
    * Backend name
    */
-  const char *id;
+  const gchar *id;
 
   /**
    * Functions supported by the backend, combination of XKLF_* constants
    */
-  int features;
+  guint8 features;
 
   /**
    * Activates the configuration.
    * xkb: create proper the XkbDescRec and send it to the server
    * xmodmap: save the property, init layout #1
    */
-  XklConfigActivateHandler xklConfigActivateHandler;
+  XklVTConfigActivateFunc config_activate_func;
 
   /**
    * Background-specific initialization.
    * xkb: XkbInitAtoms - init internal xkb atoms table
    * xmodmap: void.
    */
-  XklConfigInitHandler xklConfigInitHandler; /* private */
+  XklVTConfigInitFunc config_init_func; /* private */
 
   /**
    * Loads the registry tree into DOM (using whatever path(s))
-   * The XklConfigFreeRegistry is static - no virtualization necessary.
+   * The XklVTConfigFreeRegistry is static - no virtualization necessary.
    * xkb: loads xml from XKB_BASE+"/rules/"+ruleset+".xml"
    * xmodmap: loads xml from XMODMAP_BASE+"/"+ruleset+".xml"
    */
-  XklConfigLoadRegistryHandler xklConfigLoadRegistryHandler;
+  XklVTConfigLoadRegistryFunc config_load_registry_func;
 
   /**
    * Write the configuration into the file (binary/textual)
@@ -77,63 +77,63 @@ typedef struct
    * xmodmap: if text requested, just dump XklConfigRec to the 
    * file - not really useful. If binary - fail (not supported)
    */
-  XklConfigWriteFileHandler xklConfigWriteFileHandler;
+  XklVTConfigWriteFileFunc config_write_file_func;
 
   /**
    * Handles X events.
    * xkb: XkbEvent handling
    * xmodmap: keep track on the root window properties. What else can we do?
    */
-  XklEventHandler xklEventHandler;
+  XklVTEventFunc event_func;
 
   /**
    * Flushes the cached server config info.
    * xkb: frees XkbDesc
    * xmodmap: frees internal XklConfigRec
    */
-  XklFreeAllInfoHandler xklFreeAllInfoHandler; /* private */
+  XklVTFreeAllInfoFunc free_all_info_func; /* private */
 
   /**
    * Get the list of the group names
    * xkb: return cached list of the group names
    * xmodmap: return the list of layouts from the internal XklConfigRec
    */
-  XklGetGroupNamesHandler xklGetGroupNamesHandler;
+  XklVTGetGroupNamesFunc get_group_names_func;
 
   /**
    * Get the maximum number of loaded groups
    * xkb: returns 1 or XkbNumKbdGroups
    * xmodmap: return 0
    */
-  XklGetMaxNumGroupsHandler xklGetMaxNumGroupsHandler;
+  XklVTGetMaxNumGroupsFunc get_max_num_groups_func;
 
   /**
    * Get the number of loaded groups
    * xkb: return from the cached XkbDesc
    * xmodmap: return number of layouts from internal XklConfigRec
    */
-  XklGetNumGroupsHandler xklGetNumGroupsHandler;
+  XklVTGetNumGroupsFunc get_num_groups_func;
 
   /**
    * Gets the current stateCallback
    * xkb: XkbGetState and XkbGetIndicatorState
    * xmodmap: check the root window property (regarding the group)
    */
-  XklGetRealStateHandler xklGetRealStateHandler;
+  XklVTGetServerStateFunc get_server_state_func;
 
   /**
    * Compares the cached info with the actual one, from the server
    * xkb: Compares some parts of XkbDescPtr
    * xmodmap: returns False
    */
-  XklIfCachedInfoEqualsActualHandler xklIfCachedInfoEqualsActualHandler;
+  XklVTIfCachedInfoEqualsActualFunc if_cached_info_equals_actual_func;
 
   /**
    * Loads the configuration info from the server
    * xkb: loads XkbDesc, names, indicators
    * xmodmap: loads internal XklConfigRec from server
    */
-  XklLoadAllInfoHandler xklLoadAllInfoHandler; /* private */
+  XklVTLoadAllInfoFunc load_all_info_func; /* private */
 
   /**
    * Switches the keyboard to the group N
@@ -141,28 +141,28 @@ typedef struct
    * xmodmap: changes the root window property 
    * (listener invokes xmodmap with appropriate config file).
    */
-  XklLockGroupHandler xklLockGroupHandler;
+  XklVTLockGroupFunc lock_group_func;
 
   /**
    * Stop tracking the keyboard-related events
    * xkb: XkbSelectEvents(..., 0)
    * xmodmap: Ungrab the switching shortcut.
    */
-  XklPauseResumeListenHandler xklPauseListenHandler;
+  XklVTPauseResumeListenFunc pause_listen_func;
 
   /**
    * Start tracking the keyboard-related events
    * xkb: XkbSelectEvents + XkbSelectEventDetails
    * xmodmap: Grab the switching shortcut.
    */
-  XklPauseResumeListenHandler xklResumeListenHandler;
+  XklVTPauseResumeListenFunc resume_listen_func;
 
   /**
    * Set the indicators state from the XklState
-   * xkb: _XklSetIndicator for all indicators
+   * xkb: XklSetIndicator for all indicators
    * xmodmap: NULL. Not supported
    */
-  XklSetIndicatorsHandler xklSetIndicatorsHandler; /* private */
+  XklVTSetIndicatorsFunc set_indicators_func; /* private */
   
   /* all data is private - no direct access */
   /**
@@ -170,139 +170,161 @@ typedef struct
    * xkb: _XKB_RF_NAMES_PROP_ATOM
    * xmodmap:  "_XMM_NAMES"
    */
-  Atom baseConfigAtom;
+  Atom base_config_atom;
   
   /**
    * The configuration backup atom
    * xkb: "_XKB_RULES_NAMES_BACKUP"
    * xmodmap: "_XMM_NAMES_BACKUP"
    */
-  Atom backupConfigAtom;
+  Atom backup_config_atom;
   
   /**
    * Fallback for missing model
    */
-  const char* defaultModel;
+  const gchar* default_model;
 
   /**
    * Fallback for missing layout
    */
-  const char* defaultLayout;
+  const gchar* default_layout;
   
 } XklVTable;
 
-extern void _XklEnsureVTableInited( void );
+extern void xkl_ensure_vtable_inited( void );
 
-extern void _XklAddAppWindow( Window win, Window parent, Bool force,
-                              XklState * initState );
-extern Bool _XklGetAppWindowBottomToTop( Window win, Window * appWin_return );
-extern Bool _XklGetAppWindow( Window win, Window * appWin_return );
+extern void xkl_process_focus_in_evt( XFocusChangeEvent *fev );
+extern void xkl_process_focus_out_evt( XFocusChangeEvent *fev );
+extern void xkl_process_property_evt( XPropertyEvent *rev );
+extern void xkl_process_create_window_evt( XCreateWindowEvent *cev );
 
-extern void _XklFocusInEvHandler( XFocusChangeEvent * fev );
-extern void _XklFocusOutEvHandler( XFocusChangeEvent * fev );
-extern void _XklPropertyEvHandler( XPropertyEvent * rev );
-extern void _XklCreateEvHandler( XCreateWindowEvent * cev );
+extern void xkl_process_error( Display *dpy, XErrorEvent *evt );
 
-extern void _XklErrHandler( Display * dpy, XErrorEvent * evt );
+extern void xkl_process_state_modification( XklStateChange change_type, 
+                                            gint group, 
+                                            unsigned inds,
+                                            gboolean set_indicators );
 
-extern Window _XklGetRegisteredParent( Window win );
-extern Bool _XklLoadAllInfo( void );
-extern void _XklFreeAllInfo( void );
-extern void _XklResetAllInfo( const char reason[] );
-extern Bool _XklLoadWindowTree( void );
-extern Bool _XklLoadSubtree( Window window, int level, XklState * initState );
+extern Window xkl_get_registered_parent( Window win );
+extern gboolean xkl_load_all_info( void );
+extern void xkl_free_all_info( void );
+extern void xkl_reset_all_info( const gchar reason[] );
+extern gboolean xkl_load_window_tree( void );
+extern gboolean xkl_load_subtree( Window window, 
+                                  gint level, 
+                                  XklState *init_state );
 
-extern Bool _XklHasWmState( Window win );
+extern gboolean xkl_has_wm_state( Window win );
 
-extern Bool _XklGetAppState( Window appWin, XklState * state_return );
-extern void _XklDelAppState( Window appWin );
-extern void _XklSaveAppState( Window appWin, XklState * state );
 
-extern void _XklSelectInputMerging( Window win, long mask );
+/**
+ * Toplevel window stuff
+ */
+extern void xkl_toplevel_window_add( Window win, 
+                                     Window parent, gboolean force,
+                                     XklState *init_state );
 
-extern char *_XklGetDebugWindowTitle( Window win );
+extern gboolean xkl_toplevel_window_find_bottom_to_top( Window win, 
+                                                       Window *toplevel_win_out );
 
-extern Status _XklStatusQueryTree( Display * display,
-                                   Window w,
-                                   Window * root_return,
-                                   Window * parent_return,
-                                   Window ** children_return,
-                                   unsigned int *nchildren_return );
+extern gboolean xkl_toplevel_window_find( Window win, 
+                                         Window *toplevel_win_out );
 
-extern Bool _XklSetIndicator( int indicatorNum, Bool set );
+extern gboolean xkl_toplevel_window_is_transparent( Window toplevel_win );
 
-extern void _XklTryCallStateCallback( XklStateChange changeType,
-                                      XklState * oldState );
+extern void xkl_toplevel_window_set_transparent( Window toplevel_win,
+                                                 gboolean transparent );
 
-extern void _XklI18NInit(  );
+extern gboolean xkl_toplevel_window_get_state( Window toplevel_win, 
+                                               XklState *state_out );
 
-extern char *_XklLocaleFromUtf8( const char *utf8string );
+extern void xkl_toplevel_window_remove_state( Window toplevel_win );
+extern void xkl_toplevel_window_save_state( Window toplevel_win, XklState *state );
+/***/
 
-extern int _XklGetLanguagePriority( const char *language );
+extern void xkl_select_input_merging( Window win, gulong mask );
 
-extern char* _XklGetRulesSetName( const char defaultRuleset[] );
+extern gchar *xkl_get_debug_window_title( Window win );
 
-extern Bool _XklConfigGetFullFromServer( char **rulesFileOut, 
-                                         XklConfigRecPtr data );
+extern Status xkl_status_query_tree( Display * display,
+                                     Window w,
+                                     Window * root_out,
+                                     Window * parent_out,
+                                     Window ** children_out,
+                                     guint *nchildren_out );
 
-extern char *_XklConfigRecMergeByComma( const char **array,
-                                        const int arrayLength );
+extern gboolean xkl_set_indicator( gint indicator_num, gboolean set );
 
-extern char *_XklConfigRecMergeLayouts( const XklConfigRecPtr data );
+extern void xkl_try_call_state_func( XklStateChange change_type,
+                                     XklState * old_state );
 
-extern char *_XklConfigRecMergeVariants( const XklConfigRecPtr data );
+extern void xkl_i18n_init( void );
 
-extern char *_XklConfigRecMergeOptions( const XklConfigRecPtr data );
+extern gchar *xkl_locale_from_utf8( const gchar *utf8string );
 
-extern void _XklConfigRecSplitByComma( char ***array,
-                                       int *arraySize, const char *merged );
+extern gint xkl_get_language_priority( const gchar *language );
 
-extern void _XklConfigRecSplitLayouts( XklConfigRecPtr data,
-                                       const char *merged );
+extern gchar* xkl_get_rules_set_name( const gchar default_ruleset[] );
 
-extern void _XklConfigRecSplitVariants( XklConfigRecPtr data,
-                                        const char *merged );
+extern gboolean xkl_config_get_full_from_server( gchar **rules_file_out,
+                                                 XklConfigRec * data );
 
-extern void _XklConfigRecSplitOptions( XklConfigRecPtr data,
-                                       const char *merged );
+extern gchar *xkl_strings_concat_comma_separated( gchar **array );
 
-extern void XklConfigDump( FILE* file,
-                           XklConfigRecPtr data );
+extern void xkl_strings_split_comma_separated( gchar ***array,
+                                               const gchar *merged );
+
+/**
+ * XConfigRec
+ */
+extern gchar *xkl_config_rec_merge_layouts( const XklConfigRec * data );
+
+extern gchar *xkl_config_rec_merge_variants( const XklConfigRec * data );
+
+extern gchar *xkl_config_rec_merge_options( const XklConfigRec * data );
+
+extern void xkl_config_rec_split_layouts( XklConfigRec * data,
+                                          const gchar *merged );
+
+extern void xkl_config_rec_split_variants( XklConfigRec * data,
+                                           const gchar *merged );
+
+extern void xkl_config_rec_split_options( XklConfigRec * data,
+                                          const gchar *merged );
+/***/
+
+extern void xkl_config_dump( FILE* file,
+                             XklConfigRec * data );
                            
-extern const char *_XklGetEventName( int type );
+extern const gchar *xkl_get_event_name( gint type );
 
-extern Bool _XklIsTransparentAppWindow( Window appWin );
+extern void xkl_update_current_state( gint group, 
+                                      unsigned indicators, 
+                                      const gchar reason[] );
 
-extern void _XklUpdateCurState( int group, unsigned indicators, const char reason[] );
+extern gint xkl_xkb_init( void );
 
-extern void _XklStateModificationHandler( XklStateChange changeType, 
-                                          int grp, 
-                                          unsigned inds,
-                                          Bool setInds );
+extern gint xkl_xmm_init( void );
 
-extern int _XklXkbInit( void );
+extern gboolean xkl_is_one_switch_to_secondary_group_allowed( void );
 
-extern int _XklXmmInit( void );
+extern void xkl_one_switch_to_secondary_group_performed( void );
 
-extern Bool _XklIsOneSwitchToSecondaryGroupAllowed( void );
+extern Display *xkl_display;
 
-extern void _XklOneSwitchToSecondaryGroupPerformed( void );
+extern Window xkl_root_window;
 
-extern Display *_xklDpy;
+extern XklState xkl_current_state;
 
-extern Window _xklRootWindow;
+extern Window xkl_current_client;
 
-extern XklState _xklCurState;
+extern Status xkl_last_error_code;
 
-extern Window _xklCurClient;
+extern const gchar *xkl_last_error_message;
 
-extern Status _xklLastErrorCode;
+extern XErrorHandler xkl_default_error_handler;
 
-extern const char *_xklLastErrorMsg;
-
-extern XErrorHandler _xklDefaultErrHandler;
-
-extern char *_xklIndicatorNames[];
+extern gchar *xkl_indicator_names[];
 
 enum { WM_NAME,
   WM_STATE,
@@ -314,39 +336,34 @@ enum { WM_NAME,
 #define XKLAVIER_STATE_PROP_LENGTH 2
 
 /* taken from XFree86 maprules.c */
-#define _XKB_RF_NAMES_PROP_MAXLEN 1024
+#define XKB_RF_NAMES_PROP_MAXLEN 1024
 
-extern Atom _xklAtoms[];
+extern Atom xkl_atoms[];
 
-extern Bool _xklAllowSecondaryGroupOnce;
+extern gboolean xkl_allow_secondary_group_once;
 
-extern int _xklDefaultGroup;
+extern gint xkl_default_group;
 
-extern Bool _xklSkipOneRestore;
+extern gboolean xkl_skip_one_restore;
 
-extern int _xklSecondaryGroupsMask;
+extern guint xkl_secondary_groups_mask;
 
-extern int _xklDebugLevel;
+extern gint xkl_debug_level;
 
-extern int _xklListenerType;
+extern guint xkl_listener_type;
 
-extern Window _xklPrevAppWindow;
+extern Window xkl_toplevel_window_prev;
 
 #define WINID_FORMAT "%lx"
 
-extern XklConfigCallback _xklConfigCallback;
+extern XklConfigNotifyFunc xkl_config_callback;
 
-extern void *_xklConfigCallbackData;
+extern gpointer xkl_config_callback_data;
 
-extern XklVTable *xklVTable;
+extern XklNewWindowNotifyFunc xkl_new_window_callback;
 
-#ifdef __STRICT_ANSI__
-/* these are functions which are NOT in ANSI C. 
-   Probably we should provide the implementation */
-extern int snprintf( char *s, size_t maxlen,
-                     const char *format, ... );
-                     
-extern char *strdup( const char *s );
-#endif
+extern gpointer xkl_new_window_callback_data;
+
+extern XklVTable *xkl_vtable;
 
 #endif

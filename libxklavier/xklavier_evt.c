@@ -7,55 +7,49 @@
 
 #include "xklavier_private.h"
 
-int XklFilterEvents( XEvent * xev )
+gint xkl_filter_events( XEvent *xev )
 {
   XAnyEvent *pe = ( XAnyEvent * ) xev;
-  XklDebug( 400, "**> Filtering event %d of type %d from window %d\n",
+  xkl_debug( 400, "**> Filtering event %d of type %d from window %d\n",
             pe->serial, pe->type, pe->window );
-  _XklEnsureVTableInited();
-  if ( !xklVTable->xklEventHandler( xev ) )
+  xkl_ensure_vtable_inited();
+  if ( !xkl_vtable->event_func( xev ) )
     switch ( xev->type )
     {                           /* core events */
       case FocusIn:
-        _XklFocusInEvHandler( &xev->xfocus );
+        xkl_process_focus_in_evt( &xev->xfocus );
         break;
       case FocusOut:
-        _XklFocusOutEvHandler( &xev->xfocus );
+        xkl_process_focus_out_evt( &xev->xfocus );
         break;
       case PropertyNotify:
-        _XklPropertyEvHandler( &xev->xproperty );
+        xkl_process_property_evt( &xev->xproperty );
         break;
       case CreateNotify:
-        _XklCreateEvHandler( &xev->xcreatewindow );
+        xkl_process_create_window_evt( &xev->xcreatewindow );
         break;
       case DestroyNotify:
-        XklDebug( 150, "Window " WINID_FORMAT " destroyed\n",
+        xkl_debug( 150, "Window " WINID_FORMAT " destroyed\n",
                   xev->xdestroywindow.window );
         break;
       case UnmapNotify:
-        XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
-        break;
       case MapNotify:
-        XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
-        break;
-      case MappingNotify:
-        XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
-        _XklResetAllInfo( "X event: MappingNotify" );
-        break;
       case GravityNotify:
-        XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
-        break;
       case ReparentNotify:
-        XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
+        xkl_debug( 200, "%s\n",  xkl_get_event_name( xev->type ) );
         break;                  /* Ignore these events */
+      case MappingNotify:
+        xkl_debug( 200, "%s\n",  xkl_get_event_name( xev->type ) );
+        xkl_reset_all_info( "X event: MappingNotify" );
+        break;
       default:
       {
-        XklDebug( 200, "Unknown event %d [%s]\n", 
-                       xev->type, _XklGetEventName( xev->type ) );
+        xkl_debug( 200, "Unknown event %d [%s]\n", 
+                       xev->type, xkl_get_event_name( xev->type ) );
         return 1;
       }
     }
-  XklDebug( 400, "Filtered event %d of type %d from window %d **>\n",
+  xkl_debug( 400, "Filtered event %d of type %d from window %d **>\n",
             pe->serial, pe->type, pe->window );
   return 1;
 }
@@ -63,13 +57,13 @@ int XklFilterEvents( XEvent * xev )
 /**
  * FocusIn handler
  */
-void _XklFocusInEvHandler( XFocusChangeEvent * fev )
+void xkl_process_focus_in_evt( XFocusChangeEvent * fev )
 {
   Window win;
-  Window appWin;
-  XklState selectedWindowState;
+  Window toplevel_win;
+  XklState selected_window_state;
 
-  if( !( _xklListenerType & XKLL_MANAGE_WINDOW_STATES ) )
+  if( !( xkl_listener_type & XKLL_MANAGE_WINDOW_STATES ) )
     return;
   
   win = fev->window;
@@ -80,164 +74,169 @@ void _XklFocusInEvHandler( XFocusChangeEvent * fev )
     case NotifyWhileGrabbed:
       break;
     default:
-      XklDebug( 160,
+      xkl_debug( 160,
                 "Window " WINID_FORMAT
                 " has got focus during special action %d\n", win, fev->mode );
       return;
   }
 
-  XklDebug( 150, "Window " WINID_FORMAT ", '%s' has got focus\n", win,
-            _XklGetDebugWindowTitle( win ) );
+  xkl_debug( 150, "Window " WINID_FORMAT ", '%s' has got focus\n", win,
+            xkl_get_debug_window_title( win ) );
 
-  if( !_XklGetAppWindow( win, &appWin ) )
+  if( !xkl_toplevel_window_find( win, &toplevel_win ) )
   {
     return;
   }
 
-  XklDebug( 150, "Appwin " WINID_FORMAT ", '%s' has got focus\n", appWin,
-            _XklGetDebugWindowTitle( appWin ) );
+  xkl_debug( 150, "Appwin " WINID_FORMAT ", '%s' has got focus\n", 
+                  toplevel_win, xkl_get_debug_window_title( toplevel_win ) );
 
-  if( XklGetState( appWin, &selectedWindowState ) )
+  if( xkl_get_state( toplevel_win, &selected_window_state ) )
   {
-    if( _xklCurClient != appWin )
+    if( xkl_current_client != toplevel_win )
     {
-      Bool oldWinTransparent, newWinTransparent;
-      XklState tmpState;
+      gboolean old_win_transparent, new_win_transparent;
+      XklState tmp_state;
 
-      oldWinTransparent = _XklIsTransparentAppWindow( _xklCurClient );
-      if( oldWinTransparent )
-        XklDebug( 150, "Leaving transparent window\n" );
+      old_win_transparent = xkl_toplevel_window_is_transparent( xkl_current_client );
+      if( old_win_transparent )
+        xkl_debug( 150, "Leaving transparent window\n" );
 
       /**
        * Reload the current state from the current window. 
        * Do not do it for transparent window - we keep the state from 
        * the _previous_ window.
        */
-      if ( !oldWinTransparent && XklGetState ( _xklCurClient, &tmpState ) )
+      if ( !old_win_transparent &&
+           xkl_get_state ( xkl_current_client, &tmp_state ) )
       {
-         _XklUpdateCurState( tmpState.group, 
-                             tmpState.indicators,
-                             "Loading current (previous) state from the current (previous) window" );
+         xkl_update_current_state( tmp_state.group, 
+                                   tmp_state.indicators,
+                                   "Loading current (previous) state from the current (previous) window" );
       }
 
-      _xklCurClient = appWin;
-      XklDebug( 150, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
-                _xklCurClient, _XklGetDebugWindowTitle( _xklCurClient ) );
+      xkl_current_client = toplevel_win;
+      xkl_debug( 150, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
+                xkl_current_client, 
+                xkl_get_debug_window_title( xkl_current_client ) );
 
-      newWinTransparent = _XklIsTransparentAppWindow( appWin );
-      if( newWinTransparent )
-        XklDebug( 150, "Entering transparent window\n" );
+      new_win_transparent = xkl_toplevel_window_is_transparent( toplevel_win );
+      if( new_win_transparent )
+        xkl_debug( 150, "Entering transparent window\n" );
 
-      if( XklIsGroupPerApp() == !newWinTransparent )
+      if( xkl_is_group_per_toplevel_window() == !new_win_transparent )
       {
         /* We skip restoration only if we return to the same app window */
-        Bool doSkip = False;
-        if( _xklSkipOneRestore )
+        gboolean do_skip = FALSE;
+        if( xkl_skip_one_restore )
         {
-          _xklSkipOneRestore = False;
-          if( appWin == _xklPrevAppWindow )
-            doSkip = True;
+          xkl_skip_one_restore = FALSE;
+          if( toplevel_win == xkl_toplevel_window_prev )
+            do_skip = TRUE;
         }
 
-        if( doSkip )
+        if( do_skip )
         {
-          XklDebug( 150,
-                    "Skipping one restore as requested - instead, saving the current group into the window state\n" );
-          _XklSaveAppState( appWin, &_xklCurState );
+          xkl_debug( 150,
+                    "Skipping one restore as requested - instead, "
+                    "saving the current group into the window state\n" );
+          xkl_toplevel_window_save_state( toplevel_win, &xkl_current_state );
         } else
         {
-          if( _xklCurState.group != selectedWindowState.group )
+          if( xkl_current_state.group != selected_window_state.group )
           {
-            XklDebug( 150,
+            xkl_debug( 150,
                       "Restoring the group from %d to %d after gaining focus\n",
-                      _xklCurState.group, selectedWindowState.group );
+                      xkl_current_state.group, selected_window_state.group );
             /**
              *  For fast mouse movements - the state is probably not updated yet
              *  (because of the group change notification being late).
              *  so we'll enforce the update. But this should only happen in GPA mode
              */
-            _XklUpdateCurState( selectedWindowState.group, 
-                                selectedWindowState.indicators,
-                                "Enforcing fast update of the current state" );
-            XklLockGroup( selectedWindowState.group );
+            xkl_update_current_state( selected_window_state.group, 
+                                      selected_window_state.indicators,
+                                      "Enforcing fast update of the current state" );
+            xkl_lock_group( selected_window_state.group );
           } else
           {
-            XklDebug( 150,
-                      "Both old and new focused window have group %d so no point restoring it\n",
-                      selectedWindowState.group );
-            _XklOneSwitchToSecondaryGroupPerformed();
+            xkl_debug( 150,
+                      "Both old and new focused window "
+                      "have group %d so no point restoring it\n",
+                      selected_window_state.group );
+            xkl_one_switch_to_secondary_group_performed();
           }
         }
 
-        if( ( xklVTable->features & XKLF_CAN_TOGGLE_INDICATORS ) && 
-             XklGetIndicatorsHandling(  ) )
+        if( ( xkl_vtable->features & XKLF_CAN_TOGGLE_INDICATORS ) && 
+             xkl_get_indicators_handling(  ) )
         {
-          XklDebug( 150,
+          xkl_debug( 150,
                     "Restoring the indicators from %X to %X after gaining focus\n",
-                    _xklCurState.indicators, selectedWindowState.indicators );
-          _XklEnsureVTableInited();
-          (*xklVTable->xklSetIndicatorsHandler)( &selectedWindowState );
+                    xkl_current_state.indicators,
+                    selected_window_state.indicators );
+          xkl_ensure_vtable_inited();
+          (*xkl_vtable->set_indicators_func)( &selected_window_state );
         } else
-          XklDebug( 150,
+          xkl_debug( 150,
                     "Not restoring the indicators %X after gaining focus: indicator handling is not enabled\n",
-                    _xklCurState.indicators );
+                    xkl_current_state.indicators );
       } else
-        XklDebug( 150,
+        xkl_debug( 150,
                   "Not restoring the group %d after gaining focus: global layout (xor transparent window)\n",
-                  _xklCurState.group );
+                  xkl_current_state.group );
     } else
-      XklDebug( 150, "Same app window - just do nothing\n" );
+      xkl_debug( 150, "Same app window - just do nothing\n" );
   } else
   {
-    XklDebug( 150, "But it does not have xklavier_state\n" );
-    if( _XklHasWmState( win ) )
+    xkl_debug( 150, "But it does not have xklavier_state\n" );
+    if( xkl_has_wm_state( win ) )
     {
-      XklDebug( 150, "But it does have wm_state so we'll add it\n" );
-      _xklCurClient = appWin;
-      XklDebug( 150, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
-                _xklCurClient, _XklGetDebugWindowTitle( _xklCurClient ) );
-      _XklAddAppWindow( _xklCurClient, ( Window ) NULL, False,
-                        &_xklCurState );
+      xkl_debug( 150, "But it does have wm_state so we'll add it\n" );
+      xkl_current_client = toplevel_win;
+      xkl_debug( 150, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
+                 xkl_current_client,
+                 xkl_get_debug_window_title( xkl_current_client ) );
+      xkl_toplevel_window_add( xkl_current_client, ( Window ) NULL, FALSE,
+                               &xkl_current_state );
     } else
-      XklDebug( 150, "And it does have wm_state either\n" );
+      xkl_debug( 150, "And it does have wm_state either\n" );
   }
 }
 
 /** 
  * FocusOut handler
  */
-void _XklFocusOutEvHandler( XFocusChangeEvent * fev )
+void xkl_process_focus_out_evt( XFocusChangeEvent * fev )
 {
-  if( !( _xklListenerType & XKLL_MANAGE_WINDOW_STATES ) )
+  if( !( xkl_listener_type & XKLL_MANAGE_WINDOW_STATES ) )
     return;
   
   if( fev->mode != NotifyNormal )
   {
-    XklDebug( 200,
+    xkl_debug( 200,
               "Window " WINID_FORMAT
               " has lost focus during special action %d\n", fev->window,
               fev->mode );
     return;
   }
 
-  XklDebug( 160, "Window " WINID_FORMAT ", '%s' has lost focus\n",
-            fev->window, _XklGetDebugWindowTitle( fev->window ) );
+  xkl_debug( 160, "Window " WINID_FORMAT ", '%s' has lost focus\n",
+            fev->window, xkl_get_debug_window_title( fev->window ) );
 
-  if( XklIsTransparent( fev->window ) )
+  if( xkl_is_transparent( fev->window ) )
   {
-
-    XklDebug( 150, "Leaving transparent window!\n" );
+    xkl_debug( 150, "Leaving transparent window!\n" );
 /** 
  * If we are leaving the transparent window - we skip the restore operation.
  * This is useful for secondary groups switching from the transparent control 
  * window.
  */
-    _xklSkipOneRestore = True;
+    xkl_skip_one_restore = TRUE;
   } else
   {
     Window p;
-    if( _XklGetAppWindow( fev->window, &p ) )
-      _xklPrevAppWindow = p;
+    if( xkl_toplevel_window_find( fev->window, &p ) )
+      xkl_toplevel_window_prev = p;
   }
 }
 
@@ -248,57 +247,57 @@ void _XklFocusOutEvHandler( XFocusChangeEvent * fev )
  *    - WM_STATE property for all windows
  *    - Configuration property of the root window
  */
-void _XklPropertyEvHandler( XPropertyEvent * pev )
+void xkl_provess_property_evt( XPropertyEvent * pev )
 {
-  if( 400 <= _xklDebugLevel )
+  if( 400 <= xkl_debug_level )
   {
-    char *atomName = XGetAtomName( _xklDpy, pev->atom );
-    if( atomName != NULL )
+    char *atom_name = XGetAtomName( xkl_display, pev->atom );
+    if( atom_name != NULL )
     {
-      XklDebug( 400, "The property '%s' changed for " WINID_FORMAT "\n",
-                atomName, pev->window );
-      XFree( atomName );
+      xkl_debug( 400, "The property '%s' changed for " WINID_FORMAT "\n",
+                atom_name, pev->window );
+      XFree( atom_name );
     } else
     {
-      XklDebug( 200, "Some magic property changed for " WINID_FORMAT "\n",
+      xkl_debug( 200, "Some magic property changed for " WINID_FORMAT "\n",
                 pev->window );
     }
   }
 
-  if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
+  if( xkl_listener_type & XKLL_MANAGE_WINDOW_STATES )
   {
-    if( pev->atom == _xklAtoms[WM_STATE] )
+    if( pev->atom == xkl_atoms[WM_STATE] )
     {
-      Bool hasXklState = XklGetState( pev->window, NULL );
+      gboolean has_xkl_state = xkl_get_state( pev->window, NULL );
   
       if( pev->state == PropertyNewValue )
       {
-        XklDebug( 160, "New value of WM_STATE on window " WINID_FORMAT "\n",
+        xkl_debug( 160, "New value of WM_STATE on window " WINID_FORMAT "\n",
                   pev->window );
-        if( !hasXklState )        /* Is this event the first or not? */
+        if( !has_xkl_state )        /* Is this event the first or not? */
         {
-          _XklAddAppWindow( pev->window, ( Window ) NULL, False,
-                            &_xklCurState );
+          xkl_toplevel_window_add( pev->window, ( Window ) NULL, FALSE,
+                            &xkl_current_state );
         }
       } else
       {                           /* ev->xproperty.state == PropertyDelete, either client or WM can remove it, ICCCM 4.1.3.1 */
-        XklDebug( 160, "Something (%d) happened to WM_STATE of window 0x%x\n",
+        xkl_debug( 160, "Something (%d) happened to WM_STATE of window 0x%x\n",
                   pev->state, pev->window );
-        _XklSelectInputMerging( pev->window, PropertyChangeMask );
-        if( hasXklState )
+        xkl_select_input_merging( pev->window, PropertyChangeMask );
+        if( has_xkl_state )
         {
-          XklDelState( pev->window );
+          xkl_delete_state( pev->window );
         }
       }
     } else
-      if( pev->atom ==  xklVTable->baseConfigAtom
-          && pev->window == _xklRootWindow )
+      if( pev->atom ==  xkl_vtable->base_config_atom
+          && pev->window == xkl_root_window )
     {
       if( pev->state == PropertyNewValue )
       {
         /* If root window got new *_NAMES_PROP_ATOM -
          it most probably means new keyboard config is loaded by somebody */
-        _XklResetAllInfo( "New value of *_NAMES_PROP_ATOM on root window" );
+        xkl_reset_all_info( "New value of *_NAMES_PROP_ATOM on root window" );
       }
     }
   } /* XKLL_MANAGE_WINDOW_STATES */
@@ -307,15 +306,15 @@ void _XklPropertyEvHandler( XPropertyEvent * pev )
 /**
  * CreateNotify handler. Just interested in properties and focus events...
  */
-void _XklCreateEvHandler( XCreateWindowEvent * cev )
+void xkl_process_create_evt( XCreateWindowEvent * cev )
 {
-  if( !( _xklListenerType & XKLL_MANAGE_WINDOW_STATES ) )
+  if( !( xkl_listener_type & XKLL_MANAGE_WINDOW_STATES ) )
     return;
 
-  XklDebug( 200,
+  xkl_debug( 200,
             "Under-root window " WINID_FORMAT
             "/%s (%d,%d,%d x %d) is created\n", cev->window,
-            _XklGetDebugWindowTitle( cev->window ), cev->x, cev->y,
+            xkl_get_debug_window_title( cev->window ), cev->x, cev->y,
             cev->width, cev->height );
 
   if( !cev->override_redirect )
@@ -327,14 +326,15 @@ void _XklCreateEvHandler( XCreateWindowEvent * cev )
 * event + SelectInput request is not zero) and we definitely will (my system DO)
 * lose FocusIn/Out events after the following call of PropertyNotifyHandler.
 * So I just decided to purify this extra FocusChangeMask in the FocusIn/OutHandler. */
-    _XklSelectInputMerging( cev->window,
+    xkl_select_input_merging( cev->window,
                             PropertyChangeMask | FocusChangeMask );
 
-    if( _XklHasWmState( cev->window ) )
+    if( xkl_has_wm_state( cev->window ) )
     {
-      XklDebug( 200,
+      xkl_debug( 200,
                 "Just created window already has WM_STATE - so I'll add it" );
-      _XklAddAppWindow( cev->window, ( Window ) NULL, False, &_xklCurState );
+      xkl_toplevel_window_add( cev->window, ( Window ) NULL,
+                               FALSE, &xkl_current_state );
     }
   }
 }
@@ -343,16 +343,16 @@ void _XklCreateEvHandler( XCreateWindowEvent * cev )
  * Just error handler - sometimes we get BadWindow error for already gone 
  * windows, so we'll just ignore
  */
-void _XklErrHandler( Display * dpy, XErrorEvent * evt )
+void xkl_process_error( Display * dpy, XErrorEvent * evt )
 {
-  _xklLastErrorCode = evt->error_code;
-  switch ( _xklLastErrorCode )
+  xkl_last_error_code = evt->error_code;
+  switch ( xkl_last_error_code )
   {
     case BadWindow:
     case BadAccess:
     {
       /* in most cases this means we are late:) */
-      XklDebug( 200, "ERROR: %p, " WINID_FORMAT ", %d, %d, %d\n",
+      xkl_debug( 200, "ERROR: %p, " WINID_FORMAT ", %d, %d, %d\n",
                 dpy,
                 ( unsigned long ) evt->resourceid,
                 ( int ) evt->error_code,
@@ -360,89 +360,93 @@ void _XklErrHandler( Display * dpy, XErrorEvent * evt )
       break;
     }
     default:
-      ( *_xklDefaultErrHandler ) ( dpy, evt );
+      ( *xkl_default_error_handler ) ( dpy, evt );
   }
 }
 
 /**
  * Some common functionality for Xkb handler
  */
-void _XklStateModificationHandler( XklStateChange changeType, 
-                                   int grp, 
-                                   unsigned inds,
-                                   Bool setInds )
+void xkl_process_state_modification( XklStateChange change_type, 
+                                     gint grp, 
+                                     guint inds,
+                                     gboolean set_inds )
 {
-  Window focused, focusedApp;
-  XklState oldState;
-  int revert;
-  Bool haveOldState = True;
-  Bool setGroup = changeType == GROUP_CHANGED;
+  Window focused, focused_toplevel;
+  XklState old_state;
+  gint revert;
+  gboolean have_old_state = TRUE;
+  gboolean set_group = change_type == GROUP_CHANGED;
 
-  XGetInputFocus( _xklDpy, &focused, &revert );
+  XGetInputFocus( xkl_display, &focused, &revert );
 
   if( ( focused == None ) || ( focused == PointerRoot ) )
   {
-    XklDebug( 160, "Something with focus: " WINID_FORMAT "\n", focused );
+    xkl_debug( 160, "Something with focus: " WINID_FORMAT "\n", focused );
     return;
   }
 
   /** 
-   * Only if we manage states - otherwise _xklCurClient does not make sense 
+   * Only if we manage states - otherwise xkl_current_client does not make sense 
    */
-  if( !_XklGetAppWindow( focused, &focusedApp ) &&
-      _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
-    focusedApp = _xklCurClient; /* what else can I do */
+  if( !xkl_toplevel_window_find( focused, &focused_toplevel ) &&
+      xkl_listener_type & XKLL_MANAGE_WINDOW_STATES )
+    focused_toplevel = xkl_current_client; /* what else can I do */
 
-  XklDebug( 150, "Focused window: " WINID_FORMAT ", '%s'\n", focusedApp,
-            _XklGetDebugWindowTitle( focusedApp ) );
-  if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
+  xkl_debug( 150, "Focused window: " WINID_FORMAT ", '%s'\n",
+             focused_toplevel, xkl_get_debug_window_title( focused_toplevel ) );
+  if( xkl_listener_type & XKLL_MANAGE_WINDOW_STATES )
   {
-    XklDebug( 150, "CurClient: " WINID_FORMAT ", '%s'\n", _xklCurClient,
-              _XklGetDebugWindowTitle( _xklCurClient ) );
+    xkl_debug( 150, "CurClient: " WINID_FORMAT ", '%s'\n",
+               xkl_current_client,
+               xkl_get_debug_window_title( xkl_current_client ) );
 
-    if( focusedApp != _xklCurClient )
+    if( focused_toplevel != xkl_current_client )
     {
       /**
        * If not state - we got the new window
        */
-      if ( !_XklGetAppState( focusedApp, &oldState ) )
+      if ( !xkl_toplevel_window_get_state( focused_toplevel, &old_state ) )
       {
-        _XklUpdateCurState( grp, inds, 
+        xkl_update_current_state( grp, inds, 
                             "Updating the state from new focused window" );
-        if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
-          _XklAddAppWindow( focusedApp, ( Window ) NULL, False, &_xklCurState );
+        if( xkl_listener_type & XKLL_MANAGE_WINDOW_STATES )
+          xkl_toplevel_window_add( focused_toplevel, ( Window ) NULL,
+                                   FALSE, &xkl_current_state );
       }
       /**
        * There is state - just get the state from the window
        */
       else
       {
-        grp = oldState.group;
-        inds = oldState.indicators;
+        grp = old_state.group;
+        inds = old_state.indicators;
       }
-      _xklCurClient = focusedApp;
-      XklDebug( 160, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
-                _xklCurClient, _XklGetDebugWindowTitle( _xklCurClient ) );
+      xkl_current_client = focused_toplevel;
+      xkl_debug( 160, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
+                 xkl_current_client,
+                 xkl_get_debug_window_title( xkl_current_client ) );
     }
     /* If the window already has this this state - we are just restoring it!
       (see the second parameter of stateCallback */
-    haveOldState = _XklGetAppState( _xklCurClient, &oldState );
+    have_old_state = xkl_toplevel_window_get_state( xkl_current_client,
+                                                    &old_state );
   } else /* just tracking the stuff, no smart things */
   {
-    XklDebug( 160, "Just updating the current state in the tracking mode\n" );
-    memcpy( &oldState, &_xklCurState, sizeof( XklState ) );
+    xkl_debug( 160, "Just updating the current state in the tracking mode\n" );
+    memcpy( &old_state, &xkl_current_state, sizeof( XklState ) );
   }
 
-  if( setGroup || haveOldState )
+  if( set_group || have_old_state )
   {
-    _XklUpdateCurState( setGroup ? grp : oldState.group,
-                        setInds ? inds : oldState.indicators,
-                        "Restoring the state from the window" );
+    xkl_update_current_state( set_group ? grp : old_state.group,
+                              set_inds ? inds : old_state.indicators,
+                             "Restoring the state from the window" );
   }
 
-  if( haveOldState )
-    _XklTryCallStateCallback( changeType, &oldState );
+  if( have_old_state )
+    xkl_try_call_state_func( change_type, &old_state );
 
-  if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
-    _XklSaveAppState( _xklCurClient, &_xklCurState );
+  if( xkl_listener_type & XKLL_MANAGE_WINDOW_STATES )
+    xkl_toplevel_window_save_state( xkl_current_client, &xkl_current_state );
 }

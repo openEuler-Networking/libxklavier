@@ -43,7 +43,7 @@ Bool _XklXmmConfigLoadRegistry( void )
   return XklConfigLoadRegistryFromFile( fileName );
 }
 
-Bool _XklXmmConfigActivate( const XklConfigRecPtr data )
+Bool _XklXmmConfigActivate( const XklConfigRec * data )
 {
   Bool rv;
   rv = XklSetNamesProp( xklVTable->baseConfigAtom, 

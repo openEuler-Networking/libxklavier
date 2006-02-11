@@ -5,6 +5,7 @@
 #ifndef __XKLAVIER_CONFIG_H__
 #define __XKLAVIER_CONFIG_H__
 
+#include <glib-object.h>
 #include <libxklavier/xklavier.h>
 
 /**
@@ -31,63 +32,99 @@ extern "C"
 {
 #endif                          /* __cplusplus */
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+  typedef struct _XklConfigItem XklConfigItem;
+  typedef struct _XklConfigItemClass XklConfigItemClass;
+  typedef struct _XklConfigRec XklConfigRec;
+  typedef struct _XklConfigRecClass XklConfigRecClass;
+
+#define XKL_TYPE_CONFIG_ITEM             (xkl_config_item_get_type ())
+#define XKL_CONFIG_ITEM(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), XKL_TYPE_CONFIG_ITEM, XklConfigItem))
+#define XKL_CONFIG_ITEM_CLASS(obj)       (G_TYPE_CHECK_CLASS_CAST ((obj), XKL_CONFIG_ITEM,  XklConfigItemClass))
+#define XKL_IS_CONFIG_ITEM(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), XKL_TYPE_CONFIG_ITEM))
+#define XKL_IS_CONFIG_ITEM_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE ((obj), XKL_TYPE_CONFIG_ITEM))
+#define XKL_CONFIG_ITEM_GET_CLASS        (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_CONFIG_ITEM, XklConfigItemClass))
+
+#define XKL_TYPE_CONFIG_REC             (xkl_config_rec_get_type ())
+#define XKL_CONFIG_REC(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), XKL_TYPE_CONFIG_REC, XklConfigRec))
+#define XKL_CONFIG_REC_CLASS(obj)       (G_TYPE_CHECK_CLASS_CAST ((obj), XKL_CONFIG_REC,  XklConfigRecClass))
+#define XKL_IS_CONFIG_REC(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), XKL_TYPE_CONFIG_REC))
+#define XKL_IS_CONFIG_REC_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE ((obj), XKL_TYPE_CONFIG_REC))
+#define XKL_CONFIG_REC_GET_CLASS        (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_CONFIG_REC, XklConfigRecClass))
+
+#endif // DOXYGEN_SHOULD_SKIP_THIS
+
 /**
  * The configuration item. Corresponds to XML element "configItem".
  */
-  typedef struct _XklConfigItem
+  struct _XklConfigItem
   {
+/**
+ * The superclass object
+ */
+    GObject parent;
 /**
  * The configuration item name. Corresponds to XML element "name".
  */
-    char name[XKL_MAX_CI_NAME_LENGTH];
+    gchar name[XKL_MAX_CI_NAME_LENGTH];
 
 /**
  * The configuration item short description. Corresponds to XML element "shortDescription".
  */
-    char shortDescription[XKL_MAX_CI_DESC_LENGTH];
+    gchar short_description[XKL_MAX_CI_DESC_LENGTH];
 
 /**
  * The configuration item description. Corresponds to XML element "description".
  */
-    char description[XKL_MAX_CI_DESC_LENGTH];
-  }
-  XklConfigItem, *XklConfigItemPtr;
+    gchar description[XKL_MAX_CI_DESC_LENGTH];
+  };
+
+/**
+ * The XklConfigItem class, derived from GObject
+ */
+  struct _XklConfigItemClass
+  {
+    /**
+     * The superclass
+     */
+    GObjectClass parent_class;
+  };
 
 /**
  * Basic configuration params
  */
-  typedef struct _XklConfigRec
+  struct _XklConfigRec
   {
 /**
  * The keyboard model
  */
-    char *model;
-/**
- *  The number of keyboard layouts
- */
-    int numLayouts;
+    gchar *model;
 /**
  * The array of keyboard layouts
  */
-    char **layouts;
-/**
- * The number of keyboard layout variants
- */
-    int numVariants;
+    gchar **layouts;
 /**
  * The array of keyboard layout variants (if any)
  */
-    char **variants;
-/**
- * The number of keyboard layout options
- */
-    int numOptions;
+    gchar **variants;
 /**
  * The array of keyboard layout options
  */
-    char **options;
-  }
-  XklConfigRec, *XklConfigRecPtr;
+    gchar **options;
+  };
+
+/**
+ * The XklConfigRec class, derived from GObject
+ */
+  struct _XklConfigRecClass
+  {
+    /**
+     * The superclass
+     */
+    GObjectClass parent_class;
+  };
+
 /**
  * @defgroup xklconfiginitterm XKB configuration handling initialization and termination
  * @{
@@ -96,30 +133,30 @@ extern "C"
 /**
  * Initializes XML configuration-related structures
  */
-  extern void XklConfigInit( void );
+  extern void xkl_config_init( void );
 
 /**
  * Cleans XML configuration-related structures
  */
-  extern void XklConfigTerm( void );
+  extern void xkl_config_term( void );
 
 /**
  * Loads XML configuration registry
- * @param fileName file name to load
+ * @param file_name file name to load
  * @return true on success
  */
-  extern Bool XklConfigLoadRegistryFromFile( const char* fileName );
+  extern gboolean xkl_config_load_registry_from_file( const gchar* file_name );
 
 /**
  * Loads XML configuration registry
  * @return true on success
  */
-  extern Bool XklConfigLoadRegistry( void );
+  extern gboolean xkl_config_load_registry( void );
 
 /**
  * Frees XML configuration registry
  */
-  extern void XklConfigFreeRegistry( void );
+  extern void xkl_config_free_registry( void );
 /** @} */
 
 /**
@@ -129,65 +166,65 @@ extern "C"
 
 /**
  * Callback type used for enumerating keyboard models, layouts, variants, options
- * @param configItem is the item from registry
- * @param userData is anything which can be stored into the pointer
+ * @param item is the item from registry
+ * @param data is anything which can be stored into the pointer
  */
-  typedef void ( *ConfigItemProcessFunc ) ( const XklConfigItemPtr configItem,
-                                            void *userData );
+  typedef void ( *ConfigItemProcessFunc ) ( const XklConfigItem * item,
+                                            gpointer data );
 
 /**
  * Callback type used for enumerating keyboard option groups
- * @param configItem is the item from registry
- * @param allowMultipleSelection is a flag whether this group allows multiple selection
- * @param userData is anything which can be stored into the pointer
+ * @param item is the item from registry
+ * @param allow_multiple_selection is a flag whether this group allows multiple selection
+ * @param data is anything which can be stored into the pointer
  */
-  typedef void ( *GroupProcessFunc ) ( const XklConfigItemPtr configItem,
-                                       Bool allowMultipleSelection,
-                                       void *userData );
+  typedef void ( *GroupProcessFunc ) ( const XklConfigItem * item,
+                                       gboolean allow_multiple_selection,
+                                       gpointer data );
 /**
  * Enumerates keyboard models from the XML configuration registry
  * @param func is a callback to call for every model
- * @param userData is anything which can be stored into the pointer
+ * @param data is anything which can be stored into the pointer
  */
-  extern void XklConfigEnumModels( ConfigItemProcessFunc func,
-                                   void *userData );
+  extern void xkl_config_enum_models( ConfigItemProcessFunc func,
+                                      gpointer data );
 
 /**
  * Enumerates keyboard layouts from the XML configuration registry
  * @param func is a callback to call for every layout
- * @param userData is anything which can be stored into the pointer
+ * @param data is anything which can be stored into the pointer
  */
-  extern void XklConfigEnumLayouts( ConfigItemProcessFunc func,
-                                    void *userData );
+  extern void xkl_config_enum_layouts( ConfigItemProcessFunc func,
+                                       gpointer data );
 
 /**
  * Enumerates keyboard layout variants from the XML configuration registry
- * @param layoutName is the layout name for which variants will be listed
+ * @param layout_name is the layout name for which variants will be listed
  * @param func is a callback to call for every layout variant
- * @param userData is anything which can be stored into the pointer
+ * @param data is anything which can be stored into the pointer
  */
-  extern void XklConfigEnumLayoutVariants( const char *layoutName,
-                                           ConfigItemProcessFunc func,
-                                           void *userData );
+  extern void xkl_config_enum_layout_variants( const gchar *layout_name,
+                                               ConfigItemProcessFunc func,
+                                               gpointer data );
 
 /**
  * Enumerates keyboard option groups from the XML configuration registry
  * @param func is a callback to call for every option group
- * @param userData is anything which can be stored into the pointer
+ * @param data is anything which can be stored into the pointer
  */
-  extern void XklConfigEnumOptionGroups( GroupProcessFunc func,
-                                         void *userData );
+  extern void xkl_config_enum_option_groups( GroupProcessFunc func,
+                                             gpointer data );
 
 /**
  * Enumerates keyboard options from the XML configuration registry
- * @param optionGroupName is the option group name for which variants 
+ * @param option_group_name is the option group name for which variants 
  * will be listed
  * @param func is a callback to call for every option
- * @param userData is anything which can be stored into the pointer
+ * @param data is anything which can be stored into the pointer
  */
-  extern void XklConfigEnumOptions( const char *optionGroupName,
-                                    ConfigItemProcessFunc func,
-                                    void *userData );
+  extern void xkl_config_enum_options( const gchar *option_group_name,
+                                       ConfigItemProcessFunc func,
+                                       gpointer data );
 
 /** @} */
 
@@ -198,53 +235,53 @@ extern "C"
 
 /**
  * Loads a keyboard model information from the XML configuration registry.
- * @param ptr is a pointer to a XklConfigItem containing the name of the
+ * @param item is a pointer to a XklConfigItem containing the name of the
  * keyboard model. On successfull return, the descriptions are filled.
- * @return True if appropriate element was found and loaded
+ * @return TRUE if appropriate element was found and loaded
  */
-  extern Bool XklConfigFindModel( XklConfigItemPtr ptr );
+  extern gboolean xkl_config_find_model( XklConfigItem * item );
 
 /**
  * Loads a keyboard layout information from the XML configuration registry.
- * @param ptr is a pointer to a XklConfigItem containing the name of the
+ * @param item is a pointer to a XklConfigItem containing the name of the
  * keyboard layout. On successfull return, the descriptions are filled.
- * @return True if appropriate element was found and loaded
+ * @return TRUE if appropriate element was found and loaded
  */
-  extern Bool XklConfigFindLayout( XklConfigItemPtr ptr );
+  extern gboolean xkl_config_find_layout( XklConfigItem * item );
 
 /**
  * Loads a keyboard layout variant information from the XML configuration 
  * registry.
- * @param layoutName is a name of the parent layout
- * @param ptr is a pointer to a XklConfigItem containing the name of the
+ * @param layout_name is a name of the parent layout
+ * @param item is a pointer to a XklConfigItem containing the name of the
  * keyboard layout variant. On successfull return, the descriptions are filled.
- * @return True if appropriate element was found and loaded
+ * @return TRUE if appropriate element was found and loaded
  */
-  extern Bool XklConfigFindVariant( const char *layoutName,
-                                    XklConfigItemPtr ptr );
+  extern gboolean xkl_config_find_variant( const char *layout_name,
+                                           XklConfigItem * item );
 
 /**
  * Loads a keyboard option group information from the XML configuration 
  * registry.
- * @param ptr is a pointer to a XklConfigItem containing the name of the
+ * @param item is a pointer to a XklConfigItem containing the name of the
  * keyboard option group. On successfull return, the descriptions are filled.
- * @param allowMultipleSelection is a pointer to some Bool variable to fill 
+ * @param allow_multiple_selection is a pointer to some gboolean variable to fill 
  * the corresponding attribute of XML element "group".
- * @return True if appropriate element was found and loaded
+ * @return TRUE if appropriate element was found and loaded
  */
-  extern Bool XklConfigFindOptionGroup( XklConfigItemPtr ptr,
-                                        Bool * allowMultipleSelection );
+  extern gboolean xkl_config_find_option_group( XklConfigItem *item,
+                                                gboolean *allow_multiple_selection );
 
 /**
  * Loads a keyboard option information from the XML configuration 
  * registry.
- * @param optionGroupName is a name of the option group
- * @param ptr is a pointer to a XklConfigItem containing the name of the
+ * @param option_group_name is a name of the option group
+ * @param item is a pointer to a XklConfigItem containing the name of the
  * keyboard option. On successfull return, the descriptions are filled.
- * @return True if appropriate element was found and loaded
+ * @return TRUE if appropriate element was found and loaded
  */
-  extern Bool XklConfigFindOption( const char *optionGroupName,
-                                   XklConfigItemPtr ptr );
+  extern gboolean xkl_config_find_option( const gchar *option_group_name,
+                                          XklConfigItem *item );
 /** @} */
 
 /**
@@ -256,38 +293,38 @@ extern "C"
  * Activates some XKB configuration
  * @param data is a valid XKB configuration
  * description. Can be NULL
- * @return True on success
+ * @return TRUE on success
  * @see XklSetKeyAsSwitcher
  * At the moment, accepts only _ONE_ layout. Later probably I'll improve this..
  */
-  extern Bool XklConfigActivate( const XklConfigRecPtr data );
+  extern gboolean xkl_config_activate( const XklConfigRec *data );
 
 /**
  * Loads the current XKB configuration (from X server)
  * @param data is a buffer for XKB configuration
- * @return True on success
+ * @return TRUE on success
  */
-  extern Bool XklConfigGetFromServer( XklConfigRecPtr data );
+  extern gboolean xkl_config_get_from_server( XklConfigRec *data );
 
 /**
  * Loads the current XKB configuration (from backup)
  * @param data is a buffer for XKB configuration
- * @return True on success
+ * @return TRUE on success
  * @see XklBackupNamesProp
  */
-  extern Bool XklConfigGetFromBackup( XklConfigRecPtr data );
+  extern gboolean xkl_config_get_from_backup( XklConfigRec *data );
 
 /**
  * Writes some XKB configuration into XKM/XKB file
- * @param fileName is a name of the file to create
+ * @param file_name is a name of the file to create
  * @param data is a valid XKB configuration
  * description. Can be NULL
  * @param binary is a flag indicating whether the output file should be binary
- * @return True on success
+ * @return TRUE on success
  */
-  extern Bool XklConfigWriteFile( const char *fileName,
-                                  const XklConfigRecPtr data,
-                                  const Bool binary );
+  extern gboolean xkl_config_write_file( const gchar *file_name,
+                                         const XklConfigRec *data,
+                                         const gboolean binary );
 
 /** @} */
 
@@ -299,39 +336,40 @@ extern "C"
 
 /**
  * Gets the XKB configuration from any root window property
- * @param rulesAtomName is an atom name of the root window property to read
- * @param rulesFileOut is a pointer to hold the file name
- * @param configOut is a buffer to hold the result - 
+ * @param rules_atom_name is an atom name of the root window property to read
+ * @param rules_file_out is a pointer to hold the file name
+ * @param config_out is a buffer to hold the result - 
  *   all records are allocated using standard malloc 
- * @return True on success
+ * @return TRUE on success
  */
-  extern Bool XklGetNamesProp( Atom rulesAtomName,
-                               char **rulesFileOut,
-                               XklConfigRecPtr configOut );
+  extern gboolean xkl_get_names_prop( Atom rules_atom_name,
+                                      gchar **rules_file_out,
+                                      XklConfigRec *config_out );
 
 /**
  * Saves the XKB configuration into any root window property
- * @param rulesAtomName is an atom name of the root window property to write
- * @param rulesFile is a rules file name
+ * @param rules_atom_name is an atom name of the root window property to write
+ * @param rules_file is a rules file name
  * @param config is a configuration to save 
- * @return True on success
+ * @return TRUE on success
  */
-  extern Bool XklSetNamesProp( Atom rulesAtomName,
-                               char *rulesFile, XklConfigRecPtr config );
+  extern gboolean xkl_set_names_prop( Atom rules_atom_name,
+                                      gchar *rules_file, 
+                                      const XklConfigRec *config );
 
 /**
  * Backups current XKB configuration into some property - 
  * if this property is not defined yet.
- * @return True on success
+ * @return TRUE on success
  */
-  extern Bool XklBackupNamesProp(  );
+  extern gboolean xkl_backup_names_prop(  );
 
 /**
- * Restores XKB from the property saved by XklBackupNamesProp
- * @return True on success
- * @see XklBackupNamesProp
+ * Restores XKB from the property saved by xkl_backup_names_prop
+ * @return TRUE on success
+ * @see xkl_backup_names_prop
  */
-  extern Bool XklRestoreNamesProp(  );
+  extern gboolean xkl_restore_names_prop(  );
 
 /** @} */
 
@@ -345,27 +383,28 @@ extern "C"
  * Initializes the record (actually, fills it with 0-s)
  * @param data is a record to initialize
  */
-  extern void XklConfigRecInit( XklConfigRecPtr data );
+  extern void xkl_config_rec_init( XklConfigRec *data );
 
 /**
  * Resets the record (equal to Destroy and Init)
  * @param data is a record to reset
  */
-  extern void XklConfigRecReset( XklConfigRecPtr data );
+  extern void xkl_config_rec_reset( XklConfigRec *data );
 
 /**
  * Cleans the record (frees all the non-null members)
  * @param data is a record to clean
  */
-  extern void XklConfigRecDestroy( XklConfigRecPtr data );
+  extern void xkl_config_rec_destroy( XklConfigRec *data );
 
 /**
  * Compares the records
  * @param data1 is a record to compare
  * @param data2 is another record
- * @return True if records are same
+ * @return TRUE if records are same
  */
-  extern Bool XklConfigRecEquals( XklConfigRecPtr data1, XklConfigRecPtr data2 );
+  extern gboolean xkl_config_rec_equals( XklConfigRec *data1, 
+                                         XklConfigRec *data2 );
 
 /** @} */
 

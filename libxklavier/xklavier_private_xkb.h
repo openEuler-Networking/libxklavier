@@ -8,59 +8,61 @@
 
 #define ForPhysIndicators( i, bit ) \
     for ( i=0, bit=1; i<XkbNumIndicators; i++, bit<<=1 ) \
-          if ( _xklXkb->indicators->phys_indicators & bit )
+          if ( xkl_xkb_desc->indicators->phys_indicators & bit )
 
-extern int _xklXkbEventType, _xklXkbError;
+extern gint xkl_xkb_evt_type, xkl_xkb_error_code;
 
-extern XkbRF_VarDefsRec _xklVarDefs;
+extern XkbRF_VarDefsRec xkl_var_defs;
 
-extern XkbDescPtr _xklXkb;
+extern XkbDescPtr xkl_xkb_desc;
 
-extern void XklDumpXkbDesc( const char *filename, XkbDescPtr kbd );
+extern void xkl_dump_xkb_desc( const char *file_name, 
+                               XkbDescPtr kbd );
 
-extern Bool _XklXkbConfigMultipleLayoutsSupported( void );
+extern gboolean xkl_xkb_config_multiple_layouts_supported( void );
 
-extern const char *_XklXkbGetXkbEventName( int xkb_type );
+extern const gchar *xkl_xkb_get_xkb_event_name( gint xkb_type );
 
-extern Bool _XklXkbConfigPrepareNative( const XklConfigRecPtr data, XkbComponentNamesPtr componentNamesPtr );
+extern gboolean xkl_xkb_config_prepare_native( const XklConfigRec *data, 
+                                               XkbComponentNamesPtr component_names );
 
-extern void _XklXkbConfigCleanupNative( XkbComponentNamesPtr componentNamesPtr );
+extern void xkl_xkb_config_cleanup_native( XkbComponentNamesPtr component_names );
 
 /* Start VTable methods */
 
-extern Bool _XklXkbConfigActivate( const XklConfigRecPtr data );
+extern gboolean xkl_xkb_config_activate( const XklConfigRec * data );
 
-extern void _XklXkbConfigInit( void );
+extern void xkl_xkb_config_init( void );
 
-extern Bool _XklXkbConfigLoadRegistry( void );
+extern gboolean xkl_xkb_config_load_registry( void );
 
-extern Bool _XklXkbConfigWriteFile( const char *fileName,
-                                    const XklConfigRecPtr data,
-                                    const Bool binary );
+extern gboolean xkl_xkb_config_write_file( const char *file_name,
+                                           const XklConfigRec * data,
+                                           const gboolean binary );
 
-extern int _XklXkbEventHandler( XEvent * kev );
+extern gint xkl_xkb_event_func( XEvent * kev );
 
-extern void _XklXkbFreeAllInfo( void );
+extern void xkl_xkb_free_all_info( void );
 
-extern const char **_XklXkbGetGroupNames( void );
+extern const gchar **xkl_xkb_get_group_names( void );
 
-extern unsigned _XklXkbGetMaxNumGroups( void );
+extern gint xkl_xkb_get_max_num_groups( void );
 
-extern unsigned _XklXkbGetNumGroups( void );
+extern gint xkl_xkb_get_num_groups( void );
 
-extern void _XklXkbGetRealState( XklState * curState_return );
+extern void xkl_xkb_get_server_state( XklState * current_state_out );
 
-extern Bool _XklXkbIfCachedInfoEqualsActual( void );
+extern gboolean xkl_xkb_if_cached_info_equals_actual( void );
 
-extern Bool _XklXkbLoadAllInfo( void );
+extern gboolean xkl_xkb_load_all_info( void );
 
-extern void _XklXkbLockGroup( int group );
+extern void xkl_xkb_lock_group( gint group );
 
-extern int _XklXkbPauseListen( void );
+extern gint xkl_xkb_pause_listen( void );
 
-extern int _XklXkbResumeListen( void );
+extern gint xkl_xkb_resume_listen( void );
 
-extern void _XklXkbSetIndicators( const XklState *windowState );
+extern void xkl_xkb_set_indicators( const XklState *window_state );
 
 /* End of VTable methods */
 
@@ -70,12 +72,13 @@ extern void _XklXkbSetIndicators( const XklState *windowState );
  * VERY VERY BAD STYLE, some kind of 'protected' methods - 
  * but some programs may want to hook into them.
  */
-extern Bool _XklXkbConfigPrepareNative( const XklConfigRecPtr data, void * componentNamesPtr );
+extern gboolean xkl_xkb_config_prepare_native( const XklConfigRec * data, 
+                                               gpointer component_names );
 
-extern void _XklXkbConfigCleanupNative( void * componentNamesPtr );
+extern void xkl_xkb_config_cleanup_native( gpointer component_names );
 
 #endif
 
-extern Bool _xklXkbExtPresent;
+extern gboolean xkl_xkb_ext_present;
 
 #endif

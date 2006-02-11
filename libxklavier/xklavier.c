@@ -7,113 +7,113 @@
 
 #include "xklavier_private.h"
 
-Display *_xklDpy;
+Display *xkl_display;
 
-XklState _xklCurState;
+XklState xkl_current_state;
 
-Window _xklCurClient;
+Window xkl_current_client;
 
-Status _xklLastErrorCode;
+Status xkl_last_error_code;
 
-const char *_xklLastErrorMsg;
+const gchar *xkl_last_error_msg;
 
-XErrorHandler _xklDefaultErrHandler;
+XErrorHandler xkl_default_err_handler;
 
-Atom _xklAtoms[TOTAL_ATOMS];
+Atom xkl_atoms[TOTAL_ATOMS];
 
-Window _xklRootWindow;
+Window xkl_root_window;
 
-int _xklDefaultGroup;
+gint xkl_default_group;
 
-Bool _xklSkipOneRestore;
+gboolean xkl_skip_one_restore;
 
-int _xklSecondaryGroupsMask;
+guint xkl_secondary_groups_mask;
 
-int _xklDebugLevel = 0;
+gint xkl_debug_level = 0;
 
-Window _xklPrevAppWindow;
+guint xkl_listener_type = 0;
 
-int _xklListenerType = 0;
+XklVTable *xkl_vtable = NULL;
 
-XklVTable *xklVTable = NULL;
+XklConfigNotifyFunc xkl_config_callback = NULL;
+gpointer xkl_config_callback_data;
 
-XklConfigCallback _xklConfigCallback = NULL;
-void *_xklConfigCallbackData;
+XklNewWindowNotifyFunc xkl_new_window_callback = NULL;
+gpointer xkl_new_window_callback_data;
 
-static XklStateCallback stateCallback = NULL;
-static void *stateCallbackData;
+static XklStateNotifyFunc xkl_state_callback = NULL;
+static gpointer xkl_state_callback_data;
 
-static XklWinCallback winCallback = NULL;
-static void *winCallbackData;
+static XklLogAppender log_appender = xkl_default_log_appender;
 
-static XklLogAppender logAppender = XklDefaultLogAppender;
+static gboolean group_per_toplevel_window = TRUE;
 
-static Bool groupPerApp = True;
-
-static Bool handleIndicators = False;
+static gboolean handle_indicators = FALSE;
 
 
-void XklSetIndicatorsHandling( Bool whetherHandle )
+void xkl_set_indicators_handling( gboolean whether_handle )
 {
-  handleIndicators = whetherHandle;
+  handle_indicators = whether_handle;
 }
 
-Bool XklGetIndicatorsHandling( void )
+gboolean xkl_get_indicators_handling( void )
 {
-  return handleIndicators;
+  return handle_indicators;
 }
 
-void XklSetDebugLevel( int level )
+void xkl_set_debug_level( int level )
 {
-  _xklDebugLevel = level;
+  xkl_debug_level = level;
 }
 
-void XklSetGroupPerApp( Bool isSet )
+void xkl_set_group_per_toplevel_window( gboolean is_set )
 {
-  groupPerApp = isSet;
+  group_per_toplevel_window = is_set;
 }
 
-Bool XklIsGroupPerApp( void )
+gboolean xkl_is_group_per_toplevel_window( void )
 {
-  return groupPerApp;
+  return group_per_toplevel_window;
 }
 
-static void _XklSetSwitchToSecondaryGroup( Bool val )
+static void xkl_set_switch_to_secondary_group( gboolean val )
 {
   CARD32 propval = (CARD32)val;
-  XChangeProperty( _xklDpy, _xklRootWindow, _xklAtoms[XKLAVIER_ALLOW_SECONDARY],
+  XChangeProperty( xkl_display, 
+                   xkl_root_window, 
+                   xkl_atoms[XKLAVIER_ALLOW_SECONDARY],
                    XA_INTEGER, 32, PropModeReplace,
                    (unsigned char*)&propval, 1 );
-  XSync( _xklDpy, False );
+  XSync( xkl_display, False );
 }
 
-void XklAllowOneSwitchToSecondaryGroup( void )
+void _xkl_allow_one_switch_to_secondary_group( void )
 {
-  XklDebug( 150, "Setting allowOneSwitchToSecondaryGroup flag\n" );
-  _XklSetSwitchToSecondaryGroup( True );
+  xkl_debug( 150, "Setting allow_one_switch_to_secondary_group flag\n" );
+  xkl_set_switch_to_secondary_group( TRUE );
 }
 
-Bool _XklIsOneSwitchToSecondaryGroupAllowed( void )
+gboolean xkl_is_one_switch_to_secondary_group_allowed( void )
 {
-  Bool rv = False;
+  gboolean rv = FALSE;
   unsigned char *propval = NULL;
-  Atom actualType;
-  int actualFormat;
-  unsigned long bytesRemaining;
-  unsigned long actualItems;
+  Atom actual_type;
+  int actual_format;
+  unsigned long bytes_remaining;
+  unsigned long actual_items;
   int result;
 
-  result = XGetWindowProperty( _xklDpy, _xklRootWindow, 
-                               _xklAtoms[XKLAVIER_ALLOW_SECONDARY], 0L, 1L,
-                               False, XA_INTEGER, &actualType, &actualFormat,
-                               &actualItems, &bytesRemaining,
+  result = XGetWindowProperty( xkl_display, xkl_root_window, 
+                               xkl_atoms[XKLAVIER_ALLOW_SECONDARY], 0L, 1L,
+                               False, XA_INTEGER, &actual_type, &actual_format,
+                               &actual_items, &bytes_remaining,
                                &propval );
 
   if( Success == result )
   {
-    if( actualFormat == 32 && actualItems == 1 )
+    if( actual_format == 32 && actual_items == 1 )
     {
-      rv = *(Bool*)propval;
+      rv = (gboolean)*(Bool*)propval;
     }
     XFree( propval );
   }
@@ -121,489 +121,313 @@ Bool _XklIsOneSwitchToSecondaryGroupAllowed( void )
   return rv;
 }
 
-void _XklOneSwitchToSecondaryGroupPerformed( void )
+void xkl_one_switch_to_secondary_group_performed( void )
 {
-  XklDebug( 150, "Resetting allowOneSwitchToSecondaryGroup flag\n" );
-  _XklSetSwitchToSecondaryGroup( False );
+  xkl_debug( 150, "Resetting allow_one_switch_to_secondary_group flag\n" );
+  xkl_set_switch_to_secondary_group( FALSE );
 }
 
-void XklSetDefaultGroup( int group )
+void xkl_set_default_group( int group )
 {
-  _xklDefaultGroup = group;
+  xkl_default_group = group;
 }
 
-int XklGetDefaultGroup( void )
+gint _xkl_get_default_group( void )
 {
-  return _xklDefaultGroup;
+  return xkl_default_group;
 }
 
-void XklSetSecondaryGroupsMask( int mask )
+void xkl_set_secondary_groups_mask( guint mask )
 {
-  _xklSecondaryGroupsMask = mask;
+  xkl_secondary_groups_mask = mask;
 }
 
-int XklGetSecondaryGroupsMask( void )
+guint xkl_get_secondary_groups_mask( void )
 {
-  return _xklSecondaryGroupsMask;
+  return xkl_secondary_groups_mask;
 }
 
-int XklRegisterConfigCallback( XklConfigCallback fun, void *data )
+gint xkl_register_config_callback( XklConfigNotifyFunc func,
+                                   gpointer data )
 {
-  _xklConfigCallback = fun;
-  _xklConfigCallbackData = data;
+  xkl_config_callback = func;
+  xkl_config_callback_data = data;
   return 0;
 }
 
-int XklRegisterStateCallback( XklStateCallback fun, void *data )
+gint xkl_register_state_callback( XklStateNotifyFunc func,
+                                  gpointer data )
 {
-  stateCallback = fun;
-  stateCallbackData = data;
+  xkl_state_callback = func;
+  xkl_state_callback_data = data;
   return 0;
 }
 
-int XklRegisterWindowCallback( XklWinCallback fun, void *data )
+gint xkl_register_new_window_callback( XklNewWindowNotifyFunc func,
+                                       gpointer data )
 {
-  winCallback = fun;
-  winCallbackData = data;
+  xkl_new_window_callback = func;
+  xkl_new_window_callback_data = data;
   return 0;
 }
 
-void XklSetLogAppender( XklLogAppender fun )
+void xkl_set_log_appender( XklLogAppender func )
 {
-  logAppender = fun;
+  log_appender = func;
 }
 
-int XklStartListen( int what )
+gint xkl_start_listen( guint what )
 {
-  _xklListenerType = what;
+  xkl_listener_type = what;
   
-  if( !( xklVTable->features & XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT ) &&
+  if( !( xkl_vtable->features & XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT ) &&
       ( what & XKLL_MANAGE_LAYOUTS ) )
-    XklDebug( 0, "The backend does not require manual layout management - "
+    xkl_debug( 0, "The backend does not require manual layout management - "
                  "but it is provided by the application" );
   
-  XklResumeListen(  );
-  _XklLoadWindowTree(  );
-  XFlush( _xklDpy );
+  xkl_resume_listen(  );
+  xkl_load_window_tree(  );
+  XFlush( xkl_display );
   return 0;
 }
 
-int XklStopListen( void )
+gint xkl_stop_listen( void )
 {
-  XklPauseListen(  );
+  xkl_pause_listen(  );
   return 0;
 }
 
-int XklInit( Display * a_dpy )
+gint xkl_init( Display * a_dpy )
 {
   int scr;
-  char *sdl;
+  const gchar *sdl;
   int rv;
 
-  sdl = getenv( "XKL_DEBUG" );
+  sdl = g_getenv( "XKL_DEBUG" );
   if( sdl != NULL )
   {
-    XklSetDebugLevel( atoi( sdl ) );
+    xkl_set_debug_level( atoi( sdl ) );
   }
 
   if( !a_dpy )
   {
-    XklDebug( 10, "XklInit : display is NULL ?\n");
+    xkl_debug( 10, "xkl_init : display is NULL ?\n");
     return -1;
   }
 
-  _xklDefaultErrHandler =
-    XSetErrorHandler( ( XErrorHandler ) _XklErrHandler );
+  xkl_default_err_handler =
+    XSetErrorHandler( ( XErrorHandler ) xkl_process_error );
 
-  _xklDpy = a_dpy;
-  scr = DefaultScreen( _xklDpy );
-  _xklRootWindow = RootWindow( _xklDpy, scr );
+  xkl_display = a_dpy;
+  scr = DefaultScreen( xkl_display );
+  xkl_root_window = RootWindow( xkl_display, scr );
 
-  _xklSkipOneRestore = False;
-  _xklDefaultGroup = -1;
-  _xklSecondaryGroupsMask = 0L;
-  _xklPrevAppWindow = 0;
+  xkl_skip_one_restore = FALSE;
+  xkl_default_group = -1;
+  xkl_secondary_groups_mask = 0L;
+  xkl_toplevel_window_prev = 0;
 
-  _xklAtoms[WM_NAME] = XInternAtom( _xklDpy, "WM_NAME", False );
-  _xklAtoms[WM_STATE] = XInternAtom( _xklDpy, "WM_STATE", False );
-  _xklAtoms[XKLAVIER_STATE] = XInternAtom( _xklDpy, "XKLAVIER_STATE", False );
-  _xklAtoms[XKLAVIER_TRANSPARENT] =
-    XInternAtom( _xklDpy, "XKLAVIER_TRANSPARENT", False );
-  _xklAtoms[XKLAVIER_ALLOW_SECONDARY] =
-    XInternAtom( _xklDpy, "XKLAVIER_ALLOW_SECONDARY", False );
+  xkl_atoms[WM_NAME] = XInternAtom( xkl_display, "WM_NAME", False );
+  xkl_atoms[WM_STATE] = XInternAtom( xkl_display, "WM_STATE", False );
+  xkl_atoms[XKLAVIER_STATE] = XInternAtom( xkl_display, "XKLAVIER_STATE", False );
+  xkl_atoms[XKLAVIER_TRANSPARENT] =
+    XInternAtom( xkl_display, "XKLAVIER_TRANSPARENT", False );
+  xkl_atoms[XKLAVIER_ALLOW_SECONDARY] =
+    XInternAtom( xkl_display, "XKLAVIER_ALLOW_SECONDARY", False );
 
-  _XklOneSwitchToSecondaryGroupPerformed();
+  xkl_one_switch_to_secondary_group_performed();
 
   rv = -1;
-  XklDebug( 150, "Trying all backends:\n" );
+  xkl_debug( 150, "Trying all backends:\n" );
 #ifdef ENABLE_XKB_SUPPORT
-  XklDebug( 150, "Trying XKB backend\n" );
-  rv = _XklXkbInit();
+  xkl_debug( 150, "Trying XKB backend\n" );
+  rv = xkl_xkb_init();
 #endif
 #ifdef ENABLE_XMM_SUPPORT
   if( rv != 0 ) 
   {
-    XklDebug( 150, "Trying XMM backend\n" );
-    rv = _XklXmmInit();
+    xkl_debug( 150, "Trying XMM backend\n" );
+    rv = xkl_xmm_init();
   }
 #endif
   if( rv == 0 )
   {
-    XklDebug( 150, "Actual backend: %s\n",
-              XklGetBackendName() );
+    xkl_debug( 150, "Actual backend: %s\n",
+              xkl_get_backend_name() );
   }
   else
   {
-    XklDebug( 0, "All backends failed, last result: %d\n", rv );
-    _xklDpy = NULL;
+    xkl_debug( 0, "All backends failed, last result: %d\n", rv );
+    xkl_display = NULL;
   }
 
   return ( rv == 0 ) ?
-    ( _XklLoadAllInfo() ? 0 : _xklLastErrorCode ) : -1;
+    ( xkl_load_all_info() ? 0 : xkl_last_error_code ) : -1;
 }
 
-int XklTerm( void )
+gint xkl_term( void )
 {
-  XSetErrorHandler( ( XErrorHandler ) _xklDefaultErrHandler );
-  _xklConfigCallback = NULL;
-  stateCallback = NULL;
-  winCallback = NULL;
+  XSetErrorHandler( ( XErrorHandler ) xkl_default_err_handler );
+  xkl_config_callback = NULL;
+  xkl_state_callback = NULL;
+  xkl_new_window_callback = NULL;
 
-  logAppender = XklDefaultLogAppender;
-  _XklFreeAllInfo(  );
+  log_appender = xkl_default_log_appender;
+  xkl_free_all_info(  );
 
   return 0;
 }
 
-Bool XklGrabKey( int keycode, unsigned modifiers )
+gboolean xkl_grab_key( gint keycode, guint modifiers )
 {
-  Bool retCode;
-  char *keyName;
+  gboolean ret_code;
+  gchar *keyname;
 
-  if( _xklDebugLevel >= 100 )
+  if( xkl_debug_level >= 100 )
   {
-    keyName = XKeysymToString( XKeycodeToKeysym( _xklDpy, keycode, 0 ) );
-    XklDebug( 100, "Listen to the key %d/(%s)/%d\n", 
-                   keycode, keyName, modifiers );
+    keyname = XKeysymToString( XKeycodeToKeysym( xkl_display, keycode, 0 ) );
+    xkl_debug( 100, "Listen to the key %d/(%s)/%d\n", 
+                   keycode, keyname, modifiers );
   }
 
-  if( ( KeyCode ) NULL == keycode )
-    return False;
+  if( 0 == keycode )
+    return FALSE;
 
-  _xklLastErrorCode = Success;
+  xkl_last_error_code = Success;
 
-  retCode = XGrabKey( _xklDpy, keycode, modifiers, _xklRootWindow,
-                      True, GrabModeAsync, GrabModeAsync );
-  XSync( _xklDpy, False );
+  ret_code = XGrabKey( xkl_display, keycode, modifiers, xkl_root_window,
+                      TRUE, GrabModeAsync, GrabModeAsync );
+  XSync( xkl_display, False );
 
-  XklDebug( 100, "XGrabKey recode %d/error %d\n", retCode, _xklLastErrorCode );
+  xkl_debug( 100, "XGrabKey recode %d/error %d\n", 
+             ret_code, xkl_last_error_code );
 
-  retCode = ( _xklLastErrorCode == Success );
+  ret_code = ( xkl_last_error_code == Success );
 
-  if( !retCode )
-    _xklLastErrorMsg = "Could not grab the key";
+  if( !ret_code )
+    xkl_last_error_msg = "Could not grab the key";
 
-  return retCode;
+  return ret_code;
 }
 
-Bool XklUngrabKey( int keycode, unsigned modifiers )
+gboolean xkl_ungrab_key( gint keycode, guint modifiers )
 {
-  if( ( KeyCode ) NULL == keycode )
-    return False;
+  if( 0 == keycode )
+    return FALSE;
 
-  return Success == XUngrabKey( _xklDpy, keycode, 0, _xklRootWindow );
+  return Success == XUngrabKey( xkl_display, keycode, 0, xkl_root_window );
 }
 
-int XklGetNextGroup( void )
+gint _xkl_get_next_group( void )
 {
-  return ( _xklCurState.group + 1 ) % XklGetNumGroups(  );
+  return ( xkl_current_state.group + 1 ) % xkl_get_num_groups(  );
 }
                                                                                           
-int XklGetPrevGroup( void )
+gint xkl_get_prev_group( void )
 {
-  int n = XklGetNumGroups(  );
-  return ( _xklCurState.group + n - 1 ) % n;
+  gint n = xkl_get_num_groups(  );
+  return ( xkl_current_state.group + n - 1 ) % n;
 }
 
-int XklGetRestoreGroup( void )
+gint xkl_get_restore_group( void )
 {
   XklState state;
-  if( _xklCurClient == ( Window ) NULL )
+  if( xkl_current_client == ( Window ) NULL )
   {
-    XklDebug( 150, "cannot restore without current client\n" );
-  } else if( XklGetState( _xklCurClient, &state ) )
+    xkl_debug( 150, "cannot restore without current client\n" );
+  } else if( xkl_get_state( xkl_current_client, &state ) )
   {
     return state.group;
   } else
-    XklDebug( 150,
+    xkl_debug( 150,
               "Unbelievable: current client " WINID_FORMAT
-              ", '%s' has no group\n", _xklCurClient,
-              _XklGetDebugWindowTitle( _xklCurClient ) );
+              ", '%s' has no group\n", xkl_current_client,
+              xkl_get_debug_window_title( xkl_current_client ) );
   return 0;
 }
 
-void XklSetTransparent( Window win, Bool transparent )
+void xkl_set_transparent( Window win, gboolean transparent )
 {
-  Window appWin;
-  Bool wasTransparent;
-  XklDebug( 150, "setting transparent flag %d for " WINID_FORMAT "\n",
+  Window toplevel_win;
+  xkl_debug( 150, "setting transparent flag %d for " WINID_FORMAT "\n",
             transparent, win );
 
-  if( !_XklGetAppWindow( win, &appWin ) )
+  if( !xkl_toplevel_window_find( win, &toplevel_win ) )
   {
-    XklDebug( 150, "No app window!\n" );
-    appWin = win;
+    xkl_debug( 150, "No toplevel window!\n" );
+    toplevel_win = win;
 /*    return; */
   }
 
-  wasTransparent = XklIsTransparent( appWin );
-  XklDebug( 150, "appwin " WINID_FORMAT " was %stransparent\n", appWin,
-            wasTransparent ? "" : "not " );
-  if( transparent && !wasTransparent )
-  {
-    CARD32 prop = 1;
-    XChangeProperty( _xklDpy, appWin, _xklAtoms[XKLAVIER_TRANSPARENT],
-                     XA_INTEGER, 32, PropModeReplace,
-                     ( const unsigned char * ) &prop, 1 );
-  } else if( !transparent && wasTransparent )
-  {
-    XDeleteProperty( _xklDpy, appWin, _xklAtoms[XKLAVIER_TRANSPARENT] );
-  }
+  xkl_toplevel_window_set_transparent( toplevel_win, transparent );
 }
 
-Bool XklIsTransparent( Window win )
+gboolean xkl_is_transparent( Window win )
 {
-  Window appWin;
+  Window toplevel_win;
 
-  if( !_XklGetAppWindow( win, &appWin ) )
-    return False;
-  return _XklIsTransparentAppWindow( appWin );
-
-}
-
-/**
- * "Adds" app window to the set of managed windows.
- * Actually, no data structures involved. The only thing we do is save app state
- * and register ourselves us listeners.
- * Note: User's callback is called
- */
-void _XklAddAppWindow( Window appWin, Window parent, Bool ignoreExistingState,
-                       XklState * initState )
-{
-  XklState state = *initState;
-  int defGroupToUse = -1;
-
-  if( appWin == _xklRootWindow )
-    XklDebug( 150, "??? root app win ???\n" );
-
-  XklDebug( 150, "Trying to add window " WINID_FORMAT "/%s with group %d\n",
-            appWin, _XklGetDebugWindowTitle( appWin ), initState->group );
-
-  if( !ignoreExistingState )
-  {
-    Bool have_state = _XklGetAppState( appWin, &state );
-
-    if( have_state )
-    {
-      XklDebug( 150,
-                "The window " WINID_FORMAT
-                " does not require to be added, it already has the xklavier state \n",
-                appWin );
-      return;
-    }
-  }
-
-  if( winCallback != NULL )
-    defGroupToUse = ( *winCallback ) ( appWin, parent, winCallbackData );
-
-  if( defGroupToUse == -1 )
-    defGroupToUse = _xklDefaultGroup;
-
-  if( defGroupToUse != -1 )
-    state.group = defGroupToUse;
-
-  _XklSaveAppState( appWin, &state );
-  _XklSelectInputMerging( appWin, FocusChangeMask | PropertyChangeMask );
-
-  if( defGroupToUse != -1 )
-  {
-    if( _xklCurClient == appWin )
-    {
-      if( ( _xklSecondaryGroupsMask & ( 1 << defGroupToUse ) ) != 0 )
-        XklAllowOneSwitchToSecondaryGroup();
-      XklLockGroup( defGroupToUse );
-    }
-  }
-
-  if( parent == ( Window ) NULL )
-    parent = _XklGetRegisteredParent( appWin );
-
-  XklDebug( 150, "done\n" );
-}
-
-/**
- * Checks the window and goes up
- */
-Bool _XklGetAppWindowBottomToTop( Window win, Window * appWin_return )
-{
-  Window parent = ( Window ) NULL, rwin = ( Window ) NULL, *children = NULL;
-  unsigned int num = 0;
-
-  if( win == ( Window ) NULL || win == _xklRootWindow )
-  {
-    *appWin_return = win;
-    _xklLastErrorMsg = "The window is either 0 or root";
-    return False;
-  }
-
-  if( _XklHasWmState( win ) )
-  {
-    *appWin_return = win;
-    return True;
-  }
-
-  _xklLastErrorCode =
-    _XklStatusQueryTree( _xklDpy, win, &rwin, &parent, &children, &num );
-
-  if( _xklLastErrorCode != Success )
-  {
-    *appWin_return = ( Window ) NULL;
-    return False;
-  }
-
-  if( children != NULL )
-    XFree( children );
-
-  return _XklGetAppWindowBottomToTop( parent, appWin_return );
-}
-
-/**
- * Recursively finds "App window" (window with WM_STATE) for given window.
- * First, checks the window itself
- * Then, for first level of recursion, checks childen,
- * Then, goes to parent.
- * NOTE: root window cannot be "App window" under normal circumstances
- */
-Bool _XklGetAppWindow( Window win, Window * appWin_return )
-{
-  Window parent = ( Window ) NULL,
-    rwin = ( Window ) NULL, *children = NULL, *child;
-  unsigned int num = 0;
-  Bool rv;
-
-  if( win == ( Window ) NULL || win == _xklRootWindow )
-  {
-    *appWin_return = ( Window ) NULL;
-    _xklLastErrorMsg = "The window is either 0 or root";
-    XklDebug( 150,
-              "Window " WINID_FORMAT
-              " is either 0 or root so could not get the app window for it\n",
-              win );
-    return False;
-  }
-
-  if( _XklHasWmState( win ) )
-  {
-    *appWin_return = win;
-    return True;
-  }
-
-  _xklLastErrorCode =
-    _XklStatusQueryTree( _xklDpy, win, &rwin, &parent, &children, &num );
-
-  if( _xklLastErrorCode != Success )
-  {
-    *appWin_return = ( Window ) NULL;
-    XklDebug( 150,
-              "Could not get tree for window " WINID_FORMAT
-              " so could not get the app window for it\n", win );
-    return False;
-  }
-
-  /**
-   * Here we first check the children (in case win is just above some "App Window")
-   * and then go upstairs
-   */
-  child = children;
-  while( num )
-  {
-    if( _XklHasWmState( *child ) )
-    {
-      *appWin_return = *child;
-      if( children != NULL )
-        XFree( children );
-      return True;
-    }
-    child++;
-    num--;
-  }
-
-  if( children != NULL )
-    XFree( children );
-
-  rv = _XklGetAppWindowBottomToTop( parent, appWin_return );
-
-  if( !rv )
-    XklDebug( 200, "Could not get the app window for " WINID_FORMAT "/%s\n",
-              win, _XklGetDebugWindowTitle( win ) );
-
-  return rv;
+  if( !xkl_toplevel_window_find( win, &toplevel_win) )
+    return FALSE;
+  return xkl_toplevel_window_is_transparent( toplevel_win );
 }
 
 /**
  * Loads the tree recursively.
  */
-Bool _XklLoadWindowTree( void )
+gboolean xkl_load_window_tree( void )
 {
   Window focused;
   int revert;
-  Bool retval = True, haveAppWindow;
+  gboolean retval = TRUE, have_toplevel_win;
 
-  if( _xklListenerType & XKLL_MANAGE_WINDOW_STATES )
-    retval = _XklLoadSubtree( _xklRootWindow, 0, &_xklCurState );
+  if( xkl_listener_type & XKLL_MANAGE_WINDOW_STATES )
+    retval = xkl_load_subtree( xkl_root_window, 0, &xkl_current_state );
 
-  XGetInputFocus( _xklDpy, &focused, &revert );
+  XGetInputFocus( xkl_display, &focused, &revert );
 
-  XklDebug( 160, "initially focused: " WINID_FORMAT ", '%s'\n", 
-            focused, _XklGetDebugWindowTitle( focused ) );
+  xkl_debug( 160, "initially focused: " WINID_FORMAT ", '%s'\n", 
+            focused, xkl_get_debug_window_title( focused ) );
 
-  haveAppWindow = _XklGetAppWindow( focused, &_xklCurClient );
+  have_toplevel_win = xkl_toplevel_window_find( focused, &xkl_current_client );
 
-  if( haveAppWindow )
+  if( have_toplevel_win )
   {
-    Bool haveState = _XklGetAppState( _xklCurClient, &_xklCurState );
-    XklDebug( 160,
-              "initial _xklCurClient: " WINID_FORMAT
-              ", '%s' %s state %d/%X\n", _xklCurClient,
-              _XklGetDebugWindowTitle( _xklCurClient ),
-              ( haveState ? "with" : "without" ),
-              ( haveState ? _xklCurState.group : -1 ),
-              ( haveState ? _xklCurState.indicators : -1 ) );
+    gboolean have_state = xkl_toplevel_window_get_state( xkl_current_client,
+                                                         &xkl_current_state );
+    xkl_debug( 160,
+              "initial xkl_cur_client: " WINID_FORMAT
+              ", '%s' %s state %d/%X\n", xkl_current_client,
+              xkl_get_debug_window_title( xkl_current_client ),
+              ( have_state ? "with" : "without" ),
+              ( have_state ? xkl_current_state.group : -1 ),
+              ( have_state ? xkl_current_state.indicators : -1 ) );
   } else
   {
-    XklDebug( 160,
-              "could not find initial app. Probably, focus belongs to some WM service window. Will try to survive:)" );
+    xkl_debug( 160,
+              "Could not find initial app. "
+              "Probably, focus belongs to some WM service window. "
+              "Will try to survive:)" );
   }
 
   return retval;
 }
 
-void _XklDebug( const char file[], const char function[], int level,
-                const char format[], ... )
+void _xkl_debug( const gchar file[], const gchar function[], gint level,
+                 const gchar format[], ... )
 {
   va_list lst;
 
-  if( level > _xklDebugLevel )
+  if( level > xkl_debug_level )
     return;
 
   va_start( lst, format );
-  if( logAppender != NULL )
-    ( *logAppender ) ( file, function, level, format, lst );
+  if( log_appender != NULL )
+    ( *log_appender ) ( file, function, level, format, lst );
   va_end( lst );
 }
 
-void XklDefaultLogAppender( const char file[], const char function[],
-                            int level, const char format[], va_list args )
+void xkl_default_log_appender( const gchar file[], const gchar function[],
+                               gint level, const gchar format[], va_list args )
 {
   time_t now = time( NULL );
   fprintf( stdout, "[%08ld,%03d,%s:%s/] \t", now, level, file, function );
@@ -611,250 +435,154 @@ void XklDefaultLogAppender( const char file[], const char function[],
 }
 
 /**
- * Gets the state from the window property
- */
-Bool _XklGetAppState( Window appWin, XklState * state_return )
-{
-  Atom type_ret;
-  int format_ret;
-  unsigned long nitems, rest;
-  CARD32 *prop = NULL;
-  Bool ret = False;
-                                                                                            
-  int grp = -1;
-  unsigned inds = 0;
-                                                                                            
-  if( ( XGetWindowProperty
-        ( _xklDpy, appWin, _xklAtoms[XKLAVIER_STATE], 0L,
-          XKLAVIER_STATE_PROP_LENGTH, False,
-          XA_INTEGER, &type_ret, &format_ret, &nitems, &rest,
-          ( unsigned char ** ) ( void * ) &prop ) == Success )
-      && ( type_ret == XA_INTEGER ) && ( format_ret == 32 ) )
-  {
-    grp = prop[0];
-    if( grp >= XklGetNumGroups(  ) || grp < 0 )
-      grp = 0;
-                                                                                            
-    inds = prop[1];
-                                                                                            
-    if( state_return != NULL )
-    {
-      state_return->group = grp;
-      state_return->indicators = inds;
-    }
-    if( prop != NULL )
-      XFree( prop );
-                                                                                            
-    ret = True;
-  }
-                                                                                            
-  if( ret )
-    XklDebug( 150,
-              "Appwin " WINID_FORMAT
-              ", '%s' has the group %d, indicators %X\n", appWin,
-              _XklGetDebugWindowTitle( appWin ), grp, inds );
-  else
-    XklDebug( 150, "Appwin " WINID_FORMAT ", '%s' does not have state\n",
-              appWin, _XklGetDebugWindowTitle( appWin ) );
-                                                                                            
-  return ret;
-}
-                                                                                            
-/**
- * Deletes the state from the window properties
- */
-void _XklDelAppState( Window appWin )
-{
-  XDeleteProperty( _xklDpy, appWin, _xklAtoms[XKLAVIER_STATE] );
-}
-
-/**
- * Saves the state into the window properties
- */
-void _XklSaveAppState( Window appWin, XklState * state )
-{
-  CARD32 prop[XKLAVIER_STATE_PROP_LENGTH];
-
-  prop[0] = state->group;
-  prop[1] = state->indicators;
-
-  XChangeProperty( _xklDpy, appWin, _xklAtoms[XKLAVIER_STATE], XA_INTEGER,
-                   32, PropModeReplace, ( const unsigned char * ) prop,
-                   XKLAVIER_STATE_PROP_LENGTH );
-
-  XklDebug( 160,
-            "Saved the group %d, indicators %X for appwin " WINID_FORMAT "\n",
-            state->group, state->indicators, appWin );
-}
-
-/**
  * Just selects some events from the window.
  */
-void _XklSelectInput( Window win, long mask )
+void xkl_select_input( Window win, gulong mask )
 {
-  if( _xklRootWindow == win )
-    XklDebug( 160,
+  if( xkl_root_window == win )
+    xkl_debug( 160,
               "Someone is looking for %lx on root window ***\n",
               mask );
 
-  XSelectInput( _xklDpy, win, mask );
+  XSelectInput( xkl_display, win, mask );
 }
 
-void _XklSelectInputMerging( Window win, long mask )
+void xkl_select_input_merging( Window win, gulong mask )
 {
   XWindowAttributes attrs;
-  long oldmask = 0L, newmask;
+  gulong oldmask = 0L, newmask;
   memset( &attrs, 0, sizeof( attrs ) );
-  if( XGetWindowAttributes( _xklDpy, win, &attrs ) )
+  if( XGetWindowAttributes( xkl_display, win, &attrs ) )
     oldmask = attrs.your_event_mask;
 
   newmask = oldmask | mask;
   if( newmask != oldmask )
-    _XklSelectInput( win, newmask );
+    xkl_select_input( win, newmask );
 }
 
-void _XklTryCallStateCallback( XklStateChange changeType,
-                               XklState * oldState )
+void xkl_try_call_state_func( XklStateChange change_type,
+                              XklState * old_state )
 {
-  int group = _xklCurState.group;
-  Bool restore = oldState->group == group;
+  gint group = xkl_current_state.group;
+  gboolean restore = old_state->group == group;
 
-  XklDebug( 150,
-            "changeType: %d, group: %d, secondaryGroupMask: %X, allowsecondary: %d\n",
-            changeType, group, _xklSecondaryGroupsMask,
-            _XklIsOneSwitchToSecondaryGroupAllowed() );
+  xkl_debug( 150,
+             "change_type: %d, group: %d, secondary_group_mask: %X, allowsecondary: %d\n",
+             change_type, group, xkl_secondary_groups_mask,
+             xkl_is_one_switch_to_secondary_group_allowed() );
 
-  if( changeType == GROUP_CHANGED )
+  if( change_type == GROUP_CHANGED )
   {
     if( !restore )
     {
-      if( ( _xklSecondaryGroupsMask & ( 1 << group ) ) != 0 &&
-          !_XklIsOneSwitchToSecondaryGroupAllowed() )
+      if( ( xkl_secondary_groups_mask & ( 1 << group ) ) != 0 &&
+          !xkl_is_one_switch_to_secondary_group_allowed() )
       {
-        XklDebug( 150, "secondary -> go next\n" );
-        group = XklGetNextGroup(  );
-        XklLockGroup( group );
+        xkl_debug( 150, "secondary -> go next\n" );
+        group = xkl_get_next_group(  );
+        xkl_lock_group( group );
         return;                 /* we do not need to revalidate */
       }
     }
-    _XklOneSwitchToSecondaryGroupPerformed();
+    xkl_one_switch_to_secondary_group_performed();
   }
-  if( stateCallback != NULL )
+  if( xkl_state_callback != NULL )
   {
 
-    ( *stateCallback ) ( changeType, _xklCurState.group,
-                         restore, stateCallbackData );
+    ( *xkl_state_callback ) ( change_type, xkl_current_state.group,
+                              restore, xkl_state_callback_data );
   }
 }
 
-Bool _XklIsTransparentAppWindow( Window appWin )
-{
-  Atom type_ret;
-  int format_ret;
-  unsigned long nitems, rest;
-  CARD32 *prop = NULL;
-  if( ( XGetWindowProperty
-        ( _xklDpy, appWin, _xklAtoms[XKLAVIER_TRANSPARENT], 0L, 1, False,
-          XA_INTEGER, &type_ret, &format_ret, &nitems, &rest,
-          ( unsigned char ** ) ( void * ) &prop ) == Success )
-      && ( type_ret == XA_INTEGER ) && ( format_ret == 32 ) )
-  {
-    if( prop != NULL )
-      XFree( prop );
-    return True;
-  }
-  return False;
-}
-
-void _XklEnsureVTableInited( void )
+void xkl_ensure_vtable_inited( void )
 {
   char *p;
-  if ( xklVTable == NULL )
+  if ( xkl_vtable == NULL )
   {
-    XklDebug( 0, "ERROR: XKL VTable is NOT initialized.\n" );
+    xkl_debug( 0, "ERROR: XKL VTable is NOT initialized.\n" );
     /* force the crash! */
     p = NULL; *p = '\0';
   }
 }
 
-const char *XklGetBackendName( void )
+const gchar *xkl_get_backend_name( void )
 {
-  return xklVTable->id;
+  return xkl_vtable->id;
 }
 
-int XklGetBackendFeatures( void )
+guint xkl_get_backend_features( void )
 {
-  return xklVTable->features;
+  return xkl_vtable->features;
 }
 
-void _XklResetAllInfo( const char reason[] )
+void xkl_reset_all_info( const gchar reason[] )
 {
-  XklDebug( 150, "Resetting all the cached info, reason: [%s]\n", reason );
-  _XklEnsureVTableInited();
-  if( !(*xklVTable->xklIfCachedInfoEqualsActualHandler)() )
+  xkl_debug( 150, "Resetting all the cached info, reason: [%s]\n", reason );
+  xkl_ensure_vtable_inited();
+  if( !(*xkl_vtable->if_cached_info_equals_actual_func)() )
   {
-    (*xklVTable->xklFreeAllInfoHandler)();
-    (*xklVTable->xklLoadAllInfoHandler)();
+    (*xkl_vtable->free_all_info_func)();
+    (*xkl_vtable->load_all_info_func)();
   } else
-    XklDebug( 100, "NOT Resetting the cache: same configuration\n" );
+    xkl_debug( 100, "NOT Resetting the cache: same configuration\n" );
 }
 
 /**
  * Calling through vtable
  */
-const char **XklGetGroupNames( void )
+const gchar **xkl_get_group_names( void )
 {
-  _XklEnsureVTableInited();
-  return (*xklVTable->xklGetGroupNamesHandler)();
+  xkl_ensure_vtable_inited();
+  return (*xkl_vtable->get_group_names_func)();
 }
 
-unsigned XklGetNumGroups( void )
+guint _xkl_get_num_groups( void )
 {
-  _XklEnsureVTableInited();
-  return (*xklVTable->xklGetNumGroupsHandler)();
+  xkl_ensure_vtable_inited();
+  return (*xkl_vtable->get_num_groups_func)();
 }
 
-void XklLockGroup( int group )
+void xkl_lock_group( int group )
 {
-  _XklEnsureVTableInited();
-  (*xklVTable->xklLockGroupHandler)( group );
+  xkl_ensure_vtable_inited();
+  (*xkl_vtable->lock_group_func)( group );
 }
 
-int XklPauseListen( void )
+gint xkl_pause_listen( void )
 {
-  _XklEnsureVTableInited();
-  return (*xklVTable->xklPauseListenHandler)();
+  xkl_ensure_vtable_inited();
+  return (*xkl_vtable->pause_listen_func)();
 }
 
-int XklResumeListen( void )
+gint xkl_resume_listen( void )
 {
-  _XklEnsureVTableInited();
-  XklDebug( 150, "listenerType: %x\n", _xklListenerType );
-  if( (*xklVTable->xklResumeListenHandler)() )
+  xkl_ensure_vtable_inited();
+  xkl_debug( 150, "listenerType: %x\n", xkl_listener_type );
+  if( (*xkl_vtable->resume_listen_func)() )
     return 1;
   
-  _XklSelectInputMerging( _xklRootWindow,
-                          SubstructureNotifyMask | PropertyChangeMask );
-  _XklEnsureVTableInited();
-  (*xklVTable->xklGetRealStateHandler)( &_xklCurState );
+  xkl_select_input_merging( xkl_root_window,
+                            SubstructureNotifyMask | PropertyChangeMask );
+  xkl_ensure_vtable_inited();
+  (*xkl_vtable->get_server_state_func)( &xkl_current_state );
   return 0;
 }
 
-Bool _XklLoadAllInfo( void )
+gboolean xkl_load_all_info( void )
 {
-  _XklEnsureVTableInited();
-  return (*xklVTable->xklLoadAllInfoHandler)();
+  xkl_ensure_vtable_inited();
+  return (*xkl_vtable->load_all_info_func)();
 }
 
-void _XklFreeAllInfo( void )
+void xkl_free_all_info( void )
 {
-  _XklEnsureVTableInited();
-  (*xklVTable->xklFreeAllInfoHandler)();
+  xkl_ensure_vtable_inited();
+  (*xkl_vtable->free_all_info_func)();
 }
 
-unsigned XklGetMaxNumGroups( void )
+guint xkl_get_max_num_groups( void )
 {
-  _XklEnsureVTableInited();
-  return (*xklVTable->xklGetMaxNumGroupsHandler)();
+  xkl_ensure_vtable_inited();
+  return (*xkl_vtable->get_max_num_groups_func)();
 }
 

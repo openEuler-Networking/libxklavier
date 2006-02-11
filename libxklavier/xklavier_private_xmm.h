@@ -3,75 +3,75 @@
 
 typedef struct _XmmShortcut 
 {
-  int keysym;
-  int modifiers;
+  gint keysym;
+  guint modifiers;
 } XmmShortcut, *XmmShortcutPtr;
 
 #define MAX_SHORTCUTS_PER_OPTION 4
 typedef struct _XmmSwitchOption
 {
-  const char* optionName;
-  int numShortcuts;
+  const gchar* option_name;
+  gint num_shortcuts;
   XmmShortcut shortcuts[MAX_SHORTCUTS_PER_OPTION];
-  int shortcutSteps[MAX_SHORTCUTS_PER_OPTION];
+  gint shortcut_steps[MAX_SHORTCUTS_PER_OPTION];
 } XmmSwitchOption, *XmmSwitchOptionPtr;
 
-extern char* currentXmmRules;
+extern gchar* current_xmm_rules;
 
-extern XklConfigRec currentXmmConfig;
+extern XklConfigRec current_xmm_config;
 
-extern Atom xmmStateAtom;
+extern Atom xmm_state_atom;
 
 /* in the ideal world this should be a hashmap */
-extern XmmSwitchOption allSwitchOptions[];
+extern XmmSwitchOption all_switch_options[];
 
-extern void _XklXmmGrabIgnoringIndicators( int keycode, int modifiers );
+extern void xkl_xmm_grab_ignoring_indicators( gint keycode, guint modifiers );
 
-extern void _XklXmmUngrabIgnoringIndicators( int keycode, int modifiers );
+extern void xkl_xmm_ungrab_ignoring_indicators( gint keycode, guint modifiers );
 
-extern void _XklXmmGrabShortcuts( void );
+extern void xkl_xmm_grab_shortcuts( void );
 
-extern void _XklXmmUngrabShortcuts( void );
+extern void xkl_xmm_ungrab_shortcuts( void );
 
-extern const char* _XklXmmGetCurrentShortcutOptionName( void );
+extern const gchar* xkl_xmm_get_current_shortcut_option_name( void );
 
-XmmSwitchOptionPtr _XklXmmGetCurrentShortcut( void );
+XmmSwitchOptionPtr xkl_xmm_get_current_shortcut( void );
 
-extern void _XklXmmActualizeGroup( int group );
+extern void xkl_xmm_actualize_group( gint group );
 
-XmmSwitchOptionPtr _XklXmmFindSwitchOption( unsigned keycode, 
-                                            unsigned state,
-                                            int * currentShortcut_rv );
+XmmSwitchOptionPtr xkl_xmm_find_switch_option( gint keycode, 
+                                               guint state,
+                                               gint * current_shortcut_out );
 
 /* Start VTable methods */
 
-extern Bool _XklXmmConfigActivate( const XklConfigRecPtr data );
+extern gboolean xkl_xmm_config_activate( const XklConfigRec * data );
 
-extern void _XklXmmConfigInit( void );
+extern void xkl_xmm_config_init( void );
 
-extern Bool _XklXmmConfigLoadRegistry( void );
+extern gboolean xkl_xmm_config_load_registry( void );
 
-extern int _XklXmmEventHandler( XEvent * kev );
+extern gint xkl_xmm_event_funt( XEvent * kev );
 
-extern void _XklXmmFreeAllInfo( void );
+extern void xkl_xmm_free_all_info( void );
 
-extern const char **_XklXmmGetGroupNames( void );
+extern const gchar **xkl_xmm_get_group_names( void );
 
-extern unsigned _XklXmmGetMaxNumGroups( void );
+extern unsigned xkl_xmm_get_max_num_groups( void );
 
-extern unsigned _XklXmmGetNumGroups( void );
+extern unsigned xkl_xmm_get_num_groups( void );
 
-extern void _XklXmmGetRealState( XklState * curState_return );
+extern void xkl_xmm_get_real_state( XklState * current_state_out );
 
-extern Bool _XklXmmIfCachedInfoEqualsActual( void );
+extern gboolean xkl_xmm_if_cached_info_equals_actual( void );
 
-extern Bool _XklXmmLoadAllInfo( void );
+extern gboolean xkl_xmm_load_all_info( void );
 
-extern void _XklXmmLockGroup( int group );
+extern void xkl_xmm_lock_group( gint group );
 
-extern int _XklXmmPauseListen( void );
+extern gint xkl_xmm_pause_listen( void );
 
-extern int _XklXmmResumeListen( void );
+extern gint xkl_xmm_resume_listen( void );
 
 /* End of VTable methods */
 
