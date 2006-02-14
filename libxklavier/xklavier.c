@@ -352,8 +352,8 @@ void XklSetTransparent( Window win, Bool transparent )
   if( !_XklGetAppWindow( win, &appWin ) )
   {
     XklDebug( 150, "No app window!\n" );
-    appWin = win;
-/*    return; */
+    /* appWin = win; */
+    return;
   }
 
   wasTransparent = XklIsTransparent( appWin );

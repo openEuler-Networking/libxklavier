@@ -345,17 +345,19 @@ void _XklCreateEvHandler( XCreateWindowEvent * cev )
  */
 void _XklErrHandler( Display * dpy, XErrorEvent * evt )
 {
+  char buf[128] = "";
   _xklLastErrorCode = evt->error_code;
   switch ( _xklLastErrorCode )
   {
     case BadWindow:
     case BadAccess:
     {
+      XGetErrorText( dpy, _xklLastErrorCode, buf, sizeof(buf) );
       /* in most cases this means we are late:) */
-      XklDebug( 200, "ERROR: %p, " WINID_FORMAT ", %d, %d, %d\n",
+      XklDebug( 200, "ERROR: %p, " WINID_FORMAT ", %d (%s), %d, %d\n",
                 dpy,
                 ( unsigned long ) evt->resourceid,
-                ( int ) evt->error_code,
+                ( int ) evt->error_code, buf,
                 ( int ) evt->request_code, ( int ) evt->minor_code );
       break;
     }
