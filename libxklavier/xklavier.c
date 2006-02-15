@@ -185,7 +185,7 @@ gint xkl_start_listen( guint what )
     xkl_debug( 0, "The backend does not require manual layout management - "
                  "but it is provided by the application" );
   
-  xkl_resume_listen(  );
+  xkl_listen_resume(  );
   xkl_load_window_tree(  );
   XFlush( xkl_display );
   return 0;
@@ -193,7 +193,7 @@ gint xkl_start_listen( guint what )
 
 gint xkl_stop_listen( void )
 {
-  xkl_pause_listen(  );
+  xkl_listen_pause(  );
   return 0;
 }
 
@@ -253,7 +253,7 @@ gint xkl_init( Display * a_dpy )
   if( rv == 0 )
   {
     xkl_debug( 150, "Actual backend: %s\n",
-              xkl_get_backend_name() );
+              xkl_backend_get_name() );
   }
   else
   {
@@ -320,12 +320,12 @@ gboolean xkl_ungrab_key( gint keycode, guint modifiers )
 
 gint _xkl_get_next_group( void )
 {
-  return ( xkl_current_state.group + 1 ) % xkl_get_num_groups(  );
+  return ( xkl_current_state.group + 1 ) % xkl_groups_get_num(  );
 }
                                                                                           
 gint xkl_get_prev_group( void )
 {
-  gint n = xkl_get_num_groups(  );
+  gint n = xkl_groups_get_num(  );
   return ( xkl_current_state.group + n - 1 ) % n;
 }
 
@@ -335,7 +335,7 @@ gint xkl_get_restore_group( void )
   if( xkl_current_client == ( Window ) NULL )
   {
     xkl_debug( 150, "cannot restore without current client\n" );
-  } else if( xkl_get_state( xkl_current_client, &state ) )
+  } else if( xkl_state_get( xkl_current_client, &state ) )
   {
     return state.group;
   } else
@@ -479,8 +479,8 @@ void xkl_try_call_state_func( XklStateChange change_type,
           !xkl_is_one_switch_to_secondary_group_allowed() )
       {
         xkl_debug( 150, "secondary -> go next\n" );
-        group = xkl_get_next_group(  );
-        xkl_lock_group( group );
+        group = xkl_group_get_next(  );
+        xkl_group_lock( group );
         return;                 /* we do not need to revalidate */
       }
     }
@@ -530,35 +530,35 @@ void xkl_reset_all_info( const gchar reason[] )
 /**
  * Calling through vtable
  */
-const gchar **xkl_get_group_names( void )
+const gchar **xkl_groups_get_names( void )
 {
   xkl_ensure_vtable_inited();
-  return (*xkl_vtable->get_group_names_func)();
+  return (*xkl_vtable->groups_get_names_func)();
 }
 
-guint _xkl_get_num_groups( void )
+guint _xkl_groups_get_num( void )
 {
   xkl_ensure_vtable_inited();
-  return (*xkl_vtable->get_num_groups_func)();
+  return (*xkl_vtable->groups_get_num_func)();
 }
 
-void xkl_lock_group( int group )
+void xkl_group_lock( int group )
 {
   xkl_ensure_vtable_inited();
-  (*xkl_vtable->lock_group_func)( group );
+  (*xkl_vtable->group_lock_func)( group );
 }
 
-gint xkl_pause_listen( void )
+gint xkl_listen_pause( void )
 {
   xkl_ensure_vtable_inited();
-  return (*xkl_vtable->pause_listen_func)();
+  return (*xkl_vtable->listen_pause_func)();
 }
 
-gint xkl_resume_listen( void )
+gint xkl_listen_resume( void )
 {
   xkl_ensure_vtable_inited();
   xkl_debug( 150, "listenerType: %x\n", xkl_listener_type );
-  if( (*xkl_vtable->resume_listen_func)() )
+  if( (*xkl_vtable->listen_resume_func)() )
     return 1;
   
   xkl_select_input_merging( xkl_root_window,
@@ -580,9 +580,9 @@ void xkl_free_all_info( void )
   (*xkl_vtable->free_all_info_func)();
 }
 
-guint xkl_get_max_num_groups( void )
+guint xkl_groups_get_max_num( void )
 {
   xkl_ensure_vtable_inited();
-  return (*xkl_vtable->get_max_num_groups_func)();
+  return (*xkl_vtable->groups_get_max_num_func)();
 }
 

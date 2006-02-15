@@ -5,6 +5,7 @@
 
 #include <libxklavier/xklavier_config.h>
 
+/* XklConfigRec */
 typedef gboolean ( *XklVTConfigActivateFunc )( const XklConfigRec * data );
 
 typedef void ( *XklVTConfigInitFunc )( void );
@@ -15,27 +16,29 @@ typedef gboolean ( *XklVTConfigWriteFileFunc )( const gchar *file_name,
                                                 const XklConfigRec * data,
                                                 const gboolean binary );
 
+/* Groups */
+typedef const gchar **( *XklVTGroupsGetNamesFunc )( void );
+
+typedef gint ( *XklVTGroupsGetMaxNumFunc )( void );
+
+typedef gint ( *XklVTGroupsGetNumFunc )( void );
+
+typedef void ( *XklVTGroupLockFunc )( gint group );
+
+
 typedef gint ( *XklVTEventFunc )( XEvent *xev );
 
 typedef void ( *XklVTFreeAllInfoFunc )( void );
-
-typedef const gchar **( *XklVTGetGroupNamesFunc )( void );
-
-typedef gint ( *XklVTGetMaxNumGroupsFunc )( void );
-
-typedef gint ( *XklVTGetNumGroupsFunc )( void );
-
-typedef void ( *XklVTGetServerStateFunc)( XklState * current_state_out );
 
 typedef gboolean ( *XklVTIfCachedInfoEqualsActualFunc) ( void );
 
 typedef gboolean ( *XklVTLoadAllInfoFunc )( void );
 
-typedef void ( *XklVTLockGroupFunc )( gint group );
+typedef void ( *XklVTGetServerStateFunc)( XklState * current_state_out );
 
 typedef gint ( *XklVTPauseResumeListenFunc )( void );
 
-typedef void ( *XklVTSetIndicatorsFunc )( const XklState *window_state );
+typedef void ( *XklVTIndicatorsSetFunc )( const XklState *window_state );
 
 typedef struct
 {
@@ -79,6 +82,37 @@ typedef struct
    */
   XklVTConfigWriteFileFunc config_write_file_func;
 
+
+  /**
+   * Get the list of the group names
+   * xkb: return cached list of the group names
+   * xmodmap: return the list of layouts from the internal XklConfigRec
+   */
+  XklVTGroupsGetNamesFunc groups_get_names_func;
+
+  /**
+   * Get the maximum number of loaded groups
+   * xkb: returns 1 or XkbNumKbdGroups
+   * xmodmap: return 0
+   */
+  XklVTGroupsGetMaxNumFunc groups_get_max_num_func;
+
+  /**
+   * Get the number of loaded groups
+   * xkb: return from the cached XkbDesc
+   * xmodmap: return number of layouts from internal XklConfigRec
+   */
+  XklVTGroupsGetNumFunc groups_get_num_func;
+
+  /**
+   * Switches the keyboard to the group N
+   * xkb: simple one-liner to call the XKB function
+   * xmodmap: changes the root window property 
+   * (listener invokes xmodmap with appropriate config file).
+   */
+  XklVTGroupLockFunc group_lock_func;
+
+
   /**
    * Handles X events.
    * xkb: XkbEvent handling
@@ -92,34 +126,6 @@ typedef struct
    * xmodmap: frees internal XklConfigRec
    */
   XklVTFreeAllInfoFunc free_all_info_func; /* private */
-
-  /**
-   * Get the list of the group names
-   * xkb: return cached list of the group names
-   * xmodmap: return the list of layouts from the internal XklConfigRec
-   */
-  XklVTGetGroupNamesFunc get_group_names_func;
-
-  /**
-   * Get the maximum number of loaded groups
-   * xkb: returns 1 or XkbNumKbdGroups
-   * xmodmap: return 0
-   */
-  XklVTGetMaxNumGroupsFunc get_max_num_groups_func;
-
-  /**
-   * Get the number of loaded groups
-   * xkb: return from the cached XkbDesc
-   * xmodmap: return number of layouts from internal XklConfigRec
-   */
-  XklVTGetNumGroupsFunc get_num_groups_func;
-
-  /**
-   * Gets the current stateCallback
-   * xkb: XkbGetState and XkbGetIndicatorState
-   * xmodmap: check the root window property (regarding the group)
-   */
-  XklVTGetServerStateFunc get_server_state_func;
 
   /**
    * Compares the cached info with the actual one, from the server
@@ -136,33 +142,32 @@ typedef struct
   XklVTLoadAllInfoFunc load_all_info_func; /* private */
 
   /**
-   * Switches the keyboard to the group N
-   * xkb: simple one-liner to call the XKB function
-   * xmodmap: changes the root window property 
-   * (listener invokes xmodmap with appropriate config file).
+   * Gets the current stateCallback
+   * xkb: XkbGetState and XkbGetIndicatorState
+   * xmodmap: check the root window property (regarding the group)
    */
-  XklVTLockGroupFunc lock_group_func;
+  XklVTGetServerStateFunc get_server_state_func;
 
   /**
    * Stop tracking the keyboard-related events
    * xkb: XkbSelectEvents(..., 0)
    * xmodmap: Ungrab the switching shortcut.
    */
-  XklVTPauseResumeListenFunc pause_listen_func;
+  XklVTPauseResumeListenFunc listen_pause_func;
 
   /**
    * Start tracking the keyboard-related events
    * xkb: XkbSelectEvents + XkbSelectEventDetails
    * xmodmap: Grab the switching shortcut.
    */
-  XklVTPauseResumeListenFunc resume_listen_func;
+  XklVTPauseResumeListenFunc listen_resume_func;
 
   /**
    * Set the indicators state from the XklState
    * xkb: XklSetIndicator for all indicators
    * xmodmap: NULL. Not supported
    */
-  XklVTSetIndicatorsFunc set_indicators_func; /* private */
+  XklVTIndicatorsSetFunc indicators_set_func; /* private */
   
   /* all data is private - no direct access */
   /**
@@ -253,7 +258,7 @@ extern Status xkl_status_query_tree( Display * display,
                                      Window ** children_out,
                                      guint *nchildren_out );
 
-extern gboolean xkl_set_indicator( gint indicator_num, gboolean set );
+extern gboolean xkl_indicator_set( gint indicator_num, gboolean set );
 
 extern void xkl_try_call_state_func( XklStateChange change_type,
                                      XklState * old_state );

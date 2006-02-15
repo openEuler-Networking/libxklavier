@@ -92,14 +92,14 @@ extern "C"
  * What kind of backend if used
  * @return some string id of the backend
  */
-  extern const gchar *xkl_get_backend_name( void );
+  extern const gchar *xkl_backend_get_name( void );
 
 /**
  * Provides information regarding available backend features
  * (combination of XKLF_* constants)
  * @return ORed XKLF_* constants
  */
-  extern guint xkl_get_backend_features( void );
+  extern guint xkl_backend_get_features( void );
 
 /**
  * Provides the information on maximum number of simultaneously supported 
@@ -107,7 +107,7 @@ extern "C"
  * @return maximum number of the groups in configuration, 
  *         0 if no restrictions.
  */
-  extern unsigned xkl_get_max_num_groups( void );
+  extern unsigned xkl_groups_get_max_num( void );
 /** @} */
 
 /**
@@ -137,25 +137,25 @@ extern "C"
  * @param what any combination of XKLL_* constants
  * @return 0
  */
-  extern gint xkl_start_listen( guint what );
+  extern gint xkl_listen_start( guint what );
 
 /**
  * Stops listening for XKB-related events
  * @return 0
  */
-  extern gint xkl_stop_listen( void );
+  extern gint xkl_listen_stop( void );
 
 /**
  * Temporary pauses listening for XKB-related events
  * @return 0
  */
-  extern gint xkl_pause_listen( void );
+  extern gint xkl_listen_pause( void );
 
 /**
  * Resumes listening for XKB-related events
  * @return 0
  */
-  extern gint xkl_resume_listen( void );
+  extern gint xkl_listen_resume( void );
 
 /**
  * Grabs some key
@@ -163,7 +163,7 @@ extern "C"
  * @param modifiers is a bitmask of modifiers
  * @return True on success
  */
-  extern gboolean xkl_grab_key( gint keycode, unsigned modifiers );
+  extern gboolean xkl_key_grab( gint keycode, unsigned modifiers );
 
 /**
  * Ungrabs some key
@@ -171,7 +171,7 @@ extern "C"
  * @param modifiers is a bitmask of modifiers
  * @return True on success
  */
-  extern gboolean xkl_ungrab_key( gint keycode, unsigned modifiers );
+  extern gboolean xkl_key_ungrab( gint keycode, unsigned modifiers );
 
 /**
  * Processes X events. Should be included into the main event cycle of an
@@ -180,12 +180,12 @@ extern "C"
  * @return 0 if the event it processed - 1 otherwise
  * @see xkl_StartListen
  */
-  extern gint xkl_filter_events( XEvent * evt );
+  extern gint xkl_events_filter( XEvent * evt );
 
 /**
  * Allows to switch (once) to the secondary group
  */
-  extern void xkl_allow_one_switch_to_secondary_group( void );
+  extern void xkl_group_allow_one_switch_to_secondary( void );
 
 /** @} */
 
@@ -197,13 +197,13 @@ extern "C"
 /**
  * @return currently focused window
  */
-  extern Window xkl_get_current_window( void );
+  extern Window xkl_window_get_current( void );
 
 /**
  * @return current state of the keyboard (in XKB terms). 
  * Returned value is a statically allocated buffer, should not be freed.
  */
-  extern XklState *xkl_get_current_state( void );
+  extern XklState *xkl_state_get_current( void );
 
 /** @} */
 
@@ -216,7 +216,7 @@ extern "C"
  * @return the window title of some window or NULL. 
  * If not NULL, it should be freed with XFree
  */
-  extern gchar *xkl_get_window_title( Window w );
+  extern gchar *xkl_window_get_title( Window w );
 
 /** 
  * Finds the state for a given window (for its "App window").
@@ -225,20 +225,20 @@ extern "C"
  * @return True on success, otherwise False 
  * (the error message can be obtained using xkl_GetLastError).
  */
-  extern gboolean xkl_get_state( Window win, XklState * state_return );
+  extern gboolean xkl_state_get( Window win, XklState * state_return );
 
 /**
  * Drops the state of a given window (of its "App window").
  * @param win is a target window
  */
-  extern void xkl_delete_state( Window win );
+  extern void xkl_state_delete( Window win );
 
 /** 
  * Stores ths state for a given window
  * @param win is a target window
  * @param state is a new state of the window
  */
-  extern void xkl_save_state( Window win, XklState * state );
+  extern void xkl_state_save( Window win, XklState * state );
 
 /**
  * Sets the "transparent" flag. It means focus switching onto 
@@ -247,14 +247,14 @@ extern "C"
  * @param transparent - if true, the windows is transparent.
  * @see xkl_IsTranspatent
  */
-  extern void xkl_set_transparent( Window win, gboolean transparent );
+  extern void xkl_window_set_transparent( Window win, gboolean transparent );
 
 /**
  * Returns "transparent" flag. 
  * @param win is the window to get the transparent flag from.
  * @see xkl_SetTranspatent
  */
-  extern gboolean xkl_is_transparent( Window win );
+  extern gboolean xkl_window_is_transparent( Window win );
 
 /**
  * Checks whether 2 windows have the same topmost window
@@ -262,7 +262,7 @@ extern "C"
  * @param win2 is second window
  * @return True is windows are in the same application
  */
-  extern gboolean xkl_is_same_appication( Window win1, Window win2 );
+  extern gboolean xkl_windows_is_same_appication( Window win1, Window win2 );
 
 /** @} */
 
@@ -275,21 +275,21 @@ extern "C"
  * @return the total number of groups in the current XKB configuration 
  * (keyboard)
  */
-  extern unsigned xkl_get_num_groups( void );
+  extern unsigned xkl_groups_get_num( void );
 
 /**
  * @return the array of group names for the current XKB configuration 
  * (keyboard).
  * This array is static, should not be freed
  */
-  extern const gchar **xkl_get_group_names( void );
+  extern const gchar **xkl_groups_get_names( void );
 
 /**
  * @return the array of indicator names for the current XKB configuration 
  * (keyboard).
  * This array is static, should not be freed
  */
-  extern const gchar **xkl_get_indicator_names( void );
+  extern const gchar **xkl_indicators_get_names( void );
 
 /** @} */
 
@@ -302,19 +302,19 @@ extern "C"
  * Calculates next group id. Does not change the state of anything.
  * @return next group id
  */
-  extern gint xkl_get_next_group( void );
+  extern gint xkl_group_get_next( void );
 
 /**
  * Calculates prev group id. Does not change the state of anything.
  * @return prev group id
  */
-  extern gint xkl_get_prev_group( void );
+  extern gint xkl_group_get_prev( void );
 
 /**
  * @return saved group id of the current client. 
  * Does not change the state of anything.
  */
-  extern gint xkl_get_restore_group( void );
+  extern gint xkl_group_get_restore( void );
 
 /**
  * Locks the group. Can be used after xkl_GetXXXGroup functions
@@ -323,7 +323,7 @@ extern "C"
  * @see xkl_GetPrevGroup
  * @see xkl_GetRestoreGroup
  */
-  extern void xkl_lock_group( gint group );
+  extern void xkl_group_lock( gint group );
 
 /** @} */
 
@@ -439,14 +439,14 @@ extern "C"
  * If -1, no default group is used
  * @param group the default group
  */
-  extern void xkl_set_default_group( gint group );
+  extern void xkl_group_set_default( gint group );
 
 /**
  * Returns the default group set on window creation
  * If -1, no default group is used
  * @return the default group
  */
-  extern gint xkl_get_default_group( void );
+  extern gint xkl_group_get_default( void );
 
 /** @} */
 

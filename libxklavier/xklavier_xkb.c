@@ -401,7 +401,7 @@ gboolean xkl_set_indicator( gint indicator_num, gboolean set )
           group = i;
           break;
         }
-      xkl_lock_group( group );
+      xkl_group_lock( group );
     }
   }
 
@@ -456,18 +456,20 @@ gint xkl_xkb_init( void )
     xkl_xkb_config_init,
     xkl_xkb_config_load_registry,
     xkl_xkb_config_write_file,
+
+    xkl_xkb_groups_get_names,
+    xkl_xkb_groups_get_max_num,
+    xkl_xkb_groups_get_num,
+    xkl_xkb_group_lock,
+
     xkl_xkb_event_func,
     xkl_xkb_free_all_info,
-    xkl_xkb_get_group_names,
-    xkl_xkb_get_max_num_groups,
-    xkl_xkb_get_num_groups,
-    xkl_xkb_get_server_state,
     xkl_xkb_if_cached_info_equals_actual,
     xkl_xkb_load_all_info,
-    xkl_xkb_lock_group,
-    xkl_xkb_pause_listen,
-    xkl_xkb_resume_listen,
-    xkl_xkb_set_indicators,
+    xkl_xkb_get_server_state,
+    xkl_xkb_listen_pause,
+    xkl_xkb_listen_resume,
+    xkl_xkb_indicators_set,
   };
 
   if( getenv( "XKL_XKB_DISABLE" ) != NULL )

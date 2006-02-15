@@ -44,11 +44,11 @@ extern gint xkl_xkb_event_func( XEvent * kev );
 
 extern void xkl_xkb_free_all_info( void );
 
-extern const gchar **xkl_xkb_get_group_names( void );
+extern const gchar **xkl_xkb_groups_get_names( void );
 
-extern gint xkl_xkb_get_max_num_groups( void );
+extern gint xkl_xkb_groups_get_max_num( void );
 
-extern gint xkl_xkb_get_num_groups( void );
+extern gint xkl_xkb_groups_get_num( void );
 
 extern void xkl_xkb_get_server_state( XklState * current_state_out );
 
@@ -56,13 +56,13 @@ extern gboolean xkl_xkb_if_cached_info_equals_actual( void );
 
 extern gboolean xkl_xkb_load_all_info( void );
 
-extern void xkl_xkb_lock_group( gint group );
+extern void xkl_xkb_group_lock( gint group );
 
-extern gint xkl_xkb_pause_listen( void );
+extern gint xkl_xkb_listen_pause( void );
 
-extern gint xkl_xkb_resume_listen( void );
+extern gint xkl_xkb_listen_resume( void );
 
-extern void xkl_xkb_set_indicators( const XklState *window_state );
+extern void xkl_xkb_indicators_set( const XklState *window_state );
 
 /* End of VTable methods */
 

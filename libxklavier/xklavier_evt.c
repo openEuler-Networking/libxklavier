@@ -91,7 +91,7 @@ void xkl_process_focus_in_evt( XFocusChangeEvent * fev )
   xkl_debug( 150, "Appwin " WINID_FORMAT ", '%s' has got focus\n", 
                   toplevel_win, xkl_get_debug_window_title( toplevel_win ) );
 
-  if( xkl_get_state( toplevel_win, &selected_window_state ) )
+  if( xkl_state_get( toplevel_win, &selected_window_state ) )
   {
     if( xkl_current_client != toplevel_win )
     {
@@ -108,7 +108,7 @@ void xkl_process_focus_in_evt( XFocusChangeEvent * fev )
        * the _previous_ window.
        */
       if ( !old_win_transparent &&
-           xkl_get_state ( xkl_current_client, &tmp_state ) )
+           xkl_state_get( xkl_current_client, &tmp_state ) )
       {
          xkl_update_current_state( tmp_state.group, 
                                    tmp_state.indicators,
@@ -156,7 +156,7 @@ void xkl_process_focus_in_evt( XFocusChangeEvent * fev )
             xkl_update_current_state( selected_window_state.group, 
                                       selected_window_state.indicators,
                                       "Enforcing fast update of the current state" );
-            xkl_lock_group( selected_window_state.group );
+            xkl_group_lock( selected_window_state.group );
           } else
           {
             xkl_debug( 150,
@@ -175,7 +175,7 @@ void xkl_process_focus_in_evt( XFocusChangeEvent * fev )
                     xkl_current_state.indicators,
                     selected_window_state.indicators );
           xkl_ensure_vtable_inited();
-          (*xkl_vtable->set_indicators_func)( &selected_window_state );
+          (*xkl_vtable->indicators_set_func)( &selected_window_state );
         } else
           xkl_debug( 150,
                     "Not restoring the indicators %X after gaining focus: indicator handling is not enabled\n",
@@ -223,7 +223,7 @@ void xkl_process_focus_out_evt( XFocusChangeEvent * fev )
   xkl_debug( 160, "Window " WINID_FORMAT ", '%s' has lost focus\n",
             fev->window, xkl_get_debug_window_title( fev->window ) );
 
-  if( xkl_is_transparent( fev->window ) )
+  if( xkl_window_is_transparent( fev->window ) )
   {
     xkl_debug( 150, "Leaving transparent window!\n" );
 /** 
@@ -268,7 +268,7 @@ void xkl_provess_property_evt( XPropertyEvent * pev )
   {
     if( pev->atom == xkl_atoms[WM_STATE] )
     {
-      gboolean has_xkl_state = xkl_get_state( pev->window, NULL );
+      gboolean has_xkl_state = xkl_state_get( pev->window, NULL );
   
       if( pev->state == PropertyNewValue )
       {
@@ -286,7 +286,7 @@ void xkl_provess_property_evt( XPropertyEvent * pev )
         xkl_select_input_merging( pev->window, PropertyChangeMask );
         if( has_xkl_state )
         {
-          xkl_delete_state( pev->window );
+          xkl_state_delete( pev->window );
         }
       }
     } else
