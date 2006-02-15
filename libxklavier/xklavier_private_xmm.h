@@ -29,17 +29,17 @@ extern void xkl_xmm_grab_ignoring_indicators( gint keycode, guint modifiers );
 
 extern void xkl_xmm_ungrab_ignoring_indicators( gint keycode, guint modifiers );
 
-extern void xkl_xmm_grab_shortcuts( void );
+extern void xkl_xmm_shortcuts_grab( void );
 
-extern void xkl_xmm_ungrab_shortcuts( void );
+extern void xkl_xmm_shortcuts_ungrab( void );
 
-extern const gchar* xkl_xmm_get_current_shortcut_option_name( void );
+extern const gchar* xkl_xmm_current_shortcut_get_option_name( void );
 
-XmmSwitchOptionPtr xkl_xmm_get_current_shortcut( void );
+XmmSwitchOptionPtr xkl_xmm_current_shortcut_get( void );
 
-extern void xkl_xmm_actualize_group( gint group );
+extern void xkl_xmm_group_actualize( gint group );
 
-XmmSwitchOptionPtr xkl_xmm_find_switch_option( gint keycode, 
+XmmSwitchOptionPtr xkl_xmm_switch_option_find( gint keycode, 
                                                guint state,
                                                gint * current_shortcut_out );
 
@@ -49,29 +49,29 @@ extern gboolean xkl_xmm_config_activate( const XklConfigRec * data );
 
 extern void xkl_xmm_config_init( void );
 
-extern gboolean xkl_xmm_config_load_registry( void );
+extern gboolean xkl_xmm_config_registry_load( void );
 
-extern gint xkl_xmm_event_funt( XEvent * kev );
+extern gint xkl_xmm_process_x_event( XEvent * kev );
 
 extern void xkl_xmm_free_all_info( void );
 
-extern const gchar **xkl_xmm_get_group_names( void );
+extern const gchar **xkl_xmm_groups_get_names( void );
 
-extern unsigned xkl_xmm_get_max_num_groups( void );
+extern unsigned xkl_xmm_groups_get_max_num( void );
 
-extern unsigned xkl_xmm_get_num_groups( void );
+extern unsigned xkl_xmm_groups_get_num( void );
 
-extern void xkl_xmm_get_real_state( XklState * current_state_out );
+extern void xkl_xmm_group_lock( gint group );
+
+extern void xkl_xmm_state_get_real( XklState * current_state_out );
 
 extern gboolean xkl_xmm_if_cached_info_equals_actual( void );
 
 extern gboolean xkl_xmm_load_all_info( void );
 
-extern void xkl_xmm_lock_group( gint group );
+extern gint xkl_xmm_listen_pause( void );
 
-extern gint xkl_xmm_pause_listen( void );
-
-extern gint xkl_xmm_resume_listen( void );
+extern gint xkl_xmm_listen_resume( void );
 
 /* End of VTable methods */
 

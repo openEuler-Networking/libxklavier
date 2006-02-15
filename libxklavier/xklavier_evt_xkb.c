@@ -11,7 +11,7 @@
 /**
  * XKB event handler
  */
-gint xkl_xkb_event_handler( XEvent *xev )
+gint xkl_xkb_process_x_event( XEvent *xev )
 {
 #ifdef XKB_HEADERS_PRESENT
   gint i;

@@ -496,10 +496,10 @@ gboolean xkl_config_activate( const XklConfigRec * data )
   return (*xkl_vtable->config_activate_func)( data );
 }
 
-gboolean xkl_config_load_registry( void )
+gboolean xkl_config_registry_load( void )
 {
   xkl_ensure_vtable_inited();
-  return (*xkl_vtable->config_load_registry_func)();
+  return (*xkl_vtable->config_registry_load_func)();
 }
 
 gboolean xkl_config_write_file( const gchar *file_name,

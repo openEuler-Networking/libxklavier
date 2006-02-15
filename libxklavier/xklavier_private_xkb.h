@@ -34,13 +34,13 @@ extern gboolean xkl_xkb_config_activate( const XklConfigRec * data );
 
 extern void xkl_xkb_config_init( void );
 
-extern gboolean xkl_xkb_config_load_registry( void );
+extern gboolean xkl_xkb_config_registry_load( void );
 
 extern gboolean xkl_xkb_config_write_file( const char *file_name,
                                            const XklConfigRec * data,
                                            const gboolean binary );
 
-extern gint xkl_xkb_event_func( XEvent * kev );
+extern gint xkl_xkb_process_x_event( XEvent * kev );
 
 extern void xkl_xkb_free_all_info( void );
 

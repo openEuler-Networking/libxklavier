@@ -10,7 +10,7 @@ typedef gboolean ( *XklVTConfigActivateFunc )( const XklConfigRec * data );
 
 typedef void ( *XklVTConfigInitFunc )( void );
 
-typedef gboolean ( *XklVTConfigLoadRegistryFunc )( void );
+typedef gboolean ( *XklVTConfigRegistryLoadFunc )( void );
 
 typedef gboolean ( *XklVTConfigWriteFileFunc )( const gchar *file_name,
                                                 const XklConfigRec * data,
@@ -26,7 +26,7 @@ typedef gint ( *XklVTGroupsGetNumFunc )( void );
 typedef void ( *XklVTGroupLockFunc )( gint group );
 
 
-typedef gint ( *XklVTEventFunc )( XEvent *xev );
+typedef gint ( *XklVTProcessXEventFunc )( XEvent *xev );
 
 typedef void ( *XklVTFreeAllInfoFunc )( void );
 
@@ -72,7 +72,7 @@ typedef struct
    * xkb: loads xml from XKB_BASE+"/rules/"+ruleset+".xml"
    * xmodmap: loads xml from XMODMAP_BASE+"/"+ruleset+".xml"
    */
-  XklVTConfigLoadRegistryFunc config_load_registry_func;
+  XklVTConfigRegistryLoadFunc config_registry_load_func;
 
   /**
    * Write the configuration into the file (binary/textual)
@@ -118,7 +118,7 @@ typedef struct
    * xkb: XkbEvent handling
    * xmodmap: keep track on the root window properties. What else can we do?
    */
-  XklVTEventFunc event_func;
+  XklVTProcessXEventFunc process_x_event_func;
 
   /**
    * Flushes the cached server config info.

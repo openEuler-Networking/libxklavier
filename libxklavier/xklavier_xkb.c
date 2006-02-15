@@ -454,7 +454,7 @@ gint xkl_xkb_init( void )
       XKLF_CAN_OUTPUT_CONFIG_AS_BINARY,
     xkl_xkb_config_activate,
     xkl_xkb_config_init,
-    xkl_xkb_config_load_registry,
+    xkl_xkb_config_registry_load,
     xkl_xkb_config_write_file,
 
     xkl_xkb_groups_get_names,
@@ -462,7 +462,7 @@ gint xkl_xkb_init( void )
     xkl_xkb_groups_get_num,
     xkl_xkb_group_lock,
 
-    xkl_xkb_event_func,
+    xkl_xkb_process_x_event,
     xkl_xkb_free_all_info,
     xkl_xkb_if_cached_info_equals_actual,
     xkl_xkb_load_all_info,

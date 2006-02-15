@@ -156,7 +156,7 @@ extern "C"
 /**
  * Frees XML configuration registry
  */
-  extern void xkl_config_free_registry( void );
+  extern void xkl_config_registry_free( void );
 /** @} */
 
 /**

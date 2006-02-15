@@ -13,7 +13,7 @@ gint xkl_filter_events( XEvent *xev )
   xkl_debug( 400, "**> Filtering event %d of type %d from window %d\n",
             pe->serial, pe->type, pe->window );
   xkl_ensure_vtable_inited();
-  if ( !xkl_vtable->event_func( xev ) )
+  if ( !xkl_vtable->process_x_event_func( xev ) )
     switch ( xev->type )
     {                           /* core events */
       case FocusIn:
