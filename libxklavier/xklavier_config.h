@@ -145,13 +145,13 @@ extern "C"
  * @param file_name file name to load
  * @return true on success
  */
-  extern gboolean xkl_config_load_registry_from_file( const gchar* file_name );
+  extern gboolean xkl_config_registry_load_from_file( const gchar* file_name );
 
 /**
  * Loads XML configuration registry
  * @return true on success
  */
-  extern gboolean xkl_config_load_registry( void );
+  extern gboolean xkl_config_registry_load( void );
 
 /**
  * Frees XML configuration registry

@@ -10,7 +10,7 @@
     for ( i=0, bit=1; i<XkbNumIndicators; i++, bit<<=1 ) \
           if ( xkl_xkb_desc->indicators->phys_indicators & bit )
 
-extern gint xkl_xkb_evt_type, xkl_xkb_error_code;
+extern gint xkl_xkb_event_type, xkl_xkb_error_code;
 
 extern XkbRF_VarDefsRec xkl_var_defs;
 
@@ -23,10 +23,10 @@ extern gboolean xkl_xkb_config_multiple_layouts_supported( void );
 
 extern const gchar *xkl_xkb_get_xkb_event_name( gint xkb_type );
 
-extern gboolean xkl_xkb_config_prepare_native( const XklConfigRec *data, 
+extern gboolean xkl_xkb_config_native_prepare( const XklConfigRec *data, 
                                                XkbComponentNamesPtr component_names );
 
-extern void xkl_xkb_config_cleanup_native( XkbComponentNamesPtr component_names );
+extern void xkl_xkb_config_native_cleanup( XkbComponentNamesPtr component_names );
 
 /* Start VTable methods */
 

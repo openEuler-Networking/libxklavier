@@ -269,7 +269,7 @@ extern gchar *xkl_locale_from_utf8( const gchar *utf8string );
 
 extern gint xkl_get_language_priority( const gchar *language );
 
-extern gchar* xkl_get_rules_set_name( const gchar default_ruleset[] );
+extern gchar* xkl_rules_set_get_name( const gchar default_ruleset[] );
 
 extern gboolean xkl_config_get_full_from_server( gchar **rules_file_out,
                                                  XklConfigRec * data );

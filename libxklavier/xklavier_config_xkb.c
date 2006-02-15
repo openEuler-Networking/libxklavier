@@ -30,136 +30,137 @@
 #include <X11/keysymdef.h>
 
 #ifdef XKB_HEADERS_PRESENT
-static XkbRF_RulesPtr _xklRules;
+static XkbRF_RulesPtr xkl_rules;
 
-static XkbRF_RulesPtr _XklLoadRulesSet( void )
+static XkbRF_RulesPtr xkl_rules_set_load( void )
 {
-  XkbRF_RulesPtr rulesSet = NULL;
-  char fileName[MAXPATHLEN] = "";
-  char *rf = _XklGetRulesSetName( XKB_DEFAULT_RULESET );
+  XkbRF_RulesPtr rules_set = NULL;
+  char file_name[MAXPATHLEN] = "";
+  char *rf = xkl_rules_set_get_name( XKB_DEFAULT_RULESET );
   char *locale = NULL;
 
   if( rf == NULL )
   {
-    _xklLastErrorMsg = "Could not find the XKB rules set";
+    xkl_last_error_message = "Could not find the XKB rules set";
     return NULL;
   }
 
   locale = setlocale( LC_ALL, NULL );
 
-  snprintf( fileName, sizeof fileName, XKB_BASE "/rules/%s", rf );
-  XklDebug( 160, "Loading rules from [%s]\n", fileName );
+  snprintf( file_name, sizeof file_name, XKB_BASE "/rules/%s", rf );
+  xkl_debug( 160, "Loading rules from [%s]\n", file_name );
 
-  rulesSet = XkbRF_Load( fileName, locale, True, True );
+  rules_set = XkbRF_Load( file_name, locale, True, True );
 
-  if( rulesSet == NULL )
+  if( rules_set == NULL )
   {
-    _xklLastErrorMsg = "Could not load rules";
+    xkl_last_error_message = "Could not load rules";
     return NULL;
   }
-  return rulesSet;
+  return rules_set;
 }
 
-static void _XklFreeRulesSet( void )
+static void xkl_rules_set_free( void )
 {
-  if ( _xklRules )
-    XkbRF_Free( _xklRules, True );
-  _xklRules = NULL;
+  if ( xkl_rules )
+    XkbRF_Free( xkl_rules, True );
+  xkl_rules = NULL;
 }
 #endif
 
-void _XklXkbConfigInit( void )
+void xkl_xkb_config_init( void )
 {
 #ifdef XKB_HEADERS_PRESENT
   XkbInitAtoms( NULL );
 #endif
 }
 
-Bool _XklXkbConfigLoadRegistry( void )
+gboolean xkl_xkb_config_registry_load( void )
 {
-  struct stat statBuf;
-  char fileName[MAXPATHLEN] = "";
-  char* rf = _XklGetRulesSetName( XKB_DEFAULT_RULESET );
+  struct stat stat_buf;
+  char file_name[MAXPATHLEN] = "";
+  char* rf = xkl_rules_set_get_name( XKB_DEFAULT_RULESET );
 
   if ( rf == NULL )
-    return False;
+    return FALSE;
 
-  snprintf( fileName, sizeof fileName, XKB_BASE "/rules/%s.xml", rf );
+  snprintf( file_name, sizeof file_name, XKB_BASE "/rules/%s.xml", rf );
 
-  if( stat( fileName, &statBuf ) != 0 )
+  if( stat( file_name, &stat_buf ) != 0 )
   {
-    strncpy( fileName, XML_CFG_FALLBACK_PATH, sizeof fileName );
-    fileName[ MAXPATHLEN - 1 ] = '\0';
+    g_strlcpy( file_name, XML_CFG_FALLBACK_PATH, sizeof file_name );
   }
 
-  return XklConfigLoadRegistryFromFile( fileName );
+  return xkl_config_registry_load_from_file( file_name );
 }
 
 #ifdef XKB_HEADERS_PRESENT
-Bool _XklXkbConfigPrepareNative( const XklConfigRec * data, XkbComponentNamesPtr componentNamesPtr )
+gboolean xkl_xkb_config_native_prepare( const XklConfigRec * data,
+                                        XkbComponentNamesPtr component_names_ptr )
 {
-  XkbRF_VarDefsRec _xklVarDefs;
-  Bool gotComponents;
+  XkbRF_VarDefsRec xkl_var_defs;
+  gboolean got_components;
 
-  memset( &_xklVarDefs, 0, sizeof( _xklVarDefs ) );
+  memset( &xkl_var_defs, 0, sizeof( xkl_var_defs ) );
 
-  _xklRules = _XklLoadRulesSet();
-  if( !_xklRules )
+  xkl_rules = xkl_rules_set_load();
+  if( !xkl_rules )
   {
-    return False;
+    return FALSE;
   }
 
-  _xklVarDefs.model = ( char * ) data->model;
+  xkl_var_defs.model = ( char * ) data->model;
 
   if( data->layouts != NULL )
-    _xklVarDefs.layout = _XklConfigRecMergeLayouts( data );
+    xkl_var_defs.layout = xkl_config_rec_merge_layouts( data );
 
   if( data->variants != NULL )
-    _xklVarDefs.variant = _XklConfigRecMergeVariants( data );
+    xkl_var_defs.variant = xkl_config_rec_merge_variants( data );
 
   if( data->options != NULL )
-    _xklVarDefs.options = _XklConfigRecMergeOptions( data );
+    xkl_var_defs.options = xkl_config_rec_merge_options( data );
 
-  gotComponents = XkbRF_GetComponents( _xklRules, &_xklVarDefs, componentNamesPtr );
+  got_components = XkbRF_GetComponents( xkl_rules, &xkl_var_defs, component_names_ptr );
 
-  free( _xklVarDefs.layout );
-  free( _xklVarDefs.variant );
-  free( _xklVarDefs.options );
+  g_free( xkl_var_defs.layout );
+  g_free( xkl_var_defs.variant );
+  g_free( xkl_var_defs.options );
 
-  if( !gotComponents )
+  if( !got_components )
   {
-    _xklLastErrorMsg = "Could not translate rules into components";
+    xkl_last_error_message = "Could not translate rules into components";
     /* Just cleanup the stuff in case of failure */
-    _XklXkbConfigCleanupNative( componentNamesPtr );
+    xkl_xkb_config_native_cleanup( component_names_ptr );
     
-    return False;
+    return FALSE;
   }
 
-  if ( _xklDebugLevel >= 200 )
+  if ( xkl_debug_level >= 200 )
   {
-    XklDebug( 200, "keymap: %s\n", componentNamesPtr->keymap );
-    XklDebug( 200, "keycodes: %s\n", componentNamesPtr->keycodes );
-    XklDebug( 200, "compat: %s\n", componentNamesPtr->compat );
-    XklDebug( 200, "types: %s\n", componentNamesPtr->types );
-    XklDebug( 200, "symbols: %s\n", componentNamesPtr->symbols );
-    XklDebug( 200, "geometry: %s\n", componentNamesPtr->geometry );
+    xkl_debug( 200, "keymap: %s\n", component_names_ptr->keymap );
+    xkl_debug( 200, "keycodes: %s\n", component_names_ptr->keycodes );
+    xkl_debug( 200, "compat: %s\n", component_names_ptr->compat );
+    xkl_debug( 200, "types: %s\n", component_names_ptr->types );
+    xkl_debug( 200, "symbols: %s\n", component_names_ptr->symbols );
+    xkl_debug( 200, "geometry: %s\n", component_names_ptr->geometry );
   }
-  return True;
+  return TRUE;
 }
 
-void _XklXkbConfigCleanupNative( XkbComponentNamesPtr componentNamesPtr )
+void xkl_xkb_config_native_cleanup( XkbComponentNamesPtr component_names_ptr )
 {
-  _XklFreeRulesSet();
+  xkl_rules_set_free();
 
-  free(componentNamesPtr->keymap);
-  free(componentNamesPtr->keycodes);
-  free(componentNamesPtr->compat);
-  free(componentNamesPtr->types);
-  free(componentNamesPtr->symbols);
-  free(componentNamesPtr->geometry);
+  g_free(component_names_ptr->keymap);
+  g_free(component_names_ptr->keycodes);
+  g_free(component_names_ptr->compat);
+  g_free(component_names_ptr->types);
+  g_free(component_names_ptr->symbols);
+  g_free(component_names_ptr->geometry);
 }
 
-static XkbDescPtr _XklConfigGetKeyboard( XkbComponentNamesPtr componentNamesPtr, Bool activate )
+static XkbDescPtr xkl_config_get_keyboard( XkbComponentNamesPtr component_names_ptr,
+                                           gboolean activate )
 {
   XkbDescPtr xkb = NULL;
 #if 0
@@ -172,147 +173,148 @@ static XkbDescPtr _XklConfigGetKeyboard( XkbComponentNamesPtr componentNamesPtr,
                               ( ~XkbGBN_GeometryMask ), 
                               activate );
 #else
-  char xkmFN[L_tmpnam];
-  char xkbFN[L_tmpnam];
+  char xkm_fn[L_tmpnam];
+  char xkb_fn[L_tmpnam];
   FILE* tmpxkm;
   XkbFileInfo result;
   int xkmloadres;
 
-  if ( tmpnam( xkmFN ) != NULL && 
-       tmpnam( xkbFN ) != NULL )
+  if ( tmpnam( xkm_fn ) != NULL && 
+       tmpnam( xkb_fn ) != NULL )
   {
     pid_t cpid, pid;
     int status = 0;
     FILE *tmpxkb;
 
-    XklDebug( 150, "tmp XKB/XKM file names: [%s]/[%s]\n", xkbFN, xkmFN );
-    if( (tmpxkb = fopen( xkbFN, "w" )) != NULL )
+    xkl_debug( 150, "tmp XKB/XKM file names: [%s]/[%s]\n", xkb_fn, xkm_fn );
+    if( (tmpxkb = fopen( xkb_fn, "w" )) != NULL )
     {
       fprintf( tmpxkb, "xkb_keymap {\n" );
-      fprintf( tmpxkb, "        xkb_keycodes  { include \"%s\" };\n", componentNamesPtr->keycodes );
-      fprintf( tmpxkb, "        xkb_types     { include \"%s\" };\n", componentNamesPtr->types );
-      fprintf( tmpxkb, "        xkb_compat    { include \"%s\" };\n", componentNamesPtr->compat );
-      fprintf( tmpxkb, "        xkb_symbols   { include \"%s\" };\n", componentNamesPtr->symbols );
-      fprintf( tmpxkb, "        xkb_geometry  { include \"%s\" };\n", componentNamesPtr->geometry );
+      fprintf( tmpxkb, "        xkb_keycodes  { include \"%s\" };\n", component_names_ptr->keycodes );
+      fprintf( tmpxkb, "        xkb_types     { include \"%s\" };\n", component_names_ptr->types );
+      fprintf( tmpxkb, "        xkb_compat    { include \"%s\" };\n", component_names_ptr->compat );
+      fprintf( tmpxkb, "        xkb_symbols   { include \"%s\" };\n", component_names_ptr->symbols );
+      fprintf( tmpxkb, "        xkb_geometry  { include \"%s\" };\n", component_names_ptr->geometry );
       fprintf( tmpxkb, "};\n" );
       fclose( tmpxkb );
     
-      XklDebug( 150, "xkb_keymap {\n"
+      xkl_debug( 150, "xkb_keymap {\n"
         "        xkb_keycodes  { include \"%s\" };\n"
         "        xkb_types     { include \"%s\" };\n"
         "        xkb_compat    { include \"%s\" };\n"
         "        xkb_symbols   { include \"%s\" };\n"
         "        xkb_geometry  { include \"%s\" };\n};\n", 
-        componentNamesPtr->keycodes,
-        componentNamesPtr->types,
-        componentNamesPtr->compat,
-        componentNamesPtr->symbols,
-        componentNamesPtr->geometry );
+        component_names_ptr->keycodes,
+        component_names_ptr->types,
+        component_names_ptr->compat,
+        component_names_ptr->symbols,
+        component_names_ptr->geometry );
        
       cpid=fork();
       switch( cpid )
       {
         case -1:
-          XklDebug( 0, "Could not fork: %d\n", errno );
+          xkl_debug( 0, "Could not fork: %d\n", errno );
           break;
         case 0:
           /* child */
-          XklDebug( 160, "Executing %s\n", XKBCOMP );
-          XklDebug( 160, "%s %s %s %s %s %s %s\n",
-            XKBCOMP, XKBCOMP, "-I", "-I" XKB_BASE, "-xkm", xkbFN, xkmFN );
-          execl( XKBCOMP, XKBCOMP, "-I", "-I" XKB_BASE, "-xkm", xkbFN, xkmFN, NULL );
-          XklDebug( 0, "Could not exec %s: %d\n", XKBCOMP, errno );
+          xkl_debug( 160, "Executing %s\n", XKBCOMP );
+          xkl_debug( 160, "%s %s %s %s %s %s %s\n",
+            XKBCOMP, XKBCOMP, "-I", "-I" XKB_BASE, "-xkm", xkb_fn, xkm_fn );
+          execl( XKBCOMP, XKBCOMP, "-I", "-I" XKB_BASE, "-xkm", xkb_fn, xkm_fn, NULL );
+          xkl_debug( 0, "Could not exec %s: %d\n", XKBCOMP, errno );
           exit( 1 );
         default:
           /* parent */
           pid = waitpid( cpid, &status, 0 );
-          XklDebug( 150, "Return status of %d (well, started %d): %d\n", pid, cpid, status );
+          xkl_debug( 150, "Return status of %d (well, started %d): %d\n", pid, cpid, status );
           memset( (char *)&result, 0, sizeof(result) );
           result.xkb = XkbAllocKeyboard();
 
-          if( Success == XkbChangeKbdDisplay( _xklDpy, &result ) )
+          if( Success == XkbChangeKbdDisplay( xkl_display, &result ) )
           {
-            XklDebug( 150, "Hacked the kbddesc - set the display...\n" );
-            if( (tmpxkm = fopen( xkmFN, "r" )) != NULL )
+            xkl_debug( 150, "Hacked the kbddesc - set the display...\n" );
+            if( (tmpxkm = fopen( xkm_fn, "r" )) != NULL )
             {
               xkmloadres = XkmReadFile( tmpxkm, XkmKeymapLegal, XkmKeymapLegal, &result);
-              XklDebug( 150, "Loaded %s output as XKM file, got %d (comparing to %d)\n", 
-                        XKBCOMP, (int)xkmloadres, (int)XkmKeymapLegal );
+              xkl_debug( 150, "Loaded %s output as XKM file, got %d (comparing to %d)\n", 
+                         XKBCOMP, (int)xkmloadres, (int)XkmKeymapLegal );
               if ( (int)xkmloadres != (int)XkmKeymapLegal )
               {
-                XklDebug( 150, "Loaded legal keymap\n" );
+                xkl_debug( 150, "Loaded legal keymap\n" );
                 if( activate )
                 {
-                  XklDebug( 150, "Activating it...\n" );
+                  xkl_debug( 150, "Activating it...\n" );
                   if( XkbWriteToServer(&result) )
                   {
-                     XklDebug( 150, "Updating the keyboard...\n" );
+                     xkl_debug( 150, "Updating the keyboard...\n" );
                      xkb = result.xkb;
                   } else
                   {
-                     XklDebug( 0, "Could not write keyboard description to the server\n" );
+                     xkl_debug( 0, "Could not write keyboard description to the server\n" );
                   }
                 } else /* no activate, just load */
                   xkb = result.xkb;
               } else /* could not load properly */
               {
-                XklDebug( 0, "Could not load %s output as XKM file, got %d (asked %d)\n", 
-                             XKBCOMP, (int)xkmloadres, (int)XkmKeymapLegal );
+                xkl_debug( 0, "Could not load %s output as XKM file, got %d (asked %d)\n", 
+                              XKBCOMP, (int)xkmloadres, (int)XkmKeymapLegal );
               }
               fclose( tmpxkm );
-              XklDebug( 160, "Unlinking the temporary xkm file %s\n", xkmFN );
-              if ( _xklDebugLevel < 500 ) /* don't remove on high debug levels! */
+              xkl_debug( 160, "Unlinking the temporary xkm file %s\n", xkm_fn );
+              if ( xkl_debug_level < 500 ) /* don't remove on high debug levels! */
               {
-                if ( remove( xkmFN ) == -1 )
-                  XklDebug( 0, "Could not unlink the temporary xkm file %s: %d\n", 
-                               xkmFN, errno );
+                if ( remove( xkm_fn ) == -1 )
+                  xkl_debug( 0, "Could not unlink the temporary xkm file %s: %d\n", 
+                                xkm_fn, errno );
               } else
-                XklDebug( 500, "Well, not really - the debug level is too high: %d\n", _xklDebugLevel );
+                xkl_debug( 500, "Well, not really - the debug level is too high: %d\n", xkl_debug_level );
             } else /* could not open the file */
             {
-              XklDebug( 0, "Could not open the temporary xkm file %s\n", xkmFN );
+              xkl_debug( 0, "Could not open the temporary xkm file %s\n", xkm_fn );
             }
           } else /* could not assign to display */
           {
-            XklDebug( 0, "Could not change the keyboard description to display\n" );
+            xkl_debug( 0, "Could not change the keyboard description to display\n" );
           } 
           if ( xkb == NULL )
             XkbFreeKeyboard( result.xkb, XkbAllComponentsMask, True );
           break;
       }
-      XklDebug( 160, "Unlinking the temporary xkb file %s\n", xkbFN );
-      if ( _xklDebugLevel < 500 ) /* don't remove on high debug levels! */
+      xkl_debug( 160, "Unlinking the temporary xkb file %s\n", xkb_fn );
+      if ( xkl_debug_level < 500 ) /* don't remove on high debug levels! */
       {
-        if ( remove( xkbFN ) == -1 )
-          XklDebug( 0, "Could not unlink the temporary xkb file %s: %d\n", 
-                    xkbFN, errno );
+        if ( remove( xkb_fn ) == -1 )
+          xkl_debug( 0, "Could not unlink the temporary xkb file %s: %d\n", 
+                     xkb_fn, errno );
       } else
-        XklDebug( 500, "Well, not really - the debug level is too high: %d\n", _xklDebugLevel );
+        xkl_debug( 500, "Well, not really - the debug level is too high: %d\n", xkl_debug_level );
     } else /* could not open input tmp file */
     {
-      XklDebug( 0, "Could not open tmp XKB file [%s]: %d\n", xkbFN, errno );
+      xkl_debug( 0, "Could not open tmp XKB file [%s]: %d\n", xkb_fn, errno );
     }
   } else
   {
-    XklDebug( 0, "Could not get tmp names\n" );
+    xkl_debug( 0, "Could not get tmp names\n" );
   }
 
 #endif
   return xkb;
 }
 #else /* no XKB headers */
-Bool _XklXkbConfigPrepareNative( const XklConfigRec * data, void * componentNamesPtr )
+gboolean xkl_xkb_config_native_prepare( const XklConfigRec * data,
+                                        gpointer componentNamesPtr )
 {
-  return False;
+  return FALSE;
 }
 
-void _XklXkbConfigCleanupNative( void * componentNamesPtr )
+void _XklXkbConfigCleanupNative( gpointer componentNamesPtr )
 {
 }
 #endif
 
 /* check only client side support */
-Bool _XklXkbConfigMultipleLayoutsSupported( void )
+gboolean _XklXkbConfigMultipleLayoutsSupported( void )
 {
   enum { NON_SUPPORTED, SUPPORTED, UNCHECKED };
 
@@ -353,9 +355,9 @@ Bool _XklXkbConfigMultipleLayoutsSupported( void )
   return supportState == SUPPORTED;
 }
 
-Bool _XklXkbConfigActivate( const XklConfigRec * data )
+gboolean _XklXkbConfigActivate( const XklConfigRec * data )
 {
-  Bool rv = False;
+  gboolean rv = FALSE;
 #if 0
   {
   int i;
@@ -379,14 +381,14 @@ Bool _XklXkbConfigActivate( const XklConfigRec * data )
   if( _XklXkbConfigPrepareNative( data, &componentNames ) )
   {
     XkbDescPtr xkb;
-    xkb = _XklConfigGetKeyboard( &componentNames, True );
+    xkb = _XklConfigGetKeyboard( &componentNames, TRUE );
     if( xkb != NULL )
     {
       if( XklSetNamesProp
           ( xklVTable->baseConfigAtom, _XklGetRulesSetName( XKB_DEFAULT_RULESET ), data ) )
           /* We do not need to check the result of _XklGetRulesSetName - 
              because PrepareBeforeKbd did it for us */
-        rv = True;
+        rv = TRUE;
       else
         _xklLastErrorMsg = "Could not set names property";
       XkbFreeKeyboard( xkb, XkbAllComponentsMask, True );
@@ -400,11 +402,11 @@ Bool _XklXkbConfigActivate( const XklConfigRec * data )
   return rv;
 }
 
-Bool _XklXkbConfigWriteFile( const char *fileName, 
+gboolean _XklXkbConfigWriteFile( const char *fileName, 
                              const XklConfigRec * data,
-                             const Bool binary )
+                             const gboolean binary )
 {
-  Bool rv = False;
+  gboolean rv = FALSE;
 
 #ifdef XKB_HEADERS_PRESENT
   XkbComponentNamesRec componentNames;
@@ -414,7 +416,7 @@ Bool _XklXkbConfigWriteFile( const char *fileName,
   if( output == NULL )
   {
     _xklLastErrorMsg = "Could not open the XKB file";
-    return False;
+    return FALSE;
   }
 
   memset( &componentNames, 0, sizeof( componentNames ) );
@@ -422,7 +424,7 @@ Bool _XklXkbConfigWriteFile( const char *fileName,
   if( _XklXkbConfigPrepareNative( data, &componentNames ) )
   {
     XkbDescPtr xkb;
-    xkb = _XklConfigGetKeyboard( &componentNames, False );
+    xkb = _XklConfigGetKeyboard( &componentNames, FALSE );
     if( xkb != NULL )
     {
       dumpInfo.defined = 0;

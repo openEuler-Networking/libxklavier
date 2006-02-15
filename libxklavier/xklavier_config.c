@@ -159,7 +159,7 @@ static gboolean xkl_read_config_item( xmlNodePtr iptr, XklConfigItem *item )
 
 static void xkl_config_enum_from_node_set( xmlNodeSetPtr nodes,
                                            ConfigItemProcessFunc func,
-                                           void *data )
+                                           gpointer data )
 {
   gint i;
   if( nodes != NULL )
