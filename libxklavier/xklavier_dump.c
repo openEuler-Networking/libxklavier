@@ -30,8 +30,8 @@ static void _XkbModsRecDump( FILE * fs, XkbModsRec * mods )
 
 static void _XkbControlsDump( FILE * fs, XkbControlsPtr ctrls )
 {
-  int i;
-  char buf[1024];
+  gint i;
+  gchar buf[1024];
   fprintf( fs, "mk_dflt_btn: %d\n", ctrls->mk_dflt_btn );
   fprintf( fs, "num_groups: %d\n", ctrls->num_groups );
   fprintf( fs, "groups_wrap: %d\n", ctrls->groups_wrap );
@@ -60,7 +60,7 @@ static void _XkbControlsDump( FILE * fs, XkbControlsPtr ctrls )
   buf[0] = 0;
   for( i = 0; i < XkbPerKeyBitArraySize; i++ )
   {
-    char b[5];
+    gchar b[5];
     snprintf( b, sizeof( b ), "%d ", ctrls->per_key_repeat[i] );
     strcat( buf, b );
   }
@@ -68,7 +68,7 @@ static void _XkbControlsDump( FILE * fs, XkbControlsPtr ctrls )
 }
 #endif
 
-static const char *actionTypeNames[] = {
+static const gchar *action_type_names[] = {
   "XkbSA_NoAction",
   "XkbSA_SetMods",
   "XkbSA_LatchMods",
@@ -92,11 +92,11 @@ static const char *actionTypeNames[] = {
   "XkbSA_DeviceValuator"
 };
 
-static void _XkbActionDump( FILE * fs, int level, XkbAction * act )
+static void xkb_action_dump( FILE * fs, gint level, XkbAction * act )
 {
   XkbGroupAction *ga;
   fprintf( fs, "%*stype: %d(%s)\n", level, "", act->type,
-           actionTypeNames[act->type] );
+           action_type_names[act->type] );
   switch ( act->type )
   {
     case XkbSA_SetGroup:
@@ -110,16 +110,16 @@ static void _XkbActionDump( FILE * fs, int level, XkbAction * act )
   }
 }
 
-static void _XkbBehaviorDump( FILE * fs, int level, XkbBehavior * b )
+static void xkb_behavior_dump( FILE * fs, gint level, XkbBehavior * b )
 {
   fprintf( fs, "%*stype: %d\n", level, "", b->type );
   fprintf( fs, "%*sdata: %d\n", level, "", b->data );
 }
 
-static void _XkbServerMapDump( FILE * fs, int level, XkbServerMapPtr server,
-                               XkbDescPtr kbd )
+static void xkb_server_map_dump( FILE * fs, gint level, XkbServerMapPtr server,
+                                   XkbDescPtr kbd )
 {
-  int i;
+  gint i;
   XkbAction *pa = server->acts;
   XkbBehavior *pb = server->behaviors;
   fprintf( fs, "%*snum_acts: %d\n", level, "", server->num_acts );
@@ -129,7 +129,7 @@ static void _XkbServerMapDump( FILE * fs, int level, XkbServerMapPtr server,
     for( i = 0; i < server->num_acts; i++ )
     {
       fprintf( fs, "%*sacts[%d]:\n", level, "", i );
-      _XkbActionDump( fs, level + 2, pa++ );
+      xkb_action_dump( fs, level + 2, pa++ );
     }
   } else
     fprintf( fs, "%*sNO acts\n", level, "" );
@@ -154,7 +154,7 @@ static void _XkbServerMapDump( FILE * fs, int level, XkbServerMapPtr server,
     for( i = 0; i <= kbd->max_key_code; i++ )
     {
       fprintf( fs, "%*sbehaviors[%d]:\n", level, "", i );
-      _XkbBehaviorDump( fs, level + 2, pb++ );
+      xkb_behavior_dump( fs, level + 2, pb++ );
     }
   } else
     fprintf( fs, "%*sNO behaviors\n", level, "" );
@@ -179,17 +179,17 @@ static void _XkbServerMapDump( FILE * fs, int level, XkbServerMapPtr server,
     fprintf( fs, "%*sNO vmodmap\n", level, "" );
 }
 
-static void _XkbKeyTypeDump( FILE * fs, int level, XkbKeyTypePtr type )
+static void xkb_key_type_dump( FILE * fs, gint level, XkbKeyTypePtr type )
 {
-  char *z = type->name == None ? NULL : XGetAtomName( _xklDpy, type->name );
-  fprintf( fs, "%*sname: 0x%X(%s)\n", level, "", (int)type->name, z );
+  gchar *z = type->name == None ? NULL : XGetAtomName( xkl_display, type->name );
+  fprintf( fs, "%*sname: 0x%X(%s)\n", level, "", (gint)type->name, z );
   if( z != NULL )
     XFree( z );
 }
 
-static void _XkbSymMapDump( FILE * fs, int level, XkbSymMapPtr ksm )
+static void xkb_sym_map_dump( FILE * fs, gint level, XkbSymMapPtr ksm )
 {
-  int i;
+  gint i;
   fprintf( fs, "%*skt_index: ", level, "" );
   for( i = 0; i < XkbNumKbdGroups; i++ )
   {
@@ -200,10 +200,10 @@ static void _XkbSymMapDump( FILE * fs, int level, XkbSymMapPtr ksm )
   fprintf( fs, "%*soffset: %d\n", level, "", ksm->offset );
 }
 
-static void _XkbClientMapDump( FILE * fs, int level, XkbClientMapPtr map,
-                               XkbDescPtr kbd )
+static void xkb_client_map_dump( FILE * fs, gint level, XkbClientMapPtr map,
+                                 XkbDescPtr kbd )
 {
-  int i;
+  gint i;
   fprintf( fs, "%*ssize_types: %d\n", level, "", map->size_types );
   fprintf( fs, "%*snum_types: %d\n", level, "", map->num_types );
   if( map->types != NULL )
@@ -212,7 +212,7 @@ static void _XkbClientMapDump( FILE * fs, int level, XkbClientMapPtr map,
     for( i = 0; i < map->num_types; i++ )
     {
       fprintf( fs, "%*stypes[%d]:\n", level, "", i );
-      _XkbKeyTypeDump( fs, level + 2, type++ );
+      xkb_key_type_dump( fs, level + 2, type++ );
     }
   } else
     fprintf( fs, "%*sNO types\n", level, "" );
@@ -232,13 +232,13 @@ static void _XkbClientMapDump( FILE * fs, int level, XkbClientMapPtr map,
     for( i = 0; i <= kbd->max_key_code; i++ )
     {
       fprintf( fs, "%*skey_sym_map[%d]:\n", level, "", i );
-      _XkbSymMapDump( fs, level + 2, ksm++ );
+      xkb_sym_map_dump( fs, level + 2, ksm++ );
     }
   } else
     fprintf( fs, "%*sNO key_sym_map\n", level, "" );
 }
 
-static void _XkbDescDump( FILE * fs, int level, XkbDescPtr kbd )
+static void xkb_desc_dump( FILE * fs, gint level, XkbDescPtr kbd )
 {
   fprintf( fs, "%*sflags: 0x%X\n", level, "", kbd->flags );
   fprintf( fs, "%*sdevice_spec: %d\n", level, "", kbd->device_spec );
@@ -255,25 +255,25 @@ static void _XkbDescDump( FILE * fs, int level, XkbDescPtr kbd )
   if( kbd->server != NULL )
   {
     fprintf( fs, "%*sserver:\n", level, "" );
-    _XkbServerMapDump( fs, level + 2, kbd->server, kbd );
+    xkb_server_map_dump( fs, level + 2, kbd->server, kbd );
   } else
     fprintf( fs, "%*sNO server\n", level, "" );
 
   if( kbd->map != NULL )
   {
     fprintf( fs, "%*smap:\n", level, "" );
-    _XkbClientMapDump( fs, level + 2, kbd->map, kbd );
+    xkb_client_map_dump( fs, level + 2, kbd->map, kbd );
   } else
     fprintf( fs, "%*sNO map\n", level, "" );
   fprintf( fs, "XKB libraries not present\n" );
 }
 
-void XklDumpXkbDesc( const char *filename, XkbDescPtr kbd )
+void xkl_dump_xkb_desc( const gchar *file_name, XkbDescPtr kbd )
 {
-  FILE *fs = fopen( filename, "w+" );
+  FILE *fs = fopen( file_name, "w+" );
   if( fs != NULL )
   {
-    _XkbDescDump( fs, 0, kbd == NULL ? _xklXkb : kbd );
+    xkb_desc_dump( fs, 0, kbd == NULL ? xkl_xkb_desc : kbd );
     fclose( fs );
   }
 
