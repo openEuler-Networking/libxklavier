@@ -318,44 +318,41 @@ gboolean _XklXkbConfigMultipleLayoutsSupported( void )
 {
   enum { NON_SUPPORTED, SUPPORTED, UNCHECKED };
 
-  static int supportState = UNCHECKED;
+  static int support_state = UNCHECKED;
 
-  if( supportState == UNCHECKED )
+  if( support_state == UNCHECKED )
   {
     XklConfigRec data;
-    char *layouts[] = { "us", "de" };
-    char *variants[] = { NULL, NULL };
+    char *layouts[] = { "us", "de", NULL };
+    char *variants[] = { NULL, NULL, NULL };
 #ifdef XKB_HEADERS_PRESENT
-    XkbComponentNamesRec componentNames;
-    memset( &componentNames, 0, sizeof( componentNames ) );
+    XkbComponentNamesRec component_names;
+    memset( &component_names, 0, sizeof( component_names ) );
 #endif
 
     data.model = "pc105"; 
-    data.numVariants =
-    data.numLayouts = 2;
-    data.numOptions = 0;
     data.layouts = layouts;
     data.variants = variants;
     data.options = NULL;
 
-    XklDebug( 100, "!!! Checking multiple layouts support\n" );
-    supportState = NON_SUPPORTED;
+    xkl_debug( 100, "!!! Checking multiple layouts support\n" );
+    support_state = NON_SUPPORTED;
 #ifdef XKB_HEADERS_PRESENT
-    if( _XklXkbConfigPrepareNative( &data, &componentNames ) )
+    if( xkl_xkb_config_native_prepare( &data, &component_names ) )
     {
-      XklDebug( 100, "!!! Multiple layouts ARE supported\n" );
-      supportState = SUPPORTED;
-      _XklXkbConfigCleanupNative( &componentNames );
+      xkl_debug( 100, "!!! Multiple layouts ARE supported\n" );
+      support_state = SUPPORTED;
+      xkl_xkb_config_native_cleanup( &component_names );
     } else
     {
-      XklDebug( 100, "!!! Multiple layouts ARE NOT supported\n" );
+      xkl_debug( 100, "!!! Multiple layouts ARE NOT supported\n" );
     }
 #endif
   }
-  return supportState == SUPPORTED;
+  return support_state == SUPPORTED;
 }
 
-gboolean _XklXkbConfigActivate( const XklConfigRec * data )
+gboolean xkl_xkb_config_activate( const XklConfigRec * data )
 {
   gboolean rv = FALSE;
 #if 0
@@ -375,70 +372,70 @@ gboolean _XklXkbConfigActivate( const XklConfigRec * data )
 #endif
 
 #ifdef XKB_HEADERS_PRESENT
-  XkbComponentNamesRec componentNames;
-  memset( &componentNames, 0, sizeof( componentNames ) );
+  XkbComponentNamesRec component_names;
+  memset( &component_names, 0, sizeof( component_names ) );
 
-  if( _XklXkbConfigPrepareNative( data, &componentNames ) )
+  if( xkl_xkb_config_native_prepare( data, &component_names ) )
   {
     XkbDescPtr xkb;
-    xkb = _XklConfigGetKeyboard( &componentNames, TRUE );
+    xkb = xkl_config_get_keyboard( &component_names, TRUE );
     if( xkb != NULL )
     {
-      if( XklSetNamesProp
-          ( xklVTable->baseConfigAtom, _XklGetRulesSetName( XKB_DEFAULT_RULESET ), data ) )
+      if( xkl_set_names_prop
+          ( xkl_vtable->base_config_atom, xkl_rules_set_get_name( XKB_DEFAULT_RULESET ), data ) )
           /* We do not need to check the result of _XklGetRulesSetName - 
              because PrepareBeforeKbd did it for us */
         rv = TRUE;
       else
-        _xklLastErrorMsg = "Could not set names property";
+        xkl_last_error_message = "Could not set names property";
       XkbFreeKeyboard( xkb, XkbAllComponentsMask, True );
     } else
     {
-      _xklLastErrorMsg = "Could not load keyboard description";
+      xkl_last_error_message = "Could not load keyboard description";
     }
-    _XklXkbConfigCleanupNative( &componentNames );
+    xkl_xkb_config_native_cleanup( &component_names );
   }
 #endif
   return rv;
 }
 
-gboolean _XklXkbConfigWriteFile( const char *fileName, 
-                             const XklConfigRec * data,
-                             const gboolean binary )
+gboolean xkl_xkb_config_write_file( const char *file_name, 
+                                    const XklConfigRec *data,
+                                    const gboolean binary )
 {
   gboolean rv = FALSE;
 
 #ifdef XKB_HEADERS_PRESENT
-  XkbComponentNamesRec componentNames;
-  FILE *output = fopen( fileName, "w" );
-  XkbFileInfo dumpInfo;
+  XkbComponentNamesRec component_names;
+  FILE *output = fopen( file_name, "w" );
+  XkbFileInfo dump_info;
 
   if( output == NULL )
   {
-    _xklLastErrorMsg = "Could not open the XKB file";
+    xkl_last_error_message = "Could not open the XKB file";
     return FALSE;
   }
 
-  memset( &componentNames, 0, sizeof( componentNames ) );
+  memset( &component_names, 0, sizeof( component_names ) );
 
-  if( _XklXkbConfigPrepareNative( data, &componentNames ) )
+  if( xkl_xkb_config_native_prepare( data, &component_names ) )
   {
     XkbDescPtr xkb;
-    xkb = _XklConfigGetKeyboard( &componentNames, FALSE );
+    xkb = xkl_config_get_keyboard( &component_names, FALSE );
     if( xkb != NULL )
     {
-      dumpInfo.defined = 0;
-      dumpInfo.xkb = xkb;
-      dumpInfo.type = XkmKeymapFile;
+      dump_info.defined = 0;
+      dump_info.xkb = xkb;
+      dump_info.type = XkmKeymapFile;
       if( binary )
-        rv = XkbWriteXKMFile( output, &dumpInfo );
+        rv = XkbWriteXKMFile( output, &dump_info );
       else
-        rv = XkbWriteXKBFile( output, &dumpInfo, True, NULL, NULL );
+        rv = XkbWriteXKBFile( output, &dump_info, True, NULL, NULL );
 
       XkbFreeKeyboard( xkb, XkbGBN_AllComponentsMask, True );
     } else
-      _xklLastErrorMsg = "Could not load keyboard description";
-    _XklXkbConfigCleanupNative( &componentNames );
+      xkl_last_error_message = "Could not load keyboard description";
+    xkl_xkb_config_native_cleanup( &component_names );
   }
   fclose( output );
 #endif
