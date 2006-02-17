@@ -70,13 +70,13 @@ gint xkl_xkb_resume_listen( void )
   return 0;
 }
 
-gint xkl_xkb_get_max_num_groups( void )
+guint xkl_xkb_groups_get_max_num( void )
 {
   return xkl_vtable->features & XKLF_MULTIPLE_LAYOUTS_SUPPORTED ?
     XkbNumKbdGroups : 1;
 }
 
-gint xkl_xkb_get_num_groups( void )
+guint xkl_xkb_groups_get_num( void )
 {
   return xkl_xkb_desc->ctrls->num_groups;
 }
