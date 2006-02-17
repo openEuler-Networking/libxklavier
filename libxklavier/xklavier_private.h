@@ -19,9 +19,9 @@ typedef gboolean ( *XklVTConfigWriteFileFunc )( const gchar *file_name,
 /* Groups */
 typedef const gchar **( *XklVTGroupsGetNamesFunc )( void );
 
-typedef gint ( *XklVTGroupsGetMaxNumFunc )( void );
+typedef guint ( *XklVTGroupsGetMaxNumFunc )( void );
 
-typedef gint ( *XklVTGroupsGetNumFunc )( void );
+typedef guint ( *XklVTGroupsGetNumFunc )( void );
 
 typedef void ( *XklVTGroupLockFunc )( gint group );
 

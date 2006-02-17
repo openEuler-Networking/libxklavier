@@ -5,16 +5,15 @@ typedef struct _XmmShortcut
 {
   gint keysym;
   guint modifiers;
-} XmmShortcut, *XmmShortcutPtr;
+} XmmShortcut;
 
 #define MAX_SHORTCUTS_PER_OPTION 4
 typedef struct _XmmSwitchOption
 {
   const gchar* option_name;
-  gint num_shortcuts;
-  XmmShortcut shortcuts[MAX_SHORTCUTS_PER_OPTION];
-  gint shortcut_steps[MAX_SHORTCUTS_PER_OPTION];
-} XmmSwitchOption, *XmmSwitchOptionPtr;
+  XmmShortcut shortcuts[MAX_SHORTCUTS_PER_OPTION + 1];
+  gint shortcut_steps[MAX_SHORTCUTS_PER_OPTION + 1];
+} XmmSwitchOption;
 
 extern gchar* current_xmm_rules;
 
@@ -33,15 +32,15 @@ extern void xkl_xmm_shortcuts_grab( void );
 
 extern void xkl_xmm_shortcuts_ungrab( void );
 
-extern const gchar* xkl_xmm_current_shortcut_get_option_name( void );
+extern const gchar* xkl_xmm_shortcut_get_current_option_name( void );
 
-XmmSwitchOptionPtr xkl_xmm_current_shortcut_get( void );
+XmmSwitchOption *xkl_xmm_shortcut_get_current( void );
 
 extern void xkl_xmm_group_actualize( gint group );
 
-XmmSwitchOptionPtr xkl_xmm_switch_option_find( gint keycode, 
-                                               guint state,
-                                               gint * current_shortcut_out );
+const XmmSwitchOption *xkl_xmm_switch_option_find( gint keycode, 
+                                                   guint state,
+                                                   gint * current_shortcut_out );
 
 /* Start VTable methods */
 
@@ -57,13 +56,13 @@ extern void xkl_xmm_free_all_info( void );
 
 extern const gchar **xkl_xmm_groups_get_names( void );
 
-extern unsigned xkl_xmm_groups_get_max_num( void );
+extern guint xkl_xmm_groups_get_max_num( void );
 
-extern unsigned xkl_xmm_groups_get_num( void );
+extern guint xkl_xmm_groups_get_num( void );
 
 extern void xkl_xmm_group_lock( gint group );
 
-extern void xkl_xmm_state_get_real( XklState * current_state_out );
+extern void xkl_xmm_state_get_server( XklState * current_state_out );
 
 extern gboolean xkl_xmm_if_cached_info_equals_actual( void );
 

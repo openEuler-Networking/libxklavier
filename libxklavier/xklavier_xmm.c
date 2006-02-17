@@ -15,264 +15,270 @@
 
 #define SHORTCUT_OPTION_PREFIX "grp:"
 
-char* currentXmmRules = NULL;
+gchar* current_xmm_rules = NULL;
 
-XklConfigRec currentXmmConfig;
+XklConfigRec current_xmm_config;
 
-Atom xmmStateAtom;
+Atom xmm_state_atom;
 
-const char **_XklXmmGetGroupNames( void )
+const gchar **xkl_xmm_groups_get_names( void )
 {
-  return (const char **)currentXmmConfig.layouts;
+  return (const gchar **)current_xmm_config.layouts;
 }
 
-void _XklXmmGrabShortcuts( void )
+void xkl_xmm_shortcuts_grab( void )
 {
-  int i;
-  XmmShortcutPtr shortcut;
-  const XmmSwitchOptionPtr option = _XklXmmGetCurrentShortcut();
+  const XmmShortcut *shortcut;
+  const XmmSwitchOption *option = xkl_xmm_shortcut_get_current();
   
-  XklDebug( 150, "Found shortcut option: %p\n", option );
+  xkl_debug( 150, "Found shortcut option: %p\n", option );
   if( option == NULL )
     return;
   
   shortcut = option->shortcuts;
-  for( i = option->numShortcuts; --i >= 0; shortcut++ )
+  while (shortcut->keysym != -1)
   {
-    int keycode = XKeysymToKeycode( _xklDpy, shortcut->keysym );
-    _XklXmmGrabIgnoringIndicators( keycode, 
-                                   shortcut->modifiers );
+    int keycode = XKeysymToKeycode( xkl_display, shortcut->keysym );
+    xkl_xmm_grab_ignoring_indicators( keycode, 
+                                      shortcut->modifiers );
+    shortcut++;
   }
 }
 
-void _XklXmmUngrabShortcuts( void )
+void xkl_xmm_ungrab_shortcuts( void )
 {
-  int i;
-  XmmShortcutPtr shortcut;
-  const XmmSwitchOptionPtr option = _XklXmmGetCurrentShortcut();
+  const XmmShortcut *shortcut;
+  const XmmSwitchOption *option = xkl_xmm_shortcut_get_current();
   
   if( option == NULL )
     return;
   
   shortcut = option->shortcuts;
-  for( i = option->numShortcuts; --i >= 0; shortcut++ )
+  while (shortcut->keysym != -1)
   {
-    int keycode = XKeysymToKeycode( _xklDpy, shortcut->keysym );
-    _XklXmmUngrabIgnoringIndicators( keycode, 
-                                     shortcut->modifiers );
+    int keycode = XKeysymToKeycode( xkl_display, shortcut->keysym );
+    xkl_xmm_ungrab_ignoring_indicators( keycode, 
+                                        shortcut->modifiers );
+    shortcut++;
   }
 }
 
-XmmSwitchOptionPtr _XklXmmGetCurrentShortcut( void )
+XmmSwitchOption *xkl_xmm_shortcut_get_current( void )
 {
-  const char* optionName = _XklXmmGetCurrentShortcutOptionName();
-  XmmSwitchOptionPtr switchOption = allSwitchOptions;
-  XklDebug( 150, "Configured switch option: [%s]\n", optionName );
-  if( optionName == NULL )
+  const gchar* option_name = xkl_xmm_shortcut_get_current_option_name();
+  XmmSwitchOption *switch_option = all_switch_options;
+  xkl_debug( 150, "Configured switch option: [%s]\n", option_name );
+  if( option_name == NULL )
     return NULL;
-  while( switchOption->optionName != NULL )
+  while( switch_option->option_name != NULL )
   {
-    if( !strcmp( switchOption->optionName, optionName ) )
-      return switchOption;
-    switchOption++;
+    if( !g_ascii_strcasecmp( switch_option->option_name, option_name ) )
+      return switch_option;
+    switch_option++;
   }
   return NULL;
 }
 
-const char* _XklXmmGetCurrentShortcutOptionName( void )
+const gchar* xkl_xmm_shortcut_get_current_option_name( void )
 {
-  int i;
-  char** option = currentXmmConfig.options;
-  for( i = currentXmmConfig.numOptions; --i >= 0; option++ )
+  gchar** option = current_xmm_config.options;
+  do
   {
     /* starts with "grp:" */
     if( strstr( *option, SHORTCUT_OPTION_PREFIX ) != NULL )
     {
       return *option + sizeof SHORTCUT_OPTION_PREFIX - 1;
     }
-  }
+  } while ( *(++option) != NULL );
   return NULL;
 }
 
-XmmSwitchOptionPtr _XklXmmFindSwitchOption( unsigned keycode, 
-                                                  unsigned state, 
-                                                  int* currentShortcut_rv )
+const XmmSwitchOption *xkl_xmm_switch_option_find( gint keycode, 
+                                                   guint state, 
+                                                   gint* current_shortcut_rv )
 {
-  const XmmSwitchOptionPtr rv = _XklXmmGetCurrentShortcut();
-  int i;
+  const XmmSwitchOption *rv = xkl_xmm_shortcut_get_current();
   
   if( rv != NULL )
   {
-    XmmShortcutPtr sc = rv->shortcuts;
-    for( i=rv->numShortcuts; --i>=0; sc++ )
+    XmmShortcut *sc = rv->shortcuts;
+    while (sc->keysym != -1)
     {
-      if( ( XKeysymToKeycode( _xklDpy, sc->keysym ) == keycode ) &&
+      if( ( XKeysymToKeycode( xkl_display, sc->keysym ) == keycode ) &&
           ( ( state & sc->modifiers ) == sc->modifiers ) )
       {
         return rv;
       }
+      sc++;
     }
   }
   return NULL;
 }
 
-int _XklXmmResumeListen( void )
+gint xkl_xmm_listen_resume( void )
 {
-  if( _xklListenerType & XKLL_MANAGE_LAYOUTS )
-    _XklXmmGrabShortcuts();
+  if( xkl_listener_type & XKLL_MANAGE_LAYOUTS )
+    xkl_xmm_shortcuts_grab();
   return 0;
 }
 
-int _XklXmmPauseListen( void )
+gint xkl_xmm_listen_pause( void )
 {
-  if( _xklListenerType & XKLL_MANAGE_LAYOUTS )
-    _XklXmmUngrabShortcuts();
+  if( xkl_listener_type & XKLL_MANAGE_LAYOUTS )
+    xkl_xmm_shortcuts_ungrab();
   return 0;
 }
 
-unsigned _XklXmmGetMaxNumGroups( void )
+guint xkl_xmm_groups_get_max_num( void )
 {
   return 0;
 }
 
-unsigned _XklXmmGetNumGroups( void )
+guint xkl_xmm_groups_get_num( void )
 {
-  return currentXmmConfig.numLayouts;
+  gint rv = 0;
+  gchar ** p = current_xmm_config.layouts;
+  while( *p++ != NULL ) rv++;
+  return rv;
 }
   
-void _XklXmmFreeAllInfo( void )
+void xkl_xmm_free_all_info( void )
 {
-  if( currentXmmRules != NULL )
+  if( current_xmm_rules != NULL )
   {
-    free( currentXmmRules );
-    currentXmmRules = NULL;
+    g_free( current_xmm_rules );
+    current_xmm_rules = NULL;
   }
-  XklConfigRecReset( &currentXmmConfig );
+  xkl_config_rec_reset( &current_xmm_config );
 }
 
-Bool _XklXmmIfCachedInfoEqualsActual( void )
+gboolean xkl_xmm_if_cached_info_equals_actual( void )
 {
-  return False;
+  return FALSE;
 }
 
-Bool _XklXmmLoadAllInfo(  )
+gboolean xkl_xmm_load_all_info(  )
 {
-  return _XklConfigGetFullFromServer( &currentXmmRules, &currentXmmConfig );
+  return xkl_config_get_full_from_server( &current_xmm_rules,
+                                          &current_xmm_config );
 }
 
-void _XklXmmGetRealState( XklState * state )
+void xkl_xmm_state_get_server( XklState * state )
 {
   unsigned char *propval = NULL;
-  Atom actualType;
-  int actualFormat;
-  unsigned long bytesRemaining;
-  unsigned long actualItems;
+  Atom actual_type;
+  int actual_format;
+  unsigned long bytes_remaining;
+  unsigned long actual_items;
   int result;
   
   memset( state, 0, sizeof( *state ) );
 
-  result = XGetWindowProperty( _xklDpy, _xklRootWindow, xmmStateAtom, 0L, 1L, 
-                               False, XA_INTEGER, &actualType, &actualFormat,
-                               &actualItems, &bytesRemaining, 
-                               &propval );
+  result = XGetWindowProperty( xkl_display, xkl_root_window,
+                               xmm_state_atom, 0L, 1L, 
+                               False, XA_INTEGER, &actual_type,
+                               &actual_format, &actual_items,
+                               &bytes_remaining, &propval );
   
   if( Success == result )
   {
-    if( actualFormat == 32 || actualItems == 1 )
+    if( actual_format == 32 || actual_items == 1 )
     {
       state->group = *(CARD32*)propval;
     } else
     {  
-      XklDebug( 160, "Could not get the xmodmap current group\n" );
+      xkl_debug( 160, "Could not get the xmodmap current group\n" );
     }
     XFree( propval );
   } else
   {
-    XklDebug( 160, "Could not get the xmodmap current group: %d\n", result );
+    xkl_debug( 160, "Could not get the xmodmap current group: %d\n", result );
   }
 }
 
-void _XklXmmActualizeGroup( int group )
+void xkl_xmm_group_actualize( gint group )
 {
   char cmd[1024];
   int res;
-  const char* layoutName = NULL;
+  const gchar* layout_name = NULL;
   
-  if( currentXmmConfig.numLayouts < group )
+  if( xkl_xmm_groups_get_num() < group )
     return;
   
-  layoutName = currentXmmConfig.layouts[group];
+  layout_name = current_xmm_config.layouts[group];
   
   snprintf( cmd, sizeof cmd, 
             "xmodmap %s/xmodmap.%s",
-            XMODMAP_BASE, layoutName );
+            XMODMAP_BASE, layout_name );
 
   res = system( cmd );
   if( res > 0 )
   {
-    XklDebug( 0, "xmodmap error %d\n", res );
+    xkl_debug( 0, "xmodmap error %d\n", res );
   } else if( res < 0 )
   {
-    XklDebug( 0, "Could not execute xmodmap: %d\n", res );
+    xkl_debug( 0, "Could not execute xmodmap: %d\n", res );
   }
-  XSync( _xklDpy, False );
+  XSync( xkl_display, False );
 }
 
-void _XklXmmLockGroup( int group )
+void xkl_xmm_group_lock( gint group )
 {
   CARD32 propval;
 
-  if( currentXmmConfig.numLayouts < group )
+  if( xkl_xmm_groups_get_num() < group )
     return;
   
   /* updating the status property */
   propval = group;
-  XChangeProperty( _xklDpy, _xklRootWindow, xmmStateAtom, 
+  XChangeProperty( xkl_display, xkl_root_window, xmm_state_atom, 
                    XA_INTEGER, 32, PropModeReplace, 
                    (unsigned char*)&propval, 1 );
-  XSync( _xklDpy, False );
+  XSync( xkl_display, False );
 }
 
-int _XklXmmInit( void )
+gint xkl_xmm_init( void )
 {
-  static XklVTable xklXmmVTable =
+  static XklVTable xkl_xmm_vtable =
   {
     "xmodmap",
     XKLF_MULTIPLE_LAYOUTS_SUPPORTED |
       XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT, 
-    _XklXmmConfigActivate,
-    _XklXmmConfigInit,
-    _XklXmmConfigLoadRegistry,
-    NULL,
-    _XklXmmEventHandler,
-    _XklXmmFreeAllInfo,
-    _XklXmmGetGroupNames,
-    _XklXmmGetMaxNumGroups,
-    _XklXmmGetNumGroups,
-    _XklXmmGetRealState,
-    _XklXmmIfCachedInfoEqualsActual,
-    _XklXmmLoadAllInfo,
-    _XklXmmLockGroup,
-    _XklXmmPauseListen,
-    _XklXmmResumeListen,
-    NULL,
+    xkl_xmm_config_activate,
+    xkl_xmm_config_init,
+    xkl_xmm_config_registry_load,
+    NULL, /* no write_file */
+
+    xkl_xmm_groups_get_names,
+    xkl_xmm_groups_get_max_num,
+    xkl_xmm_groups_get_num,
+    xkl_xmm_group_lock,
+
+    xkl_xmm_process_x_event,
+    xkl_xmm_free_all_info,
+    xkl_xmm_if_cached_info_equals_actual,
+    xkl_xmm_load_all_info,
+    xkl_xmm_state_get_server,
+    xkl_xmm_listen_pause,
+    xkl_xmm_listen_resume,
+    NULL, /* no indicators_set */
   };
 
   if( getenv( "XKL_XMODMAP_DISABLE" ) != NULL )
     return -1;
 
-  xklXmmVTable.baseConfigAtom =
-    XInternAtom( _xklDpy, "_XMM_NAMES", False );
-  xklXmmVTable.backupConfigAtom =
-    XInternAtom( _xklDpy, "_XMM_NAMES_BACKUP", False );
+  xkl_xmm_vtable.base_config_atom =
+    XInternAtom( xkl_display, "_XMM_NAMES", False );
+  xkl_xmm_vtable.backup_config_atom =
+    XInternAtom( xkl_display, "_XMM_NAMES_BACKUP", False );
 
-  xmmStateAtom =
-    XInternAtom( _xklDpy, "_XMM_STATE", False );
+  xmm_state_atom =
+    XInternAtom( xkl_display, "_XMM_STATE", False );
   
-  xklXmmVTable.defaultModel = "generic";
-  xklXmmVTable.defaultLayout = "us";
+  xkl_xmm_vtable.default_model = "generic";
+  xkl_xmm_vtable.default_layout = "us";
 
-  xklVTable = &xklXmmVTable;
+  xkl_vtable = &xkl_xmm_vtable;
 
   return 0;
 }
