@@ -15,18 +15,18 @@ static gint xkl_xmm_process_keypress_event( XKeyPressedEvent* kpe )
   {
     xkl_debug( 200, "Processing the KeyPress event\n" );
     gint current_shortcut = 0;
-    const XmmSwitchOptionPtr sop = xkl_xmm_switch_option_find( kpe->keycode, 
-                                                               kpe->state,
-                                                               &current_shortcut );
+    const XmmSwitchOption *sop = xkl_xmm_switch_option_find( kpe->keycode, 
+                                                             kpe->state,
+                                                             &current_shortcut );
     if( sop != NULL )
     {
       xkl_debug( 150, "It is THE shortcut\n" );
       XklState state;
-      xkl_xmm_state_get_real( &state );
+      xkl_xmm_state_get_server( &state );
       if( state.group != -1 )
       {
         gint new_group = ( state.group + sop->shortcut_steps[current_shortcut] ) % 
-                         current_xmm_config.num_layouts;
+                           g_strv_length (current_xmm_config.layouts);
         xkl_debug( 150, "Setting new xmm group %d\n", new_group );
         xkl_xmm_group_lock( new_group );
         return 1;
@@ -46,7 +46,7 @@ static gint xkl_xmm_process_property_event( XPropertyEvent* kpe )
   if( kpe->atom == xmm_state_atom )
   {
     XklState state;
-    xkl_xmm_state_get_real( &state );
+    xkl_xmm_state_get_server( &state );
     
     if( xkl_listener_type & XKLL_MANAGE_LAYOUTS )
     {
