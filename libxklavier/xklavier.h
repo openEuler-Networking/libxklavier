@@ -221,11 +221,11 @@ extern "C"
 /** 
  * Finds the state for a given window (for its "App window").
  * @param win is a target window
- * @param state_return is a structure to store the state
+ * @param state_out is a structure to store the state
  * @return True on success, otherwise False 
  * (the error message can be obtained using xkl_GetLastError).
  */
-  extern gboolean xkl_state_get( Window win, XklState * state_return );
+  extern gboolean xkl_state_get( Window win, XklState * state_out );
 
 /**
  * Drops the state of a given window (of its "App window").
