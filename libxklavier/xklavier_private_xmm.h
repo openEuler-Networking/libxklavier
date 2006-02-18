@@ -3,7 +3,7 @@
 
 typedef struct _XmmShortcut 
 {
-  gint keysym;
+  guint keysym;
   guint modifiers;
 } XmmShortcut;
 

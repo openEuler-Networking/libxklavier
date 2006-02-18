@@ -36,7 +36,7 @@ void xkl_xmm_shortcuts_grab( void )
     return;
   
   shortcut = option->shortcuts;
-  while (shortcut->keysym != -1)
+  while (shortcut->keysym != XK_VoidSymbol)
   {
     int keycode = XKeysymToKeycode( xkl_display, shortcut->keysym );
     xkl_xmm_grab_ignoring_indicators( keycode, 
@@ -54,7 +54,7 @@ void xkl_xmm_ungrab_shortcuts( void )
     return;
   
   shortcut = option->shortcuts;
-  while (shortcut->keysym != -1)
+  while (shortcut->keysym != XK_VoidSymbol)
   {
     int keycode = XKeysymToKeycode( xkl_display, shortcut->keysym );
     xkl_xmm_ungrab_ignoring_indicators( keycode, 
@@ -102,7 +102,7 @@ const XmmSwitchOption *xkl_xmm_switch_option_find( gint keycode,
   if( rv != NULL )
   {
     XmmShortcut *sc = rv->shortcuts;
-    while (sc->keysym != -1)
+    while (sc->keysym != XK_VoidSymbol)
     {
       if( ( XKeysymToKeycode( xkl_display, sc->keysym ) == keycode ) &&
           ( ( state & sc->modifiers ) == sc->modifiers ) )
