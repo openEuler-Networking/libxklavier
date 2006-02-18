@@ -342,7 +342,7 @@ gint xkl_get_restore_group( void )
     xkl_debug( 150,
               "Unbelievable: current client " WINID_FORMAT
               ", '%s' has no group\n", xkl_current_client,
-              xkl_get_debug_window_title( xkl_current_client ) );
+              xkl_window_get_debug_title( xkl_current_client ) );
   return 0;
 }
 
@@ -386,7 +386,7 @@ gboolean xkl_load_window_tree( void )
   XGetInputFocus( xkl_display, &focused, &revert );
 
   xkl_debug( 160, "initially focused: " WINID_FORMAT ", '%s'\n", 
-            focused, xkl_get_debug_window_title( focused ) );
+            focused, xkl_window_get_debug_title( focused ) );
 
   have_toplevel_win = xkl_toplevel_window_find( focused, &xkl_current_client );
 
@@ -397,7 +397,7 @@ gboolean xkl_load_window_tree( void )
     xkl_debug( 160,
               "initial xkl_cur_client: " WINID_FORMAT
               ", '%s' %s state %d/%X\n", xkl_current_client,
-              xkl_get_debug_window_title( xkl_current_client ),
+              xkl_window_get_debug_title( xkl_current_client ),
               ( have_state ? "with" : "without" ),
               ( have_state ? xkl_current_state.group : -1 ),
               ( have_state ? xkl_current_state.indicators : -1 ) );

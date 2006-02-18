@@ -36,16 +36,16 @@ gint xkl_filter_events( XEvent *xev )
       case MapNotify:
       case GravityNotify:
       case ReparentNotify:
-        xkl_debug( 200, "%s\n",  xkl_get_event_name( xev->type ) );
+        xkl_debug( 200, "%s\n",  xkl_event_get_name( xev->type ) );
         break;                  /* Ignore these events */
       case MappingNotify:
-        xkl_debug( 200, "%s\n",  xkl_get_event_name( xev->type ) );
+        xkl_debug( 200, "%s\n",  xkl_event_get_name( xev->type ) );
         xkl_reset_all_info( "X event: MappingNotify" );
         break;
       default:
       {
         xkl_debug( 200, "Unknown event %d [%s]\n", 
-                       xev->type, xkl_get_event_name( xev->type ) );
+                       xev->type, xkl_event_get_name( xev->type ) );
         return 1;
       }
     }
@@ -81,7 +81,7 @@ void xkl_process_focus_in_evt( XFocusChangeEvent * fev )
   }
 
   xkl_debug( 150, "Window " WINID_FORMAT ", '%s' has got focus\n", win,
-            xkl_get_debug_window_title( win ) );
+            xkl_window_get_debug_title( win ) );
 
   if( !xkl_toplevel_window_find( win, &toplevel_win ) )
   {
@@ -89,7 +89,7 @@ void xkl_process_focus_in_evt( XFocusChangeEvent * fev )
   }
 
   xkl_debug( 150, "Appwin " WINID_FORMAT ", '%s' has got focus\n", 
-                  toplevel_win, xkl_get_debug_window_title( toplevel_win ) );
+                  toplevel_win, xkl_window_get_debug_title( toplevel_win ) );
 
   if( xkl_state_get( toplevel_win, &selected_window_state ) )
   {
@@ -110,7 +110,7 @@ void xkl_process_focus_in_evt( XFocusChangeEvent * fev )
       if ( !old_win_transparent &&
            xkl_state_get( xkl_current_client, &tmp_state ) )
       {
-         xkl_update_current_state( tmp_state.group, 
+         xkl_current_state_update( tmp_state.group, 
                                    tmp_state.indicators,
                                    "Loading current (previous) state from the current (previous) window" );
       }
@@ -118,7 +118,7 @@ void xkl_process_focus_in_evt( XFocusChangeEvent * fev )
       xkl_current_client = toplevel_win;
       xkl_debug( 150, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
                 xkl_current_client, 
-                xkl_get_debug_window_title( xkl_current_client ) );
+                xkl_window_get_debug_title( xkl_current_client ) );
 
       new_win_transparent = xkl_toplevel_window_is_transparent( toplevel_win );
       if( new_win_transparent )
@@ -153,7 +153,7 @@ void xkl_process_focus_in_evt( XFocusChangeEvent * fev )
              *  (because of the group change notification being late).
              *  so we'll enforce the update. But this should only happen in GPA mode
              */
-            xkl_update_current_state( selected_window_state.group, 
+            xkl_current_state_update( selected_window_state.group, 
                                       selected_window_state.indicators,
                                       "Enforcing fast update of the current state" );
             xkl_group_lock( selected_window_state.group );
@@ -189,13 +189,13 @@ void xkl_process_focus_in_evt( XFocusChangeEvent * fev )
   } else
   {
     xkl_debug( 150, "But it does not have xklavier_state\n" );
-    if( xkl_has_wm_state( win ) )
+    if( xkl_window_has_wm_state( win ) )
     {
       xkl_debug( 150, "But it does have wm_state so we'll add it\n" );
       xkl_current_client = toplevel_win;
       xkl_debug( 150, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
                  xkl_current_client,
-                 xkl_get_debug_window_title( xkl_current_client ) );
+                 xkl_window_get_debug_title( xkl_current_client ) );
       xkl_toplevel_window_add( xkl_current_client, ( Window ) NULL, FALSE,
                                &xkl_current_state );
     } else
@@ -221,7 +221,7 @@ void xkl_process_focus_out_evt( XFocusChangeEvent * fev )
   }
 
   xkl_debug( 160, "Window " WINID_FORMAT ", '%s' has lost focus\n",
-            fev->window, xkl_get_debug_window_title( fev->window ) );
+            fev->window, xkl_window_get_debug_title( fev->window ) );
 
   if( xkl_window_is_transparent( fev->window ) )
   {
@@ -314,7 +314,7 @@ void xkl_process_create_evt( XCreateWindowEvent * cev )
   xkl_debug( 200,
             "Under-root window " WINID_FORMAT
             "/%s (%d,%d,%d x %d) is created\n", cev->window,
-            xkl_get_debug_window_title( cev->window ), cev->x, cev->y,
+            xkl_window_get_debug_title( cev->window ), cev->x, cev->y,
             cev->width, cev->height );
 
   if( !cev->override_redirect )
@@ -329,7 +329,7 @@ void xkl_process_create_evt( XCreateWindowEvent * cev )
     xkl_select_input_merging( cev->window,
                             PropertyChangeMask | FocusChangeMask );
 
-    if( xkl_has_wm_state( cev->window ) )
+    if( xkl_window_has_wm_state( cev->window ) )
     {
       xkl_debug( 200,
                 "Just created window already has WM_STATE - so I'll add it" );
@@ -394,12 +394,12 @@ void xkl_process_state_modification( XklStateChange change_type,
     focused_toplevel = xkl_current_client; /* what else can I do */
 
   xkl_debug( 150, "Focused window: " WINID_FORMAT ", '%s'\n",
-             focused_toplevel, xkl_get_debug_window_title( focused_toplevel ) );
+             focused_toplevel, xkl_window_get_debug_title( focused_toplevel ) );
   if( xkl_listener_type & XKLL_MANAGE_WINDOW_STATES )
   {
     xkl_debug( 150, "CurClient: " WINID_FORMAT ", '%s'\n",
                xkl_current_client,
-               xkl_get_debug_window_title( xkl_current_client ) );
+               xkl_window_get_debug_title( xkl_current_client ) );
 
     if( focused_toplevel != xkl_current_client )
     {
@@ -408,7 +408,7 @@ void xkl_process_state_modification( XklStateChange change_type,
        */
       if ( !xkl_toplevel_window_get_state( focused_toplevel, &old_state ) )
       {
-        xkl_update_current_state( grp, inds, 
+        xkl_current_state_update( grp, inds, 
                             "Updating the state from new focused window" );
         if( xkl_listener_type & XKLL_MANAGE_WINDOW_STATES )
           xkl_toplevel_window_add( focused_toplevel, ( Window ) NULL,
@@ -425,7 +425,7 @@ void xkl_process_state_modification( XklStateChange change_type,
       xkl_current_client = focused_toplevel;
       xkl_debug( 160, "CurClient:changed to " WINID_FORMAT ", '%s'\n",
                  xkl_current_client,
-                 xkl_get_debug_window_title( xkl_current_client ) );
+                 xkl_window_get_debug_title( xkl_current_client ) );
     }
     /* If the window already has this this state - we are just restoring it!
       (see the second parameter of stateCallback */
@@ -439,7 +439,7 @@ void xkl_process_state_modification( XklStateChange change_type,
 
   if( set_group || have_old_state )
   {
-    xkl_update_current_state( set_group ? grp : old_state.group,
+    xkl_current_state_update( set_group ? grp : old_state.group,
                               set_inds ? inds : old_state.indicators,
                              "Restoring the state from the window" );
   }

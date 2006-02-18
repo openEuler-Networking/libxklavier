@@ -7,94 +7,94 @@
 
 #include "xklavier_private.h"
 
-XklState *XklGetCurrentState(  )
+XklState *xkl_state_get_current(  )
 {
-  return &_xklCurState;
+  return &xkl_current_state;
 }
 
-const char *XklGetLastError(  )
+const gchar *_xkl_get_last_error(  )
 {
-  return _xklLastErrorMsg;
+  return xkl_last_error_message;
 }
 
-unsigned char *XklGetWindowTitle( Window w )
+gchar *xkl_window_get_title( Window w )
 {
   Atom type_ret;
   int format_ret;
   unsigned long nitems, rest;
   unsigned char *prop;
 
-  if( Success == XGetWindowProperty( _xklDpy, w, _xklAtoms[WM_NAME], 0L,
+  if( Success == XGetWindowProperty( xkl_display, w, xkl_atoms[WM_NAME], 0L,
                                      -1L, False, XA_STRING, &type_ret,
                                      &format_ret, &nitems, &rest, &prop ) )
-    return prop;
+    return (gchar *)prop;
   else
     return NULL;
 }
 
-Bool XklIsSameApp( Window win1, Window win2 )
+gboolean xkl_windows_is_same_application( Window win1, Window win2 )
 {
   Window app1, app2;
-  return _XklGetAppWindow( win1, &app1 ) &&
-    _XklGetAppWindow( win2, &app2 ) && app1 == app2;
+  return xkl_toplevel_window_find( win1, &app1 ) &&
+         xkl_toplevel_window_find( win2, &app2 ) && app1 == app2;
 }
 
-Bool XklGetState( Window win, XklState * state_return )
+gboolean xkl_state_get( Window win, XklState * state_out )
 {
-  Window appWin;
+  Window app_win;
 
-  if( !_XklGetAppWindow( win, &appWin ) )
+  if( !xkl_toplevel_window_find( win, &app_win ) )
   {
-    if( state_return != NULL )
-      state_return->group = -1;
-    return False;
+    if( state_out != NULL )
+      state_out->group = -1;
+    return FALSE;
   }
 
-  return _XklGetAppState( appWin, state_return );
+  return xkl_toplevel_window_get_state( app_win, state_out );
 }
 
-void XklDelState( Window win )
+void xkl_state_delete( Window win )
 {
-  Window appWin;
+  Window app_win;
 
-  if( _XklGetAppWindow( win, &appWin ) )
-    _XklDelAppState( appWin );
+  if( xkl_toplevel_window_find( win, &app_win ) )
+    xkl_toplevel_window_remove_state( app_win );
 }
 
-void XklSaveState( Window win, XklState * state )
+void xkl_state_save( Window win, XklState * state )
 {
-  Window appWin;
+  Window app_win;
 
-  if( !( _xklListenerType & XKLL_MANAGE_WINDOW_STATES ) )
+  if( !( xkl_listener_type & XKLL_MANAGE_WINDOW_STATES ) )
     return;
 
-  if( _XklGetAppWindow( win, &appWin ) )
-    _XklSaveAppState( appWin, state );
+  if( xkl_toplevel_window_find( win, &app_win ) )
+    xkl_toplevel_window_save_state( app_win, state );
 }
 
 /**
  *  Prepares the name of window suitable for debugging (32characters long).
  */
-char *_XklGetDebugWindowTitle( Window win )
+gchar *xkl_window_get_debug_title( Window win )
 {
-  static char sname[33];
-  unsigned char *name;
+  static gchar sname[33];
+  gchar *name;
   strcpy( sname, "NULL" );
   if( win != ( Window ) NULL )
   {
-    name = XklGetWindowTitle( win );
+    name = xkl_window_get_title( win );
     if( name != NULL )
     {
       snprintf( sname, sizeof( sname ), "%.32s", name );
-      free( name );
+      g_free( name );
     }
   }
   return sname;
 }
 
-Window XklGetCurrentWindow(  )
+Window xkl_window_get_current(  )
 {
-  return _xklCurClient;
+  return xkl_current_client;
 }
 
 /**
@@ -102,44 +102,44 @@ Window XklGetCurrentWindow(  )
  * All the windows with WM_STATE are added.
  * All the windows within level 0 are listened for focus and property
  */
-Bool _XklLoadSubtree( Window window, int level, XklState * initState )
+gboolean __xkl_load_subtree( Window window, gint level, XklState * init_state )
 {
   Window rwin = ( Window ) NULL,
     parent = ( Window ) NULL, *children = NULL, *child;
-  unsigned int num = 0;
-  Bool retval = True;
+  guint num = 0;
+  gboolean retval = True;
 
-  _xklLastErrorCode =
-    _XklStatusQueryTree( _xklDpy, window, &rwin, &parent, &children, &num );
+  xkl_last_error_code =
+    xkl_status_query_tree( window, &rwin, &parent, &children, &num );
 
-  if( _xklLastErrorCode != Success )
+  if( xkl_last_error_code != Success )
   {
-    return False;
+    return FALSE;
   }
 
   child = children;
   while( num )
   {
-    if( _XklHasWmState( *child ) )
+    if( xkl_window_has_wm_state( *child ) )
     {
-      XklDebug( 160, "Window " WINID_FORMAT " '%s' has WM_STATE so we'll add it\n",
-                *child, _XklGetDebugWindowTitle( *child )  );
-      _XklAddAppWindow( *child, window, True, initState );
+      xkl_debug( 160, "Window " WINID_FORMAT " '%s' has WM_STATE so we'll add it\n",
+                 *child, xkl_window_get_debug_title( *child )  );
+      xkl_toplevel_window_add( *child, window, TRUE, init_state );
     } else
     {
-      XklDebug( 200, "Window " WINID_FORMAT " '%s' does not have have WM_STATE so we'll not add it\n",
-                *child, _XklGetDebugWindowTitle( *child ) );
+      xkl_debug( 200, "Window " WINID_FORMAT " '%s' does not have have WM_STATE so we'll not add it\n",
+                 *child, xkl_window_get_debug_title( *child ) );
 
       if( level == 0 )
       {
-        XklDebug( 200, "But we are at level 0 so we'll spy on it\n" );
-        _XklSelectInputMerging( *child,
-                                FocusChangeMask | PropertyChangeMask );
+        xkl_debug( 200, "But we are at level 0 so we'll spy on it\n" );
+        xkl_select_input_merging( *child,
+                                  FocusChangeMask | PropertyChangeMask );
       } else
-        XklDebug( 200, "And we are at level %d so we'll not spy on it\n",
-                  level );
+        xkl_debug( 200, "And we are at level %d so we'll not spy on it\n",
+                   level );
 
-      retval = _XklLoadSubtree( *child, level + 1, initState );
+      retval = xkl_load_subtree( *child, level + 1, init_state );
     }
 
     child++;
@@ -155,7 +155,7 @@ Bool _XklLoadSubtree( Window window, int level, XklState * initState )
 /**
  * Checks whether given window has WM_STATE property (i.e. "App window").
  */
-Bool _XklHasWmState( Window win )
+gboolean xkl_window_has_wm_state( Window win )
 {                               /* ICCCM 4.1.3.1 */
   Atom type = None;
   int format;
@@ -163,8 +163,8 @@ Bool _XklHasWmState( Window win )
   unsigned long after;
   unsigned char *data = NULL;   /* Helps in the case of BadWindow error */
 
-  XGetWindowProperty( _xklDpy, win, _xklAtoms[WM_STATE], 0, 0, False,
-                      _xklAtoms[WM_STATE], &type, &format, &nitems, &after,
+  XGetWindowProperty( xkl_display, win, xkl_atoms[WM_STATE], 0, 0, False,
+                      xkl_atoms[WM_STATE], &type, &format, &nitems, &after,
                       &data );
   if( data != NULL )
     XFree( data );              /* To avoid an one-byte memory leak because after successfull return
@@ -175,53 +175,55 @@ Bool _XklHasWmState( Window win )
 /**
  * Finds out the official parent window (accortind to XQueryTree)
  */
-Window _XklGetRegisteredParent( Window win )
+Window xkl_get_registered_parent( Window win )
 {
   Window parent = ( Window ) NULL, rw = ( Window ) NULL, *children = NULL;
-  unsigned int nchildren = 0;
+  guint nchildren = 0;
 
-  _xklLastErrorCode =
-    _XklStatusQueryTree( _xklDpy, win, &rw, &parent, &children, &nchildren );
+  xkl_last_error_code =
+    xkl_status_query_tree( win, &rw, &parent, &children, &nchildren );
 
   if( children != NULL )
     XFree( children );
 
-  return _xklLastErrorCode == Success ? parent : ( Window ) NULL;
+  return xkl_last_error_code == Success ? parent : ( Window ) NULL;
 }
 
 /**
  * Make sure about the result. Origial XQueryTree is pretty stupid beast:)
  */
-Status _XklStatusQueryTree( Display * display,
-                            Window w,
-                            Window * root_return,
-                            Window * parent_return,
-                            Window ** children_return,
-                            unsigned int *nchildren_return )
+Status xkl_status_query_tree( Window w,
+                              Window * root_out,
+                              Window * parent_out,
+                              Window ** children_out,
+                              guint *nchildren_out )
 {
-  Bool result;
+  gboolean result;
+  unsigned int nc;
 
-  result = ( Bool ) XQueryTree( display,
+  result = ( gboolean ) XQueryTree( xkl_display,
                                 w,
-                                root_return,
-                                parent_return,
-                                children_return, nchildren_return );
+                                root_out,
+                                parent_out,
+                                children_out, &nc );
+  *nchildren_out = nc;
+
   if( !result )
   {
-    XklDebug( 160,
-              "Could not get tree info for window " WINID_FORMAT ": %d\n", w,
-              result );
-    _xklLastErrorMsg = "Could not get the tree info";
+    xkl_debug( 160,
+               "Could not get tree info for window " WINID_FORMAT ": %d\n", w,
+               result );
+    xkl_last_error_message = "Could not get the tree info";
   }
 
   return result ? Success : FirstExtensionError;
 }
 
-const char *_XklGetEventName( int type )
+const gchar *xkl_event_get_name( gint type )
 {
   /* Not really good to use the fact of consecutivity
      but X protocol is already standartized so... */
-  static const char *evtNames[] = {
+  static const gchar *evt_names[] = {
     "KeyPress",
     "KeyRelease",
     "ButtonPress",
@@ -256,16 +258,16 @@ const char *_XklGetEventName( int type )
   };
   type -= KeyPress;
   if( type < 0 || 
-      type >= ( sizeof( evtNames ) / sizeof( evtNames[0] ) ) )
+      type >= ( sizeof( evt_names ) / sizeof( evt_names[0] ) ) )
     return "UNKNOWN";
-  return evtNames[type];
+  return evt_names[type];
 }
 
-void _XklUpdateCurState( int group, unsigned indicators, const char reason[] )
+void xkl_current_state_update( int group, unsigned indicators, const char reason[] )
 {
-  XklDebug( 150, 
-            "Updating the current state with [g:%d/i:%u], reason: %s\n", 
-            group, indicators, reason );
-  _xklCurState.group = group;
-  _xklCurState.indicators = indicators;
+  xkl_debug( 150, 
+             "Updating the current state with [g:%d/i:%u], reason: %s\n", 
+             group, indicators, reason );
+  xkl_current_state.group = group;
+  xkl_current_state.indicators = indicators;
 }

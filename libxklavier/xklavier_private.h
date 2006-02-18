@@ -219,7 +219,7 @@ extern gboolean xkl_load_subtree( Window window,
                                   gint level, 
                                   XklState *init_state );
 
-extern gboolean xkl_has_wm_state( Window win );
+extern gboolean xkl_window_has_wm_state( Window win );
 
 
 /**
@@ -249,10 +249,9 @@ extern void xkl_toplevel_window_save_state( Window toplevel_win, XklState *state
 
 extern void xkl_select_input_merging( Window win, gulong mask );
 
-extern gchar *xkl_get_debug_window_title( Window win );
+extern gchar *xkl_window_get_debug_title( Window win );
 
-extern Status xkl_status_query_tree( Display * display,
-                                     Window w,
+extern Status xkl_status_query_tree( Window w,
                                      Window * root_out,
                                      Window * parent_out,
                                      Window ** children_out,
@@ -301,9 +300,9 @@ extern void xkl_config_rec_split_options( XklConfigRec * data,
 extern void xkl_config_dump( FILE* file,
                              XklConfigRec * data );
                            
-extern const gchar *xkl_get_event_name( gint type );
+extern const gchar *xkl_event_get_name( gint type );
 
-extern void xkl_update_current_state( gint group, 
+extern void xkl_current_state_update( gint group, 
                                       unsigned indicators, 
                                       const gchar reason[] );
 
