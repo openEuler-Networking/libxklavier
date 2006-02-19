@@ -8,10 +8,10 @@
 #include <libxklavier/xklavier.h>
 #include <libxklavier/xklavier_config.h>
 
-extern void XklConfigDump( FILE* file,
-                           XklConfigRecPtr data );
+extern void xkl_config_dump( FILE* file,
+                             XklConfigRec *data );
 
-static void printUsage()
+static void print_usage()
 {
   printf( "Usage: test_monitor (-l1)(-l2)(-l3)(-h)(-d <debugLevel>)\n" );
   printf( "Options:\n" );
@@ -25,13 +25,13 @@ static void printUsage()
 int main( int argc, char * argv[] )
 {
   int c;
-  int debugLevel = -1;
+  int debug_level = -1;
   XkbEvent ev;
   Display* dpy;
-  int listenerType = 0, lt;
-  int listenerTypes[] = { XKLL_MANAGE_LAYOUTS, 
-                          XKLL_MANAGE_WINDOW_STATES,
-                          XKLL_TRACK_KEYBOARD_STATE };
+  int listener_type = 0, lt;
+  int listener_types[] = { XKLL_MANAGE_LAYOUTS, 
+                           XKLL_MANAGE_WINDOW_STATES,
+                           XKLL_TRACK_KEYBOARD_STATE };
 
   while (1)
   {
@@ -41,19 +41,19 @@ int main( int argc, char * argv[] )
     switch (c)
     {
       case 'h':
-        printUsage();
+        print_usage();
         exit(0);
       case 'd':
-        debugLevel = atoi( optarg );
+        debug_level = atoi( optarg );
         break;
       case 'l':
         lt = optarg[0] - '1';
-        if( lt >= 0 && lt < sizeof(listenerTypes)/sizeof(listenerTypes[0]) )
-          listenerType |= listenerTypes[lt];
+        if( lt >= 0 && lt < sizeof(listener_types)/sizeof(listener_types[0]) )
+          listener_type |= listener_types[lt];
         break;
       default:
         fprintf( stderr, "?? getopt returned character code 0%o ??\n", c );
-        printUsage();
+        print_usage();
         exit(0);
     }
   }
@@ -65,41 +65,41 @@ int main( int argc, char * argv[] )
     exit(1);
   }
   printf( "opened display: %p\n", dpy );
-  if( !XklInit( dpy ) )
+  if( !xkl_init( dpy ) )
   {
-    XklConfigRec currentConfig;
-    if( debugLevel != -1 )
-      XklSetDebugLevel( debugLevel );
-    XklDebug( 0, "Xklavier initialized\n" );
-    XklConfigInit();
-    XklConfigLoadRegistry();
-    XklDebug( 0, "Xklavier registry loaded\n" );
+    XklConfigRec current_config;
+    if( debug_level != -1 )
+      xkl_set_debug_level( debug_level );
+    xkl_debug( 0, "Xklavier initialized\n" );
+    xkl_config_init();
+    xkl_config_registry_load();
+    xkl_debug( 0, "Xklavier registry loaded\n" );
 
-    XklConfigRecInit( &currentConfig );
-    XklConfigGetFromServer( &currentConfig );
+    xkl_config_rec_init( &current_config );
+    xkl_config_get_from_server( &current_config );
 
-    XklDebug( 0, "Now, listening...\n" );
-    XklStartListen( listenerType );
+    xkl_debug( 0, "Now, listening...\n" );
+    xkl_listen_start( listener_type );
 
     while (1) 
     {
       XNextEvent( dpy, &ev.core );
-      if ( XklFilterEvents( &ev.core ) )
-        XklDebug( 200, "Unknown event %d\n", ev.type );
+      if ( xkl_events_filter( &ev.core ) )
+        xkl_debug( 200, "Unknown event %d\n", ev.type );
     }
 
-    XklStopListen();
+    xkl_listen_stop();
 
-    XklConfigRecDestroy( &currentConfig );
+    xkl_config_rec_destroy( &current_config );
 
-    XklConfigFreeRegistry();
-    XklConfigTerm();
-    XklDebug( 0, "Xklavier registry freed\n" );
-    XklDebug( 0, "Xklavier terminating\n" );
-    XklTerm();
+    xkl_config_registry_free();
+    xkl_config_term();
+    xkl_debug( 0, "Xklavier registry freed\n" );
+    xkl_debug( 0, "Xklavier terminating\n" );
+    xkl_term();
   } else
   {
-    fprintf( stderr, "Could not init Xklavier: %s\n", XklGetLastError() );
+    fprintf( stderr, "Could not init Xklavier: %s\n", xkl_get_last_error() );
     exit(2);
   }
   printf( "closing display: %p\n", dpy );
