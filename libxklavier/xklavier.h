@@ -12,33 +12,30 @@
 #include <glib.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-  typedef enum
-  {
+	typedef enum {
 /**
  * Group was changed
  */
-    GROUP_CHANGED,
+		GROUP_CHANGED,
 /**
  * Indicators were changed
  */
-    INDICATORS_CHANGED
-  }
-  XklStateChange;
+		INDICATORS_CHANGED
+	} XklStateChange;
 
 /**
  * Backend allows to toggls indicators on/off
- */  
+ */
 #define XKLF_CAN_TOGGLE_INDICATORS 0x01
 
 /**
  * Backend allows to write ascii representation of the configuration
  */
 #define XKLF_CAN_OUTPUT_CONFIG_AS_ASCII 0x02
-  
+
 /**
  * Backend allows to write binary representation of the configuration
  */
@@ -59,14 +56,12 @@ extern "C"
 /**
  * XKB state. Can be global or per-window
  */
-  typedef struct
-  {
+	typedef struct {
 /** selected group */
-    gint32 group;
+		gint32 group;
 /** set of active indicators */
-    guint32 indicators;
-  }
-  XklState;
+		guint32 indicators;
+	} XklState;
 
 /**
  * @defgroup xklinitterm Library initialization and termination
@@ -81,25 +76,25 @@ extern "C"
  * @return 0 if OK, otherwise last X error 
  * (special case: -1 if XKB extension is not present)
  */
-  extern gint xkl_init( Display * dpy );
+	extern gint xkl_init(Display * dpy);
 
 /**
  * Terminates everything...
  */
-  extern gint xkl_term( void );
+	extern gint xkl_term(void);
 
 /**
  * What kind of backend if used
  * @return some string id of the backend
  */
-  extern const gchar *xkl_backend_get_name( void );
+	extern const gchar *xkl_backend_get_name(void);
 
 /**
  * Provides information regarding available backend features
  * (combination of XKLF_* constants)
  * @return ORed XKLF_* constants
  */
-  extern guint xkl_backend_get_features( void );
+	extern guint xkl_backend_get_features(void);
 
 /**
  * Provides the information on maximum number of simultaneously supported 
@@ -107,7 +102,7 @@ extern "C"
  * @return maximum number of the groups in configuration, 
  *         0 if no restrictions.
  */
-  extern unsigned xkl_groups_get_max_num( void );
+	extern unsigned xkl_groups_get_max_num(void);
 /** @} */
 
 /**
@@ -137,25 +132,25 @@ extern "C"
  * @param what any combination of XKLL_* constants
  * @return 0
  */
-  extern gint xkl_listen_start( guint what );
+	extern gint xkl_listen_start(guint what);
 
 /**
  * Stops listening for XKB-related events
  * @return 0
  */
-  extern gint xkl_listen_stop( void );
+	extern gint xkl_listen_stop(void);
 
 /**
  * Temporary pauses listening for XKB-related events
  * @return 0
  */
-  extern gint xkl_listen_pause( void );
+	extern gint xkl_listen_pause(void);
 
 /**
  * Resumes listening for XKB-related events
  * @return 0
  */
-  extern gint xkl_listen_resume( void );
+	extern gint xkl_listen_resume(void);
 
 /**
  * Grabs some key
@@ -163,7 +158,7 @@ extern "C"
  * @param modifiers is a bitmask of modifiers
  * @return True on success
  */
-  extern gboolean xkl_key_grab( gint keycode, unsigned modifiers );
+	extern gboolean xkl_key_grab(gint keycode, unsigned modifiers);
 
 /**
  * Ungrabs some key
@@ -171,7 +166,7 @@ extern "C"
  * @param modifiers is a bitmask of modifiers
  * @return True on success
  */
-  extern gboolean xkl_key_ungrab( gint keycode, unsigned modifiers );
+	extern gboolean xkl_key_ungrab(gint keycode, unsigned modifiers);
 
 /**
  * Processes X events. Should be included into the main event cycle of an
@@ -180,12 +175,12 @@ extern "C"
  * @return 0 if the event it processed - 1 otherwise
  * @see xkl_StartListen
  */
-  extern gint xkl_events_filter( XEvent * evt );
+	extern gint xkl_events_filter(XEvent * evt);
 
 /**
  * Allows to switch (once) to the secondary group
  */
-  extern void xkl_group_allow_one_switch_to_secondary( void );
+	extern void xkl_group_allow_one_switch_to_secondary(void);
 
 /** @} */
 
@@ -197,13 +192,13 @@ extern "C"
 /**
  * @return currently focused window
  */
-  extern Window xkl_window_get_current( void );
+	extern Window xkl_window_get_current(void);
 
 /**
  * @return current state of the keyboard (in XKB terms). 
  * Returned value is a statically allocated buffer, should not be freed.
  */
-  extern XklState *xkl_state_get_current( void );
+	extern XklState *xkl_state_get_current(void);
 
 /** @} */
 
@@ -216,7 +211,7 @@ extern "C"
  * @return the window title of some window or NULL. 
  * If not NULL, it should be freed with XFree
  */
-  extern gchar *xkl_window_get_title( Window w );
+	extern gchar *xkl_window_get_title(Window w);
 
 /** 
  * Finds the state for a given window (for its "App window").
@@ -225,20 +220,20 @@ extern "C"
  * @return True on success, otherwise False 
  * (the error message can be obtained using xkl_GetLastError).
  */
-  extern gboolean xkl_state_get( Window win, XklState * state_out );
+	extern gboolean xkl_state_get(Window win, XklState * state_out);
 
 /**
  * Drops the state of a given window (of its "App window").
  * @param win is a target window
  */
-  extern void xkl_state_delete( Window win );
+	extern void xkl_state_delete(Window win);
 
 /** 
  * Stores ths state for a given window
  * @param win is a target window
  * @param state is a new state of the window
  */
-  extern void xkl_state_save( Window win, XklState * state );
+	extern void xkl_state_save(Window win, XklState * state);
 
 /**
  * Sets the "transparent" flag. It means focus switching onto 
@@ -247,14 +242,15 @@ extern "C"
  * @param transparent - if true, the windows is transparent.
  * @see xkl_IsTranspatent
  */
-  extern void xkl_window_set_transparent( Window win, gboolean transparent );
+	extern void xkl_window_set_transparent(Window win,
+					       gboolean transparent);
 
 /**
  * Returns "transparent" flag. 
  * @param win is the window to get the transparent flag from.
  * @see xkl_SetTranspatent
  */
-  extern gboolean xkl_window_is_transparent( Window win );
+	extern gboolean xkl_window_is_transparent(Window win);
 
 /**
  * Checks whether 2 windows have the same topmost window
@@ -262,7 +258,8 @@ extern "C"
  * @param win2 is second window
  * @return True is windows are in the same application
  */
-  extern gboolean xkl_windows_is_same_appication( Window win1, Window win2 );
+	extern gboolean xkl_windows_is_same_appication(Window win1,
+						       Window win2);
 
 /** @} */
 
@@ -275,21 +272,21 @@ extern "C"
  * @return the total number of groups in the current XKB configuration 
  * (keyboard)
  */
-  extern unsigned xkl_groups_get_num( void );
+	extern unsigned xkl_groups_get_num(void);
 
 /**
  * @return the array of group names for the current XKB configuration 
  * (keyboard).
  * This array is static, should not be freed
  */
-  extern const gchar **xkl_groups_get_names( void );
+	extern const gchar **xkl_groups_get_names(void);
 
 /**
  * @return the array of indicator names for the current XKB configuration 
  * (keyboard).
  * This array is static, should not be freed
  */
-  extern const gchar **xkl_indicators_get_names( void );
+	extern const gchar **xkl_indicators_get_names(void);
 
 /** @} */
 
@@ -302,19 +299,19 @@ extern "C"
  * Calculates next group id. Does not change the state of anything.
  * @return next group id
  */
-  extern gint xkl_group_get_next( void );
+	extern gint xkl_group_get_next(void);
 
 /**
  * Calculates prev group id. Does not change the state of anything.
  * @return prev group id
  */
-  extern gint xkl_group_get_prev( void );
+	extern gint xkl_group_get_prev(void);
 
 /**
  * @return saved group id of the current client. 
  * Does not change the state of anything.
  */
-  extern gint xkl_group_get_restore( void );
+	extern gint xkl_group_get_restore(void);
 
 /**
  * Locks the group. Can be used after xkl_GetXXXGroup functions
@@ -323,7 +320,7 @@ extern "C"
  * @see xkl_GetPrevGroup
  * @see xkl_GetRestoreGroup
  */
-  extern void xkl_group_lock( gint group );
+	extern void xkl_group_lock(gint group);
 
 /** @} */
 
@@ -337,7 +334,7 @@ extern "C"
  * @param data is anything which can be stored into the pointer
  * @see xkl_RegisterConfigCallback
  */
-  typedef void ( *XklConfigNotifyFunc ) ( gpointer data );
+	typedef void (*XklConfigNotifyFunc) (gpointer data);
 
 /**
  * Registers user callback. Only one callback can be registered at a time
@@ -345,8 +342,8 @@ extern "C"
  * @param data is the data to pass
  * @see xkl_ConfigCallback
  */
-  extern gint xkl_register_config_callback( XklConfigNotifyFunc func,
-                                            gpointer data );
+	extern gint xkl_register_config_callback(XklConfigNotifyFunc func,
+						 gpointer data);
 
 /**
  * Used for notifying application of new window creation (actually, 
@@ -359,8 +356,8 @@ extern "C"
  * @see xkl_set_default_group
  * @see xkl_get_default_group
  */
-  typedef gint ( *XklNewWindowNotifyFunc ) ( Window win, Window parent,
-                                             gpointer data );
+	typedef gint(*XklNewWindowNotifyFunc) (Window win, Window parent,
+					       gpointer data);
 
 /**
  * Registers user callback. Only one callback can be registered at a time
@@ -368,8 +365,8 @@ extern "C"
  * @param data is the data to pass
  * @see XklWindowCallback
  */
-  extern gint xkl_register_new_window_callback( XklNewWindowNotifyFunc func, 
-                                                gpointer data );
+	extern gint xkl_register_new_window_callback(XklNewWindowNotifyFunc
+						     func, gpointer data);
 
 /**
  * Used for notifying application of the window state change.
@@ -380,8 +377,9 @@ extern "C"
  * @param data is anything which can be stored into the pointer
  * @see xkl_register_config_callback
  */
-  typedef void ( *XklStateNotifyFunc ) ( XklStateChange changeType, gint group,
-                                         gboolean restore, gpointer data );
+	typedef void (*XklStateNotifyFunc) (XklStateChange changeType,
+					    gint group, gboolean restore,
+					    gpointer data);
 
 /**
  * Registers user callback. Only one callback can be registered at a time
@@ -389,8 +387,8 @@ extern "C"
  * @param data is the data to pass
  * @see XklStateNotifyFunc
  */
-  extern gint xkl_register_state_callback( XklStateNotifyFunc func,
-                                           gpointer data );
+	extern gint xkl_register_state_callback(XklStateNotifyFunc func,
+						gpointer data);
 
 /** @} */
 
@@ -403,23 +401,23 @@ extern "C"
  * Sets the configuration parameter: group per application
  * @param isGlobal is a new parameter value
  */
-  extern void xkl_set_group_per_toplevel_window( gboolean isGlobal );
+	extern void xkl_set_group_per_toplevel_window(gboolean isGlobal);
 
 /**
  *  @return the value of the parameter: group per application
  */
-  extern gboolean xkl_is_group_per_toplevel_window( void );
+	extern gboolean xkl_is_group_per_toplevel_window(void);
 
 /**
  * Sets the configuration parameter: perform indicators handling
  * @param whetherHandle is a new parameter value
  */
-  extern void xkl_set_indicators_handling( gboolean whetherHandle );
+	extern void xkl_set_indicators_handling(gboolean whetherHandle);
 
 /**
  * @return the value of the parameter: perform indicator handling
  */
-  extern gboolean xkl_get_indicators_handling( void );
+	extern gboolean xkl_get_indicators_handling(void);
 
 /**
  * Sets the secondary groups (one bit per group). 
@@ -427,26 +425,26 @@ extern "C"
  * @param mask is a new group mask
  * @see xkl_allow_one_switch_to_secondary_group
  */
-  extern void xkl_set_secondary_groups_mask( guint mask );
+	extern void xkl_set_secondary_groups_mask(guint mask);
 
 /**
  * @return the secondary group mask
  */
-  extern guint xkl_get_secondary_groups_mask( void );
+	extern guint xkl_get_secondary_groups_mask(void);
 
 /**
  * Configures the default group set on window creation.
  * If -1, no default group is used
  * @param group the default group
  */
-  extern void xkl_group_set_default( gint group );
+	extern void xkl_group_set_default(gint group);
 
 /**
  * Returns the default group set on window creation
  * If -1, no default group is used
  * @return the default group
  */
-  extern gint xkl_group_get_default( void );
+	extern gint xkl_group_get_default(void);
 
 /** @} */
 
@@ -458,7 +456,7 @@ extern "C"
 /**
  * @return the text message (statically allocated) of the last error
  */
-  extern const gchar *xkl_get_last_error( void );
+	extern const gchar *xkl_get_last_error(void);
 
 /**
  * Output (optionally) some debug info
@@ -470,8 +468,8 @@ extern "C"
  * @param format is a format (like in printf)
  * @see xkl_debug
  */
-  extern void _xkl_debug( const gchar file[], const gchar function[], 
-                          gint level, const gchar format[], ... );
+	extern void _xkl_debug(const gchar file[], const gchar function[],
+			       gint level, const gchar format[], ...);
 
 /**
  * Custom log output method for _xkl_debug. This appender is NOT called if the
@@ -487,11 +485,11 @@ extern "C"
  * @see _xkl_debug
  * @see xkl_set_debug_level
  */
-  typedef void ( *XklLogAppender ) ( const gchar file[], 
-                                     const gchar function[],
-                                     gint level, 
-                                     const gchar format[],
-                                     va_list args );
+	typedef void (*XklLogAppender) (const gchar file[],
+					const gchar function[],
+					gint level,
+					const gchar format[],
+					va_list args);
 
 /**
  * Default log output method. Sends everything to stdout.
@@ -504,24 +502,24 @@ extern "C"
  * @param format is a format (like in printf)
  * @param args is the list of parameters
  */
-  extern void xkl_default_log_appender( const gchar file[], 
-                                        const gchar function[],
-                                        gint level, 
-                                        const gchar format[],
-                                        va_list args );
+	extern void xkl_default_log_appender(const gchar file[],
+					     const gchar function[],
+					     gint level,
+					     const gchar format[],
+					     va_list args);
 
 /**
  * Installs the custom log appender.function
  * @param fun is the new log appender
  */
-  extern void xkl_set_log_appender( XklLogAppender fun );
+	extern void xkl_set_log_appender(XklLogAppender fun);
 
 /**
  * Sets maximum debug level. 
  * Message of the level more than the one set here - will be ignored
  * @param level is a new debug level
  */
-  extern void xkl_set_debug_level( gint level );
+	extern void xkl_set_debug_level(gint level);
 
 /* Just to make doxygen happy - two block with/without @param format */
 #if defined(G_HAVE_GNUC_VARARGS)
@@ -553,6 +551,5 @@ extern "C"
 
 #ifdef __cplusplus
 }
-#endif                          /* __cplusplus */
-
+#endif				/* __cplusplus */
 #endif
