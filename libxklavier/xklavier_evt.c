@@ -7,7 +7,7 @@
 
 #include "xklavier_private.h"
 
-gint xkl_filter_events( XEvent *xev )
+gint xkl_events_filter( XEvent *xev )
 {
   XAnyEvent *pe = ( XAnyEvent * ) xev;
   xkl_debug( 400, "**> Filtering event %d of type %d from window %d\n",

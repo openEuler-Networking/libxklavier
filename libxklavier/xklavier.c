@@ -176,7 +176,7 @@ void xkl_set_log_appender( XklLogAppender func )
   log_appender = func;
 }
 
-gint xkl_start_listen( guint what )
+gint xkl_listen_start( guint what )
 {
   xkl_listener_type = what;
   
@@ -191,7 +191,7 @@ gint xkl_start_listen( guint what )
   return 0;
 }
 
-gint xkl_stop_listen( void )
+gint xkl_listen_stop( void )
 {
   xkl_listen_pause(  );
   return 0;
