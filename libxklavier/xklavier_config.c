@@ -286,21 +286,21 @@ void xkl_strings_split_comma_separated( gchar ***array, const gchar *merged )
   *array = g_strsplit( merged, ",", 0);
 }
 
-gchar* xkl_get_rules_set_name( const gchar default_ruleset[] )
+gchar* xkl_rules_set_get_name( const gchar default_ruleset[] )
 {
-  static char rules_set_name[1024] = "";
+  static gchar rules_set_name[1024] = "";
   if ( !rules_set_name[0] )
   {
     /* first call */
-    char* rf = NULL;
+    gchar* rf = NULL;
     if( !xkl_get_names_prop( xkl_vtable->base_config_atom, &rf, NULL ) ||
         ( rf == NULL ) )
     {
-      strncpy( rules_set_name, default_ruleset, sizeof rules_set_name );
+      g_strlcpy( rules_set_name, default_ruleset, sizeof rules_set_name );
       xkl_debug( 100, "Using default rules set: [%s]\n", rules_set_name );
       return rules_set_name;
     }
-    strncpy( rules_set_name, rf, sizeof rules_set_name );
+    g_strlcpy( rules_set_name, rf, sizeof rules_set_name );
     g_free( rf );
   }
   xkl_debug( 100, "Rules set: [%s]\n", rules_set_name );
@@ -339,7 +339,7 @@ void xkl_config_term( void )
   }
 }
 
-gboolean xkl_config_load_registry_from_file( const gchar * file_name )
+gboolean xkl_config_registry_load_from_file( const gchar * file_name )
 {
   the_registry.doc = xmlParseFile( file_name );
   if( the_registry.doc == NULL )
@@ -351,7 +351,7 @@ gboolean xkl_config_load_registry_from_file( const gchar * file_name )
   return xkl_config_registry_is_initialized(  );
 }
 
-void xkl_config_free_registry( void )
+void xkl_config_registry_free( void )
 {
   if( xkl_config_registry_is_initialized(  ) )
   {

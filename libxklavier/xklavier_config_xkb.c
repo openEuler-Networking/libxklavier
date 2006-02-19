@@ -314,7 +314,7 @@ void _XklXkbConfigCleanupNative( gpointer componentNamesPtr )
 #endif
 
 /* check only client side support */
-gboolean _XklXkbConfigMultipleLayoutsSupported( void )
+gboolean xkl_xkb_config_multiple_layouts_supported( void )
 {
   enum { NON_SUPPORTED, SUPPORTED, UNCHECKED };
 

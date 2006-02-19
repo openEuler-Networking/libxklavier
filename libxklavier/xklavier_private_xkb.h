@@ -21,7 +21,7 @@ extern void xkl_dump_xkb_desc( const char *file_name,
 
 extern gboolean xkl_xkb_config_multiple_layouts_supported( void );
 
-extern const gchar *xkl_xkb_get_xkb_event_name( gint xkb_type );
+extern const gchar *xkl_xkb_event_get_name( gint xkb_type );
 
 extern gboolean xkl_xkb_config_native_prepare( const XklConfigRec *data, 
                                                XkbComponentNamesPtr component_names );

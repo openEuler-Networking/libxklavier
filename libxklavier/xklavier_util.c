@@ -12,7 +12,7 @@ XklState *xkl_state_get_current(  )
   return &xkl_current_state;
 }
 
-const gchar *_xkl_get_last_error(  )
+const gchar *xkl_get_last_error(  )
 {
   return xkl_last_error_message;
 }
@@ -102,7 +102,7 @@ Window xkl_window_get_current(  )
  * All the windows with WM_STATE are added.
  * All the windows within level 0 are listened for focus and property
  */
-gboolean __xkl_load_subtree( Window window, gint level, XklState * init_state )
+gboolean xkl_load_subtree( Window window, gint level, XklState * init_state )
 {
   Window rwin = ( Window ) NULL,
     parent = ( Window ) NULL, *children = NULL, *child;

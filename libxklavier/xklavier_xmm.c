@@ -45,7 +45,7 @@ void xkl_xmm_shortcuts_grab( void )
   }
 }
 
-void xkl_xmm_ungrab_shortcuts( void )
+void xkl_xmm_shortcuts_ungrab( void )
 {
   const XmmShortcut *shortcut;
   const XmmSwitchOption *option = xkl_xmm_shortcut_get_current();

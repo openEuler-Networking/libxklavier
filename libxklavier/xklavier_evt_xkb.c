@@ -97,7 +97,7 @@ gint xkl_xkb_process_x_event( XEvent *xev )
 #endif
     case XkbNewKeyboardNotify:
       xkl_debug( 150, "%s\n",
-                 xkl_xkb_get_xkb_event_name( kev->any.xkb_type ) );
+                 xkl_xkb_event_get_name( kev->any.xkb_type ) );
       xkl_reset_all_info( "XKB event: XkbNewKeyboardNotify" );
       break;
 
@@ -106,7 +106,7 @@ gint xkl_xkb_process_x_event( XEvent *xev )
      */
     default:
       xkl_debug( 150, "Unknown XKB event %d [%s]\n", 
-                kev->any.xkb_type, xkl_xkb_get_xkb_event_name( kev->any.xkb_type ) );
+                kev->any.xkb_type, xkl_xkb_event_get_name( kev->any.xkb_type ) );
       return 0;
   }
   return 1;

@@ -247,7 +247,7 @@ void xkl_process_focus_out_evt( XFocusChangeEvent * fev )
  *    - WM_STATE property for all windows
  *    - Configuration property of the root window
  */
-void xkl_provess_property_evt( XPropertyEvent * pev )
+void xkl_process_property_evt( XPropertyEvent * pev )
 {
   if( 400 <= xkl_debug_level )
   {
@@ -306,7 +306,7 @@ void xkl_provess_property_evt( XPropertyEvent * pev )
 /**
  * CreateNotify handler. Just interested in properties and focus events...
  */
-void xkl_process_create_evt( XCreateWindowEvent * cev )
+void xkl_process_create_window_evt( XCreateWindowEvent * cev )
 {
   if( !( xkl_listener_type & XKLL_MANAGE_WINDOW_STATES ) )
     return;

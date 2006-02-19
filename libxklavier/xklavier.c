@@ -15,9 +15,9 @@ Window xkl_current_client;
 
 Status xkl_last_error_code;
 
-const gchar *xkl_last_error_msg;
+const gchar *xkl_last_error_message;
 
-XErrorHandler xkl_default_err_handler;
+XErrorHandler xkl_default_error_handler;
 
 Atom xkl_atoms[TOTAL_ATOMS];
 
@@ -87,7 +87,7 @@ static void xkl_set_switch_to_secondary_group( gboolean val )
   XSync( xkl_display, False );
 }
 
-void _xkl_allow_one_switch_to_secondary_group( void )
+void xkl_group_allow_one_switch_to_secondary( void )
 {
   xkl_debug( 150, "Setting allow_one_switch_to_secondary_group flag\n" );
   xkl_set_switch_to_secondary_group( TRUE );
@@ -215,7 +215,7 @@ gint xkl_init( Display * a_dpy )
     return -1;
   }
 
-  xkl_default_err_handler =
+  xkl_default_error_handler =
     XSetErrorHandler( ( XErrorHandler ) xkl_process_error );
 
   xkl_display = a_dpy;
@@ -267,7 +267,7 @@ gint xkl_init( Display * a_dpy )
 
 gint xkl_term( void )
 {
-  XSetErrorHandler( ( XErrorHandler ) xkl_default_err_handler );
+  XSetErrorHandler( ( XErrorHandler ) xkl_default_error_handler );
   xkl_config_callback = NULL;
   xkl_state_callback = NULL;
   xkl_new_window_callback = NULL;
@@ -278,7 +278,7 @@ gint xkl_term( void )
   return 0;
 }
 
-gboolean xkl_grab_key( gint keycode, guint modifiers )
+gboolean xkl_key_grab( gint keycode, guint modifiers )
 {
   gboolean ret_code;
   gchar *keyname;
@@ -305,12 +305,12 @@ gboolean xkl_grab_key( gint keycode, guint modifiers )
   ret_code = ( xkl_last_error_code == Success );
 
   if( !ret_code )
-    xkl_last_error_msg = "Could not grab the key";
+    xkl_last_error_message = "Could not grab the key";
 
   return ret_code;
 }
 
-gboolean xkl_ungrab_key( gint keycode, guint modifiers )
+gboolean xkl_key_ungrab( gint keycode, guint modifiers )
 {
   if( 0 == keycode )
     return FALSE;
@@ -318,7 +318,7 @@ gboolean xkl_ungrab_key( gint keycode, guint modifiers )
   return Success == XUngrabKey( xkl_display, keycode, 0, xkl_root_window );
 }
 
-gint _xkl_get_next_group( void )
+gint xkl_group_get_next( void )
 {
   return ( xkl_current_state.group + 1 ) % xkl_groups_get_num(  );
 }
@@ -362,7 +362,7 @@ void xkl_set_transparent( Window win, gboolean transparent )
   xkl_toplevel_window_set_transparent( toplevel_win, transparent );
 }
 
-gboolean xkl_is_transparent( Window win )
+gboolean xkl_window_is_transparent( Window win )
 {
   Window toplevel_win;
 
@@ -505,12 +505,12 @@ void xkl_ensure_vtable_inited( void )
   }
 }
 
-const gchar *xkl_get_backend_name( void )
+const gchar *xkl_backend_get_name( void )
 {
   return xkl_vtable->id;
 }
 
-guint xkl_get_backend_features( void )
+guint xkl_backend_get_features( void )
 {
   return xkl_vtable->features;
 }
@@ -536,7 +536,7 @@ const gchar **xkl_groups_get_names( void )
   return (*xkl_vtable->groups_get_names_func)();
 }
 
-guint _xkl_groups_get_num( void )
+guint xkl_groups_get_num( void )
 {
   xkl_ensure_vtable_inited();
   return (*xkl_vtable->groups_get_num_func)();

@@ -20,12 +20,12 @@ gint xkl_xkb_event_type, xkl_xkb_error_code;
 
 static gchar *group_names[XkbNumKbdGroups];
 
-const gchar **xkl_xkb_get_group_names( void )
+const gchar **xkl_xkb_groups_get_names( void )
 {
   return ( const gchar ** ) group_names;
 }
 
-gint xkl_xkb_pause_listen( void )
+gint xkl_xkb_listen_pause( void )
 {
   XkbSelectEvents( xkl_display, XkbUseCoreKbd, XkbAllEventsMask, 0 );
 /*  XkbSelectEventDetails( xkl_display,
@@ -39,7 +39,7 @@ gint xkl_xkb_pause_listen( void )
   return 0;
 }
 
-gint xkl_xkb_resume_listen( void )
+gint xkl_xkb_listen_resume( void )
 {
   /* What events we want */
 #define XKB_EVT_MASK \
@@ -257,7 +257,7 @@ gboolean xkl_xkb_load_all_info( void )
   return TRUE;
 }
 
-void _XklXkbLockGroup( int group )
+void xkl_xkb_group_lock( int group )
 {
   xkl_debug( 100, "Posted request for change the group to %d ##\n", group );
   XkbLockGroup( xkl_display, XkbUseCoreKbd, group );
@@ -286,7 +286,7 @@ void xkl_xkb_get_server_state( XklState * current_state_out )
 /*
  * Actually taken from mxkbledpanel, valueChangedProc
  */
-gboolean xkl_set_indicator( gint indicator_num, gboolean set )
+gboolean xkl_indicator_set( gint indicator_num, gboolean set )
 {
   XkbIndicatorMapPtr map;
 

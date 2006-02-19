@@ -14,7 +14,7 @@ void xkl_toplevel_window_set_transparent( Window toplevel_win,
 {
   gboolean oldval;
 
-  oldval = xkl_is_transparent( toplevel_win );
+  oldval = xkl_window_is_transparent( toplevel_win );
   xkl_debug( 150, "toplevel_win " WINID_FORMAT " was %stransparent\n", 
                   toplevel_win, oldval ? "" : "not " );
   if( transparent && !oldval )
@@ -48,7 +48,7 @@ void xkl_toplevel_window_add( Window toplevel_win, Window parent,
     xkl_debug( 150, "??? root app win ???\n" );
 
   xkl_debug( 150, "Trying to add window " WINID_FORMAT "/%s with group %d\n",
-                  toplevel_win, xkl_get_debug_window_title( toplevel_win), 
+                  toplevel_win, xkl_window_get_debug_title( toplevel_win), 
                   init_state->group );
 
   if( !ignore_existing_state )
@@ -84,8 +84,8 @@ void xkl_toplevel_window_add( Window toplevel_win, Window parent,
     if( xkl_current_client == toplevel_win )
     {
       if( ( xkl_secondary_groups_mask & ( 1 << default_group_to_use ) ) != 0 )
-        xkl_allow_one_switch_to_secondary_group();
-      xkl_lock_group( default_group_to_use );
+        xkl_group_allow_one_switch_to_secondary();
+      xkl_group_lock( default_group_to_use );
     }
   }
 
@@ -111,14 +111,14 @@ gboolean xkl_toplevel_window_find_bottom_to_top( Window win,
     return FALSE;
   }
 
-  if( xkl_has_wm_state( win ) )
+  if( xkl_window_has_wm_state( win ) )
   {
     *toplevel_win_out = win;
     return TRUE;
   }
 
   xkl_last_error_code =
-    xkl_status_query_tree( xkl_display, win, &rwin, &parent, &children, &num );
+    xkl_status_query_tree( win, &rwin, &parent, &children, &num );
 
   if( xkl_last_error_code != Success )
   {
@@ -157,14 +157,14 @@ gboolean xkl_toplevel_window_find( Window win, Window * toplevel_win_out )
     return FALSE;
   }
 
-  if( xkl_has_wm_state( win ) )
+  if( xkl_window_has_wm_state( win ) )
   {
     *toplevel_win_out = win;
     return TRUE;
   }
 
   xkl_last_error_code =
-    xkl_status_query_tree( xkl_display, win, &rwin, &parent, &children, &num );
+    xkl_status_query_tree( win, &rwin, &parent, &children, &num );
 
   if( xkl_last_error_code != Success )
   {
@@ -182,7 +182,7 @@ gboolean xkl_toplevel_window_find( Window win, Window * toplevel_win_out )
   child = children;
   while( num )
   {
-    if( xkl_has_wm_state( *child ) )
+    if( xkl_window_has_wm_state( *child ) )
     {
       *toplevel_win_out = *child;
       if( children != NULL )
@@ -200,7 +200,7 @@ gboolean xkl_toplevel_window_find( Window win, Window * toplevel_win_out )
 
   if( !rv )
     xkl_debug( 200, "Could not get the app window for " WINID_FORMAT "/%s\n",
-              win, xkl_get_debug_window_title( win ) );
+               win, xkl_window_get_debug_title( win ) );
 
   return rv;
 }
@@ -227,7 +227,7 @@ gboolean xkl_toplevel_window_get_state( Window toplevel_win, XklState * state_ou
       && ( type_ret == XA_INTEGER ) && ( format_ret == 32 ) )
   {
     grp = prop[0];
-    if( grp >= xkl_get_num_groups(  ) || grp < 0 )
+    if( grp >= xkl_groups_get_num(  ) || grp < 0 )
       grp = 0;
                                                                                             
     inds = prop[1];
@@ -247,10 +247,10 @@ gboolean xkl_toplevel_window_get_state( Window toplevel_win, XklState * state_ou
     xkl_debug( 150,
               "Appwin " WINID_FORMAT
               ", '%s' has the group %d, indicators %X\n", toplevel_win,
-              xkl_get_debug_window_title( toplevel_win ), grp, inds );
+              xkl_window_get_debug_title( toplevel_win ), grp, inds );
   else
     xkl_debug( 150, "Appwin " WINID_FORMAT ", '%s' does not have state\n",
-              toplevel_win, xkl_get_debug_window_title( toplevel_win ) );
+               toplevel_win, xkl_window_get_debug_title( toplevel_win ) );
                                                                                             
   return ret;
 }
