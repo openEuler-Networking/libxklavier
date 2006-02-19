@@ -82,14 +82,18 @@ XmmSwitchOption *xkl_xmm_shortcut_get_current( void )
 const gchar* xkl_xmm_shortcut_get_current_option_name( void )
 {
   gchar** option = current_xmm_config.options;
-  do
+  if( option == NULL )
+    return NULL;
+
+  while( *option != NULL )
   {
     /* starts with "grp:" */
     if( strstr( *option, SHORTCUT_OPTION_PREFIX ) != NULL )
     {
       return *option + sizeof SHORTCUT_OPTION_PREFIX - 1;
     }
-  } while ( *(++option) != NULL );
+    option++;
+  }
   return NULL;
 }
 
@@ -138,7 +142,8 @@ guint xkl_xmm_groups_get_num( void )
 {
   gint rv = 0;
   gchar ** p = current_xmm_config.layouts;
-  while( *p++ != NULL ) rv++;
+  if( p != NULL )
+    while( *p++ != NULL ) rv++;
   return rv;
 }
   

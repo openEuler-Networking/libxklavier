@@ -270,7 +270,7 @@ gboolean xkl_get_names_prop( Atom rules_atom,
     /* take variants from layouts like ru(winkeys) */
     layout = data->layouts;
     variant = data->variants;
-    while ( layout != NULL && variant != NULL )
+    while( *layout != NULL && *variant != NULL )
     {
       gchar *varstart = g_strstr_len( *layout, -1, "(" );
       if( varstart != NULL )
