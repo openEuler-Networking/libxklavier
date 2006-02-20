@@ -136,10 +136,9 @@ xkl_read_config_item(xmlNodePtr iptr, XklConfigItem * item)
 
 	if (short_desc_element != NULL &&
 	    short_desc_element->children != NULL) {
-		gchar *lmsg =
-		    xkl_locale_from_utf8((const gchar *)
-					 short_desc_element->children->
-					 content);
+		gchar *lmsg = xkl_locale_from_utf8((const gchar *)
+						   short_desc_element->
+						   children->content);
 		strncat(item->short_description, lmsg,
 			XKL_MAX_CI_SHORT_DESC_LENGTH - 1);
 		g_free(lmsg);
@@ -317,15 +316,12 @@ void
 xkl_config_init(void)
 {
 	xmlXPathInit();
-	models_xpath =
-	    xmlXPathCompile((unsigned char *)
-			    "/xkbConfigRegistry/modelList/model");
-	layouts_xpath =
-	    xmlXPathCompile((unsigned char *)
-			    "/xkbConfigRegistry/layoutList/layout");
-	option_groups_xpath =
-	    xmlXPathCompile((unsigned char *)
-			    "/xkbConfigRegistry/optionList/group");
+	models_xpath = xmlXPathCompile((unsigned char *)
+				       "/xkbConfigRegistry/modelList/model");
+	layouts_xpath = xmlXPathCompile((unsigned char *)
+					"/xkbConfigRegistry/layoutList/layout");
+	option_groups_xpath = xmlXPathCompile((unsigned char *)
+					      "/xkbConfigRegistry/optionList/group");
 	xkl_i18n_init();
 
 	xkl_ensure_vtable_inited();

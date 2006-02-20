@@ -42,6 +42,8 @@ main(int argc, char *const argv[])
 	int binary = 0;
 	Display *dpy;
 
+	g_type_init_with_debug_flags(G_TYPE_DEBUG_OBJECTS | G_TYPE_DEBUG_SIGNALS);
+
 	while (1) {
 		c = getopt(argc, argv, "hsgm:l:o:d:w:");
 		if (c == -1)
@@ -93,7 +95,7 @@ main(int argc, char *const argv[])
 	}
 	printf("opened display: %p\n", dpy);
 	if (!xkl_init(dpy)) {
-		XklConfigRec current_config, r2;
+		XklConfigRec *current_config, *r2;
 		if (debug_level != -1)
 			xkl_set_debug_level(debug_level);
 		xkl_debug(0, "Xklavier initialized\n");
@@ -106,26 +108,26 @@ main(int argc, char *const argv[])
 		xkl_debug(0, "Max number of groups: %d\n",
 			  xkl_groups_get_max_num());
 
-		xkl_config_rec_init(&current_config);
-		xkl_config_get_from_server(&current_config);
+		current_config = xkl_config_rec_new();
+		xkl_config_get_from_server(current_config);
 
 		switch (action) {
 		case ACTION_GET:
 			xkl_debug(0, "Got config from the server\n");
-			xkl_config_dump(stdout, &current_config);
+			xkl_config_dump(stdout, current_config);
 
-			xkl_config_rec_init(&r2);
+			r2 = xkl_config_rec_new();
 
-			if (xkl_config_get_from_backup(&r2)) {
+			if (xkl_config_get_from_backup(r2)) {
 				xkl_debug(0,
 					  "Got config from the backup\n");
-				xkl_config_dump(stdout, &r2);
+				xkl_config_dump(stdout, r2);
 			}
 
-			if (xkl_config_activate(&r2)) {
+			if (xkl_config_activate(r2)) {
 				xkl_debug(0,
 					  "The backup configuration restored\n");
-				if (xkl_config_activate(&current_config)) {
+				if (xkl_config_activate(current_config)) {
 					xkl_debug(0,
 						  "Reverting the configuration change\n");
 				} else {
@@ -139,42 +141,42 @@ main(int argc, char *const argv[])
 					  xkl_get_last_error());
 			}
 
-			xkl_config_rec_destroy(&r2);
+			g_object_unref(G_OBJECT(r2));
 			break;
 		case ACTION_SET:
 			if (model != NULL) {
-				if (current_config.model != NULL)
-					g_free(current_config.model);
-				current_config.model = g_strdup(model);
+				if (current_config->model != NULL)
+					g_free(current_config->model);
+				current_config->model = g_strdup(model);
 			}
 
 			if (layouts != NULL) {
-				if (current_config.layouts != NULL)
-					g_strfreev(current_config.layouts);
-				if (current_config.variants != NULL)
-					g_strfreev(current_config.
+				if (current_config->layouts != NULL)
+					g_strfreev(current_config->layouts);
+				if (current_config->variants != NULL)
+					g_strfreev(current_config->
 						   variants);
 
-				current_config.layouts = g_new0(char *, 2);
-				current_config.layouts[0] =
+				current_config->layouts = g_new0(char *, 2);
+				current_config->layouts[0] =
 				    g_strdup(layouts);
-				current_config.variants =
+				current_config->variants =
 				    g_new0(char *, 2);
-				current_config.variants[0] = g_strdup("");
+				current_config->variants[0] = g_strdup("");
 			}
 
 			if (options != NULL) {
-				if (current_config.options != NULL)
-					g_strfreev(current_config.options);
+				if (current_config->options != NULL)
+					g_strfreev(current_config->options);
 
-				current_config.options = g_new0(char *, 2);
-				current_config.options[0] =
+				current_config->options = g_new0(char *, 2);
+				current_config->options[0] =
 				    g_strdup(options);
 			}
 
 			xkl_debug(0, "New config:\n");
-			xkl_config_dump(stdout, &current_config);
-			if (xkl_config_activate(&current_config))
+			xkl_config_dump(stdout, current_config);
+			if (xkl_config_activate(current_config))
 				xkl_debug(0, "Set the config\n");
 			else
 				xkl_debug(0,
@@ -184,13 +186,13 @@ main(int argc, char *const argv[])
 		case ACTION_WRITE:
 			xkl_config_write_file(binary ? (PACKAGE ".xkm")
 					      : (PACKAGE ".xkb"),
-					      &current_config, binary);
+					      current_config, binary);
 			xkl_debug(0, "The file " PACKAGE "%s is written\n",
 				  binary ? ".xkm" : ".xkb");
 			break;
 		}
 
-		xkl_config_rec_destroy(&current_config);
+		g_object_unref(G_OBJECT(current_config));
 
 		xkl_config_registry_free();
 		xkl_config_term();

@@ -13,11 +13,55 @@
 #include "xklavier_config.h"
 #include "xklavier_private.h"
 
-void
-xkl_config_rec_init(XklConfigRec * data)
+static GObjectClass *g_object_class = NULL;
+
+static void xkl_config_rec_destroy(XklConfigRec * data);
+
+G_DEFINE_TYPE(XklConfigItem, xkl_config_item, G_TYPE_OBJECT)
+
+static void
+xkl_config_item_init(XklConfigItem * this)
 {
-	/* clear the structure VarDefsPtr... */
-	memset((void *) data, 0, sizeof(XklConfigRec));
+}
+
+static void
+xkl_config_item_class_init(XklConfigItemClass * klass)
+{
+}
+
+XklConfigItem *
+xkl_config_item_new(void)
+{
+	return
+	    XKL_CONFIG_ITEM(g_object_new
+			    (xkl_config_item_get_type(), NULL));
+}
+
+G_DEFINE_TYPE(XklConfigRec, xkl_config_rec, G_TYPE_OBJECT)
+
+static void
+xkl_config_rec_finalize(GObject * obj)
+{
+	XklConfigRec *this = (XklConfigRec *) obj;
+	xkl_config_rec_destroy(this);
+	G_OBJECT_CLASS(g_object_class)->finalize(obj);
+}
+
+static void
+xkl_config_rec_class_init(XklConfigRecClass * klass)
+{
+	GObjectClass *object_class;
+
+	object_class = (GObjectClass *) klass;
+	g_object_class = g_type_class_peek_parent(klass);
+	object_class->finalize = xkl_config_rec_finalize;
+}
+
+XklConfigRec *
+xkl_config_rec_new(void)
+{
+	return
+	    XKL_CONFIG_REC(g_object_new(xkl_config_rec_get_type(), NULL));
 }
 
 static gboolean
@@ -65,9 +109,8 @@ xkl_get_default_names_prop(char **rules_file_out, XklConfigRec * data)
 gboolean
 xkl_config_get_full_from_server(char **rules_file_out, XklConfigRec * data)
 {
-	gboolean rv =
-	    xkl_get_names_prop(xkl_vtable->base_config_atom,
-			       rules_file_out, data);
+	gboolean rv = xkl_get_names_prop(xkl_vtable->base_config_atom,
+					 rules_file_out, data);
 
 	if (!rv)
 		rv = xkl_get_default_names_prop(rules_file_out, data);
@@ -87,6 +130,14 @@ xkl_config_rec_equals(XklConfigRec * data1, XklConfigRec * data2)
 	if (!xkl_lists_equal(data1->variants, data2->variants))
 		return FALSE;
 	return xkl_lists_equal(data1->options, data2->options);
+}
+
+void
+xkl_config_rec_init(XklConfigRec * data)
+{
+	/* clear the structure VarDefsPtr... */
+	data->model = NULL;
+	data->layouts = data->variants = data->options = NULL;
 }
 
 void
@@ -289,7 +340,7 @@ xkl_get_names_prop(Atom rules_atom,
 					((char *)
 					 g_realloc(*layout,
 						   laylen + 1))[laylen] =
-				   '\0';
+					    '\0';
 				}
 			}
 			layout++;

@@ -36,6 +36,8 @@ main(int argc, char *argv[])
 		XKLL_TRACK_KEYBOARD_STATE
 	};
 
+        g_type_init_with_debug_flags(G_TYPE_DEBUG_OBJECTS | G_TYPE_DEBUG_SIGNALS);
+
 	while (1) {
 		c = getopt(argc, argv, "hd:l:");
 		if (c == -1)
@@ -71,7 +73,7 @@ main(int argc, char *argv[])
 	}
 	printf("opened display: %p\n", dpy);
 	if (!xkl_init(dpy)) {
-		XklConfigRec current_config;
+		XklConfigRec *current_config;
 		if (debug_level != -1)
 			xkl_set_debug_level(debug_level);
 		xkl_debug(0, "Xklavier initialized\n");
@@ -79,8 +81,8 @@ main(int argc, char *argv[])
 		xkl_config_registry_load();
 		xkl_debug(0, "Xklavier registry loaded\n");
 
-		xkl_config_rec_init(&current_config);
-		xkl_config_get_from_server(&current_config);
+		current_config = xkl_config_rec_new();
+		xkl_config_get_from_server(current_config);
 
 		xkl_debug(0, "Now, listening...\n");
 		xkl_listen_start(listener_type);
@@ -94,7 +96,7 @@ main(int argc, char *argv[])
 
 		xkl_listen_stop();
 
-		xkl_config_rec_destroy(&current_config);
+		g_object_unref(G_OBJECT(current_config));
 
 		xkl_config_registry_free();
 		xkl_config_term();

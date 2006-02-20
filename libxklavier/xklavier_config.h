@@ -87,11 +87,26 @@ extern "C" {
      */
 		GObjectClass parent_class;
 	};
+/**
+ * Get type info for XConfigItem
+ * @return GType for XConfigItem
+ */
+	extern GType xkl_config_item_get_type(void);
+
+/**
+ * Create new XklConfigItem
+ * @return new instance
+ */
+	extern XklConfigItem *xkl_config_item_new(void);
 
 /**
  * Basic configuration params
  */
 	struct _XklConfigRec {
+/**
+ * The superclass object
+ */
+		GObject parent;
 /**
  * The keyboard model
  */
@@ -119,6 +134,18 @@ extern "C" {
      */
 		GObjectClass parent_class;
 	};
+
+/**
+ * Get type info for XConfigRec
+ * @return GType for XConfigRec
+ */
+	extern GType xkl_config_rec_get_type(void);
+
+/**
+ * Create new XklConfigRec
+ * @return new instance
+ */
+	extern XklConfigRec *xkl_config_rec_new(void);
 
 /**
  * @defgroup xklconfiginitterm XKB configuration handling initialization and termination
@@ -381,22 +408,10 @@ extern "C" {
  */
 
 /**
- * Initializes the record (actually, fills it with 0-s)
- * @param data is a record to initialize
- */
-	extern void xkl_config_rec_init(XklConfigRec * data);
-
-/**
  * Resets the record (equal to Destroy and Init)
  * @param data is a record to reset
  */
 	extern void xkl_config_rec_reset(XklConfigRec * data);
-
-/**
- * Cleans the record (frees all the non-null members)
- * @param data is a record to clean
- */
-	extern void xkl_config_rec_destroy(XklConfigRec * data);
 
 /**
  * Compares the records
