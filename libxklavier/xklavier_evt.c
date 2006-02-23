@@ -33,7 +33,8 @@ int XklFilterEvents( XEvent * xev )
                   xev->xdestroywindow.window );
         break;
       case UnmapNotify:
-        XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
+        XklDebug( 200, "Window " WINID_FORMAT " unmapped\n",
+                  xev->xunmap.window );
         break;
       case MapNotify:
         XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
@@ -46,8 +47,9 @@ int XklFilterEvents( XEvent * xev )
         XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
         break;
       case ReparentNotify:
-        XklDebug( 200, "%s\n",  _XklGetEventName( xev->type ) );
-        break;                  /* Ignore these events */
+        XklDebug( 200, "Window " WINID_FORMAT " reparented to " WINID_FORMAT "\n",
+                  xev->xreparent.window, xev->xreparent.parent );
+        break;
       default:
       {
         XklDebug( 200, "Unknown event %d [%s]\n", 
@@ -354,11 +356,13 @@ void _XklErrHandler( Display * dpy, XErrorEvent * evt )
     {
       XGetErrorText( dpy, _xklLastErrorCode, buf, sizeof(buf) );
       /* in most cases this means we are late:) */
-      XklDebug( 200, "ERROR: %p, " WINID_FORMAT ", %d (%s), %d, %d\n",
+      XklDebug( 200, "ERROR: %p, " WINID_FORMAT ", %d [%s], "
+                "X11 request: %d, minor code: %d\n",
                 dpy,
                 ( unsigned long ) evt->resourceid,
                 ( int ) evt->error_code, buf,
-                ( int ) evt->request_code, ( int ) evt->minor_code );
+                ( int ) evt->request_code,
+		( int ) evt->minor_code );
       break;
     }
     default:

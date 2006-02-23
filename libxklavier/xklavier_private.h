@@ -269,7 +269,7 @@ extern void _XklConfigRecSplitOptions( XklConfigRecPtr data,
 extern void XklConfigDump( FILE* file,
                            XklConfigRecPtr data );
                            
-extern const char *_XklGetEventName( int type );
+extern const char *_XklGetEventName( int requestId );
 
 extern Bool _XklIsTransparentAppWindow( Window appWin );
 
