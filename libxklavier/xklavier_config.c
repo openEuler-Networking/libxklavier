@@ -24,6 +24,8 @@ static xmlXPathCompExprPtr option_groups_xpath;
 #define xkl_config_registry_is_initialized() \
   ( the_registry.xpath_context != NULL )
 
+static XklEngine *engine = NULL;
+
 static xmlChar *
 xkl_node_get_xml_lang_attr(xmlNodePtr nptr)
 {
@@ -290,14 +292,15 @@ xkl_strings_split_comma_separated(gchar *** array, const gchar * merged)
 }
 
 gchar *
-xkl_rules_set_get_name(const gchar default_ruleset[])
+xkl_engine_get_ruleset_name(XklEngine * engine,
+			    const gchar default_ruleset[])
 {
 	static gchar rules_set_name[1024] = "";
 	if (!rules_set_name[0]) {
 		/* first call */
 		gchar *rf = NULL;
 		if (!xkl_get_names_prop
-		    (xkl_vtable->base_config_atom, &rf, NULL)
+		    (engine->priv->base_config_atom, &rf, NULL)
 		    || (rf == NULL)) {
 			g_strlcpy(rules_set_name, default_ruleset,
 				  sizeof rules_set_name);
@@ -313,7 +316,7 @@ xkl_rules_set_get_name(const gchar default_ruleset[])
 }
 
 void
-xkl_config_init(void)
+xkl_config_init(XklEngine * engine)
 {
 	xmlXPathInit();
 	models_xpath = xmlXPathCompile((unsigned char *)
@@ -324,8 +327,8 @@ xkl_config_init(void)
 					      "/xkbConfigRegistry/optionList/group");
 	xkl_i18n_init();
 
-	xkl_ensure_vtable_inited();
-	(*xkl_vtable->config_init_func) ();
+	xkl_engine_ensure_vtable_inited(engine);
+	xkl_engine_vcall(engine, init_config) ();
 }
 
 void
@@ -351,7 +354,7 @@ xkl_config_registry_load_from_file(const gchar * file_name)
 	the_registry.doc = xmlParseFile(file_name);
 	if (the_registry.doc == NULL) {
 		the_registry.xpath_context = NULL;
-		xkl_last_error_message =
+		engine->priv->last_error_message =
 		    "Could not parse XKB configuration registry";
 	} else
 		the_registry.xpath_context =
@@ -512,15 +515,15 @@ xkl_config_find_option(const char *option_group_name,
 gboolean
 xkl_config_activate(const XklConfigRec * data)
 {
-	xkl_ensure_vtable_inited();
-	return (*xkl_vtable->config_activate_func) (data);
+	xkl_engine_ensure_vtable_inited(engine);
+	return xkl_engine_vcall(engine, activate_config) (data);
 }
 
 gboolean
 xkl_config_registry_load(void)
 {
-	xkl_ensure_vtable_inited();
-	return (*xkl_vtable->config_registry_load_func) ();
+	xkl_engine_ensure_vtable_inited(engine);
+	return xkl_engine_vcall(engine, load_config_registry) ();
 }
 
 gboolean
@@ -528,16 +531,18 @@ xkl_config_write_file(const gchar * file_name,
 		      const XklConfigRec * data, const gboolean binary)
 {
 	if ((!binary &&
-	     !(xkl_vtable->features & XKLF_CAN_OUTPUT_CONFIG_AS_ASCII)) ||
-	    (binary &&
-	     !(xkl_vtable->features & XKLF_CAN_OUTPUT_CONFIG_AS_BINARY))) {
-		xkl_last_error_message =
+	     !(engine->priv->features & XKLF_CAN_OUTPUT_CONFIG_AS_ASCII))
+	    || (binary
+		&& !(engine->priv->
+		     features & XKLF_CAN_OUTPUT_CONFIG_AS_BINARY))) {
+		engine->priv->last_error_message =
 		    "Function not supported at backend";
 		return FALSE;
 	}
-	xkl_ensure_vtable_inited();
-	return (*xkl_vtable->config_write_file_func) (file_name, data,
-						      binary);
+	xkl_engine_ensure_vtable_inited(engine);
+	return xkl_engine_vcall(engine, write_config_to_file) (file_name,
+							       data,
+							       binary);
 }
 
 void

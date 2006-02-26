@@ -53,7 +53,7 @@ xkl_config_rec_class_init(XklConfigRecClass * klass)
 	GObjectClass *object_class;
 
 	object_class = (GObjectClass *) klass;
-	g_object_class = g_type_class_peek_parent(klass);
+	g_object_class = g_type_class_peek_parent(object_class);
 	object_class->finalize = xkl_config_rec_finalize;
 }
 
@@ -95,7 +95,7 @@ static gboolean
 xkl_get_default_names_prop(char **rules_file_out, XklConfigRec * data)
 {
 	if (rules_file_out != NULL)
-		*rules_file_out = strdup(XKB_DEFAULT_RULESET);
+		*rules_file_out = g_strdup(XKB_DEFAULT_RULESET);
 	data->model = g_strdup(xkl_vtable->default_model);
 /* keeping Nvariants = Nlayouts */
 	data->layouts = g_new0(char *, 2);

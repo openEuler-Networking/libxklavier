@@ -7,60 +7,24 @@
 
 #include "xklavier_private.h"
 
-Display *xkl_display;
-
-XklState xkl_current_state;
-
-Window xkl_current_client;
-
-Status xkl_last_error_code;
-
-const gchar *xkl_last_error_message;
-
-XErrorHandler xkl_default_error_handler;
-
-Atom xkl_atoms[TOTAL_ATOMS];
-
-Window xkl_root_window;
-
-gint xkl_default_group;
-
-gboolean xkl_skip_one_restore;
-
-guint xkl_secondary_groups_mask;
+static XklEngine *the_engine = NULL;
 
 gint xkl_debug_level = 0;
 
-guint xkl_listener_type = 0;
-
-XklVTable *xkl_vtable = NULL;
-
-XklConfigNotifyFunc xkl_config_callback = NULL;
-gpointer xkl_config_callback_data;
-
-XklNewWindowNotifyFunc xkl_new_window_callback = NULL;
-gpointer xkl_new_window_callback_data;
-
-static XklStateNotifyFunc xkl_state_callback = NULL;
-static gpointer xkl_state_callback_data;
-
 static XklLogAppender log_appender = xkl_default_log_appender;
-
-static gboolean group_per_toplevel_window = TRUE;
-
-static gboolean handle_indicators = FALSE;
 
 
 void
-xkl_set_indicators_handling(gboolean whether_handle)
+xkl_engine_set_indicators_handling(XklEngine * engine,
+				   gboolean whether_handle)
 {
-	handle_indicators = whether_handle;
+	engine->priv->handle_indicators = whether_handle;
 }
 
 gboolean
-xkl_get_indicators_handling(void)
+xkl_engine_get_indicators_handling(XklEngine * engine)
 {
-	return handle_indicators;
+	return engine->priv->handle_indicators;
 }
 
 void
@@ -70,39 +34,41 @@ xkl_set_debug_level(int level)
 }
 
 void
-xkl_set_group_per_toplevel_window(gboolean is_set)
+xkl_engine_set_group_per_toplevel_window(XklEngine * engine,
+					 gboolean is_set)
 {
-	group_per_toplevel_window = is_set;
+	engine->priv->group_per_toplevel_window = is_set;
 }
 
 gboolean
-xkl_is_group_per_toplevel_window(void)
+xkl_engine_is_group_per_toplevel_window(XklEngine * engine)
 {
-	return group_per_toplevel_window;
+	return engine->priv->group_per_toplevel_window;
 }
 
 static void
-xkl_set_switch_to_secondary_group(gboolean val)
+xkl_engine_set_switch_to_secondary_group(XklEngine * engine, gboolean val)
 {
 	CARD32 propval = (CARD32) val;
-	XChangeProperty(xkl_display,
-			xkl_root_window,
-			xkl_atoms[XKLAVIER_ALLOW_SECONDARY],
+	Display *dpy = xkl_engine_get_display(engine);
+	XChangeProperty(dpy,
+			engine->priv->root_window,
+			engine->priv->atoms[XKLAVIER_ALLOW_SECONDARY],
 			XA_INTEGER, 32, PropModeReplace,
 			(unsigned char *) &propval, 1);
-	XSync(xkl_display, False);
+	XSync(dpy, False);
 }
 
 void
-xkl_group_allow_one_switch_to_secondary(void)
+xkl_engine_group_allow_one_switch_to_secondary(XklEngine * engine)
 {
 	xkl_debug(150,
 		  "Setting allow_one_switch_to_secondary_group flag\n");
-	xkl_set_switch_to_secondary_group(TRUE);
+	xkl_engine_set_switch_to_secondary_group(engine, TRUE);
 }
 
 gboolean
-xkl_is_one_switch_to_secondary_group_allowed(void)
+xkl_engine_is_one_switch_to_secondary_group_allowed(XklEngine * engine)
 {
 	gboolean rv = FALSE;
 	unsigned char *propval = NULL;
@@ -112,12 +78,14 @@ xkl_is_one_switch_to_secondary_group_allowed(void)
 	unsigned long actual_items;
 	int result;
 
-	result = XGetWindowProperty(xkl_display, xkl_root_window,
-				    xkl_atoms[XKLAVIER_ALLOW_SECONDARY],
-				    0L, 1L, False, XA_INTEGER,
-				    &actual_type, &actual_format,
-				    &actual_items, &bytes_remaining,
-				    &propval);
+	result =
+	    XGetWindowProperty(xkl_engine_get_display(engine),
+			       engine->priv->root_window,
+			       engine->priv->
+			       atoms[XKLAVIER_ALLOW_SECONDARY], 0L, 1L,
+			       False, XA_INTEGER, &actual_type,
+			       &actual_format, &actual_items,
+			       &bytes_remaining, &propval);
 
 	if (Success == result) {
 		if (actual_format == 32 && actual_items == 1) {
@@ -130,60 +98,35 @@ xkl_is_one_switch_to_secondary_group_allowed(void)
 }
 
 void
-xkl_one_switch_to_secondary_group_performed(void)
+xkl_engine_one_switch_to_secondary_group_performed(XklEngine * engine)
 {
 	xkl_debug(150,
 		  "Resetting allow_one_switch_to_secondary_group flag\n");
-	xkl_set_switch_to_secondary_group(FALSE);
+	xkl_engine_set_switch_to_secondary_group(engine, FALSE);
 }
 
 void
-xkl_set_default_group(int group)
+xkl_engine_set_default_group(XklEngine * engine, gint group)
 {
-	xkl_default_group = group;
+	engine->priv->default_group = group;
 }
 
 gint
-_xkl_get_default_group(void)
+xkl_engine_get_default_group(XklEngine * engine)
 {
-	return xkl_default_group;
+	return engine->priv->default_group;
 }
 
 void
-xkl_set_secondary_groups_mask(guint mask)
+xkl_engine_set_secondary_groups_mask(XklEngine * engine, guint mask)
 {
-	xkl_secondary_groups_mask = mask;
+	engine->priv->secondary_groups_mask = mask;
 }
 
 guint
-xkl_get_secondary_groups_mask(void)
+xkl_engine_get_secondary_groups_mask(XklEngine * engine)
 {
-	return xkl_secondary_groups_mask;
-}
-
-gint
-xkl_register_config_callback(XklConfigNotifyFunc func, gpointer data)
-{
-	xkl_config_callback = func;
-	xkl_config_callback_data = data;
-	return 0;
-}
-
-gint
-xkl_register_state_callback(XklStateNotifyFunc func, gpointer data)
-{
-	xkl_state_callback = func;
-	xkl_state_callback_data = data;
-	return 0;
-}
-
-gint
-xkl_register_new_window_callback(XklNewWindowNotifyFunc func,
-				 gpointer data)
-{
-	xkl_new_window_callback = func;
-	xkl_new_window_callback_data = data;
-	return 0;
+	return engine->priv->secondary_groups_mask;
 }
 
 void
@@ -193,118 +136,134 @@ xkl_set_log_appender(XklLogAppender func)
 }
 
 gint
-xkl_listen_start(guint what)
+xkl_engine_start_listen(XklEngine * engine, guint what)
 {
-	xkl_listener_type = what;
+	engine->priv->listener_type = what;
 
 	if (!
-	    (xkl_vtable->features & XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT)
-	    && (what & XKLL_MANAGE_LAYOUTS))
+	    (engine->priv->
+	     features & XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT)
+&& (what & XKLL_MANAGE_LAYOUTS))
 		xkl_debug(0,
 			  "The backend does not require manual layout management - "
 			  "but it is provided by the application");
 
-	xkl_listen_resume();
-	xkl_load_window_tree();
-	XFlush(xkl_display);
+	xkl_engine_resume_listen(engine);
+	xkl_engine_load_window_tree(engine);
+	XFlush(xkl_engine_get_display(engine));
 	return 0;
 }
 
 gint
-xkl_listen_stop(void)
+xkl_engine_stop_listen(XklEngine * engine)
 {
-	xkl_listen_pause();
+	xkl_engine_pause_listen(engine);
 	return 0;
 }
 
-gint
-xkl_init(Display * a_dpy)
+XklEngine *
+xkl_engine_get_instance(Display * display)
 {
-	int scr;
-	const gchar *sdl;
-	int rv;
+	if (the_engine != NULL) {
+		g_object_ref(G_OBJECT(the_engine));
+		return the_engine;
+	}
 
-	sdl = g_getenv("XKL_DEBUG");
+	if (!display) {
+		xkl_debug(10, "xkl_init : display is NULL ?\n");
+		return NULL;
+	}
+
+	the_engine = XKL_ENGINE(g_object_new(xkl_engine_get_type(), NULL));
+
+
+	the_engine->priv->display = display;
+
+	const gchar *sdl = g_getenv("XKL_DEBUG");
+
 	if (sdl != NULL) {
 		xkl_set_debug_level(atoi(sdl));
 	}
 
-	if (!a_dpy) {
-		xkl_debug(10, "xkl_init : display is NULL ?\n");
-		return -1;
-	}
-
-	xkl_default_error_handler =
-	    XSetErrorHandler((XErrorHandler) xkl_process_error);
-
-	xkl_display = a_dpy;
-	scr = DefaultScreen(xkl_display);
-	xkl_root_window = RootWindow(xkl_display, scr);
-
-	xkl_skip_one_restore = FALSE;
-	xkl_default_group = -1;
-	xkl_secondary_groups_mask = 0L;
-	xkl_toplevel_window_prev = 0;
-
-	xkl_atoms[WM_NAME] = XInternAtom(xkl_display, "WM_NAME", False);
-	xkl_atoms[WM_STATE] = XInternAtom(xkl_display, "WM_STATE", False);
-	xkl_atoms[XKLAVIER_STATE] =
-	    XInternAtom(xkl_display, "XKLAVIER_STATE", False);
-	xkl_atoms[XKLAVIER_TRANSPARENT] =
-	    XInternAtom(xkl_display, "XKLAVIER_TRANSPARENT", False);
-	xkl_atoms[XKLAVIER_ALLOW_SECONDARY] =
-	    XInternAtom(xkl_display, "XKLAVIER_ALLOW_SECONDARY", False);
-
-	xkl_one_switch_to_secondary_group_performed();
-
-	rv = -1;
+	gint rv = -1;
 	xkl_debug(150, "Trying all backends:\n");
 #ifdef ENABLE_XKB_SUPPORT
 	xkl_debug(150, "Trying XKB backend\n");
-	rv = xkl_xkb_init();
+	rv = xkl_xkb_init(the_engine);
 #endif
 #ifdef ENABLE_XMM_SUPPORT
 	if (rv != 0) {
 		xkl_debug(150, "Trying XMM backend\n");
-		rv = xkl_xmm_init();
+		rv = xkl_xmm_init(the_engine);
 	}
 #endif
 	if (rv == 0) {
 		xkl_debug(150, "Actual backend: %s\n",
-			  xkl_backend_get_name());
+			  xkl_engine_get_backend_name(the_engine));
 	} else {
 		xkl_debug(0, "All backends failed, last result: %d\n", rv);
-		xkl_display = NULL;
+		the_engine->priv->display = NULL;
+		g_object_unref(G_OBJECT(the_engine));
+		the_engine = NULL;
+		return NULL;
 	}
 
-	return (rv == 0) ?
-	    (xkl_load_all_info()? 0 : xkl_last_error_code) : -1;
+	int scr;
+
+	the_engine->priv->default_error_handler =
+	    XSetErrorHandler((XErrorHandler) xkl_process_error);
+
+	Display *dpy = xkl_engine_get_display(the_engine);
+	scr = DefaultScreen(dpy);
+	the_engine->priv->root_window = RootWindow(dpy, scr);
+
+	the_engine->priv->skip_one_restore = FALSE;
+	the_engine->priv->default_group = -1;
+	the_engine->priv->secondary_groups_mask = 0L;
+	the_engine->priv->prev_toplvl_win = 0;
+
+	the_engine->priv->atoms[WM_NAME] =
+	    XInternAtom(dpy, "WM_NAME", False);
+	the_engine->priv->atoms[WM_STATE] =
+	    XInternAtom(dpy, "WM_STATE", False);
+	the_engine->priv->atoms[XKLAVIER_STATE] =
+	    XInternAtom(dpy, "XKLAVIER_STATE", False);
+	the_engine->priv->atoms[XKLAVIER_TRANSPARENT] =
+	    XInternAtom(dpy, "XKLAVIER_TRANSPARENT", False);
+	the_engine->priv->atoms[XKLAVIER_ALLOW_SECONDARY] =
+	    XInternAtom(dpy, "XKLAVIER_ALLOW_SECONDARY", False);
+
+	xkl_engine_one_switch_to_secondary_group_performed(the_engine);
+
+	if (!xkl_engine_load_all_info(the_engine)) {
+		g_object_unref(G_OBJECT(the_engine));
+		the_engine = NULL;
+	}
+
+	return the_engine;
 }
 
 gint
-xkl_term(void)
+xkl_term(XklEngine * engine)
 {
-	XSetErrorHandler((XErrorHandler) xkl_default_error_handler);
-	xkl_config_callback = NULL;
-	xkl_state_callback = NULL;
-	xkl_new_window_callback = NULL;
+	XSetErrorHandler((XErrorHandler) engine->priv->
+			 default_error_handler);
 
-	log_appender = xkl_default_log_appender;
-	xkl_free_all_info();
+	xkl_engine_free_all_info(engine);
 
 	return 0;
 }
 
 gboolean
-xkl_key_grab(gint keycode, guint modifiers)
+xkl_engine_key_grab(XklEngine * engine, gint keycode, guint modifiers)
 {
 	gboolean ret_code;
 	gchar *keyname;
+	Display *dpy = xkl_engine_get_display(engine);
 
 	if (xkl_debug_level >= 100) {
 		keyname =
-		    XKeysymToString(XKeycodeToKeysym
-				    (xkl_display, keycode, 0));
+		    XKeysymToString(XKeycodeToKeysym(dpy, keycode, 0));
 		xkl_debug(100, "Listen to the key %d/(%s)/%d\n", keycode,
 			  keyname, modifiers);
 	}
@@ -312,124 +271,143 @@ xkl_key_grab(gint keycode, guint modifiers)
 	if (0 == keycode)
 		return FALSE;
 
-	xkl_last_error_code = Success;
+	engine->priv->last_error_code = Success;
 
 	ret_code =
-	    XGrabKey(xkl_display, keycode, modifiers, xkl_root_window,
+	    XGrabKey(dpy, keycode, modifiers, engine->priv->root_window,
 		     TRUE, GrabModeAsync, GrabModeAsync);
-	XSync(xkl_display, False);
+	XSync(dpy, False);
 
 	xkl_debug(100, "XGrabKey recode %d/error %d\n",
-		  ret_code, xkl_last_error_code);
+		  ret_code, engine->priv->last_error_code);
 
-	ret_code = (xkl_last_error_code == Success);
+	ret_code = (engine->priv->last_error_code == Success);
 
 	if (!ret_code)
-		xkl_last_error_message = "Could not grab the key";
+		engine->priv->last_error_message =
+		    "Could not grab the key";
 
 	return ret_code;
 }
 
 gboolean
-xkl_key_ungrab(gint keycode, guint modifiers)
+xkl_engine_key_ungrab(XklEngine * engine, gint keycode, guint modifiers)
 {
 	if (0 == keycode)
 		return FALSE;
 
-	return Success == XUngrabKey(xkl_display, keycode, 0,
-				     xkl_root_window);
+	return Success == XUngrabKey(xkl_engine_get_display(engine),
+				     keycode, 0,
+				     engine->priv->root_window);
 }
 
 gint
-xkl_group_get_next(void)
+xkl_engine_get_next_group(XklEngine * engine)
 {
-	return (xkl_current_state.group + 1) % xkl_groups_get_num();
+	gint n = xkl_engine_get_num_groups(engine);
+	return (engine->priv->curr_state.group + 1) % n;
 }
 
 gint
-xkl_get_prev_group(void)
+xkl_engine_get_prev_group(XklEngine * engine)
 {
-	gint n = xkl_groups_get_num();
-	return (xkl_current_state.group + n - 1) % n;
+	gint n = xkl_engine_get_num_groups(engine);
+	return (engine->priv->curr_state.group + n - 1) % n;
 }
 
 gint
-xkl_get_restore_group(void)
+xkl_engine_get_current_window_group(XklEngine * engine)
 {
 	XklState state;
-	if (xkl_current_client == (Window) NULL) {
+	if (engine->priv->curr_toplvl_win == (Window) NULL) {
 		xkl_debug(150, "cannot restore without current client\n");
-	} else if (xkl_state_get(xkl_current_client, &state)) {
+	} else
+	    if (xkl_engine_get_toplevel_window_state
+		(engine, engine->priv->curr_toplvl_win, &state)) {
 		return state.group;
 	} else
 		xkl_debug(150,
 			  "Unbelievable: current client " WINID_FORMAT
-			  ", '%s' has no group\n", xkl_current_client,
-			  xkl_window_get_debug_title(xkl_current_client));
+			  ", '%s' has no group\n",
+			  engine->priv->curr_toplvl_win,
+			  xkl_get_debug_window_title(engine->priv->
+						     curr_toplvl_win));
 	return 0;
 }
 
 void
-xkl_set_transparent(Window win, gboolean transparent)
+xkl_engine_set_transparent(XklEngine * engine, Window win,
+			   gboolean transparent)
 {
 	Window toplevel_win;
 	xkl_debug(150,
 		  "setting transparent flag %d for " WINID_FORMAT "\n",
 		  transparent, win);
 
-	if (!xkl_toplevel_window_find(win, &toplevel_win)) {
+	if (!xkl_engine_find_toplevel_window(engine, win, &toplevel_win)) {
 		xkl_debug(150, "No toplevel window!\n");
 		toplevel_win = win;
 /*    return; */
 	}
 
-	xkl_toplevel_window_set_transparent(toplevel_win, transparent);
+	xkl_engine_set_toplevel_window_transparent(engine, toplevel_win,
+						   transparent);
 }
 
 gboolean
-xkl_window_is_transparent(Window win)
+xkl_engine_is_window_transparent(XklEngine * engine, Window win)
 {
 	Window toplevel_win;
 
-	if (!xkl_toplevel_window_find(win, &toplevel_win))
+	if (!xkl_engine_find_toplevel_window(engine, win, &toplevel_win))
 		return FALSE;
-	return xkl_toplevel_window_is_transparent(toplevel_win);
+	return xkl_engine_is_toplevel_window_transparent(engine,
+							 toplevel_win);
 }
 
 /**
  * Loads the tree recursively.
  */
 gboolean
-xkl_load_window_tree(void)
+xkl_engine_load_window_tree(XklEngine * engine)
 {
 	Window focused;
 	int revert;
 	gboolean retval = TRUE, have_toplevel_win;
 
-	if (xkl_listener_type & XKLL_MANAGE_WINDOW_STATES)
+	if (engine->priv->listener_type & XKLL_MANAGE_WINDOW_STATES)
 		retval =
-		    xkl_load_subtree(xkl_root_window, 0,
-				     &xkl_current_state);
+		    xkl_engine_load_subtree(engine,
+					    engine->priv->root_window, 0,
+					    &engine->priv->curr_state);
 
-	XGetInputFocus(xkl_display, &focused, &revert);
+	XGetInputFocus(xkl_engine_get_display(engine), &focused, &revert);
 
 	xkl_debug(160, "initially focused: " WINID_FORMAT ", '%s'\n",
-		  focused, xkl_window_get_debug_title(focused));
+		  focused, xkl_get_debug_window_title(focused));
 
 	have_toplevel_win =
-	    xkl_toplevel_window_find(focused, &xkl_current_client);
+	    xkl_engine_find_toplevel_window(engine, focused,
+					    &engine->priv->
+					    curr_toplvl_win);
 
 	if (have_toplevel_win) {
 		gboolean have_state =
-		    xkl_toplevel_window_get_state(xkl_current_client,
-						  &xkl_current_state);
+		    xkl_engine_get_toplevel_window_state(engine,
+							 engine->priv->
+							 curr_toplvl_win,
+							 &engine->priv->
+							 curr_state);
 		xkl_debug(160,
-			  "initial xkl_cur_client: " WINID_FORMAT
-			  ", '%s' %s state %d/%X\n", xkl_current_client,
-			  xkl_window_get_debug_title(xkl_current_client),
+			  "initial toplevel: " WINID_FORMAT
+			  ", '%s' %s state %d/%X\n",
+			  engine->priv->curr_toplvl_win,
+			  xkl_get_debug_window_title(engine->priv->
+						     curr_toplvl_win),
 			  (have_state ? "with" : "without"),
-			  (have_state ? xkl_current_state.group : -1),
-			  (have_state ? xkl_current_state.
+			  (have_state ? engine->priv->curr_state.
+			   group : -1),
+			  (have_state ? engine->priv->curr_state.
 			   indicators : -1));
 	} else {
 		xkl_debug(160,
@@ -470,68 +448,77 @@ xkl_default_log_appender(const gchar file[], const gchar function[],
  * Just selects some events from the window.
  */
 void
-xkl_select_input(Window win, gulong mask)
+xkl_engine_select_input(XklEngine * engine, Window win, gulong mask)
 {
-	if (xkl_root_window == win)
+	if (engine->priv->root_window == win)
 		xkl_debug(160,
 			  "Someone is looking for %lx on root window ***\n",
 			  mask);
 
-	XSelectInput(xkl_display, win, mask);
+	XSelectInput(xkl_engine_get_display(engine), win, mask);
 }
 
 void
-xkl_select_input_merging(Window win, gulong mask)
+xkl_engine_select_input_merging(XklEngine * engine, Window win,
+				gulong mask)
 {
 	XWindowAttributes attrs;
 	gulong oldmask = 0L, newmask;
 	memset(&attrs, 0, sizeof(attrs));
-	if (XGetWindowAttributes(xkl_display, win, &attrs))
+	if (XGetWindowAttributes
+	    (xkl_engine_get_display(engine), win, &attrs))
 		oldmask = attrs.your_event_mask;
 
 	newmask = oldmask | mask;
 	if (newmask != oldmask)
-		xkl_select_input(win, newmask);
+		xkl_engine_select_input(engine, win, newmask);
 }
 
 void
-xkl_try_call_state_func(XklStateChange change_type, XklState * old_state)
+xkl_engine_try_call_state_func(XklEngine * engine,
+			       XklStateChange change_type,
+			       XklState * old_state)
 {
-	gint group = xkl_current_state.group;
+	gint group = engine->priv->curr_state.group;
 	gboolean restore = old_state->group == group;
 
 	xkl_debug(150,
 		  "change_type: %d, group: %d, secondary_group_mask: %X, allowsecondary: %d\n",
-		  change_type, group, xkl_secondary_groups_mask,
-		  xkl_is_one_switch_to_secondary_group_allowed());
+		  change_type, group, engine->priv->secondary_groups_mask,
+		  xkl_engine_is_one_switch_to_secondary_group_allowed
+		  (engine));
 
 	if (change_type == GROUP_CHANGED) {
 		if (!restore) {
-			if ((xkl_secondary_groups_mask & (1 << group)) != 0
+			if ((engine->priv->
+			     secondary_groups_mask & (1 << group)) != 0
 			    &&
-			    !xkl_is_one_switch_to_secondary_group_allowed
-			    ()) {
+			    !xkl_engine_is_one_switch_to_secondary_group_allowed
+			    (engine)) {
 				xkl_debug(150, "secondary -> go next\n");
-				group = xkl_group_get_next();
-				xkl_group_lock(group);
+				group = xkl_engine_get_next_group(engine);
+				xkl_engine_lock_group(engine, group);
 				return;	/* we do not need to revalidate */
 			}
 		}
-		xkl_one_switch_to_secondary_group_performed();
+		xkl_engine_one_switch_to_secondary_group_performed(engine);
 	}
+// TODO
+#if 0
 	if (xkl_state_callback != NULL) {
 
 		(*xkl_state_callback) (change_type,
-				       xkl_current_state.group, restore,
+				       xkl_curr_state.group, restore,
 				       xkl_state_callback_data);
 	}
+#endif
 }
 
 void
-xkl_ensure_vtable_inited(void)
+xkl_engine_ensure_vtable_inited(XklEngine * engine)
 {
 	char *p;
-	if (xkl_vtable == NULL) {
+	if (engine->priv->backend_id == NULL) {
 		xkl_debug(0, "ERROR: XKL VTable is NOT initialized.\n");
 		/* force the crash! */
 		p = NULL;
@@ -540,26 +527,27 @@ xkl_ensure_vtable_inited(void)
 }
 
 const gchar *
-xkl_backend_get_name(void)
+xkl_engine_get_backend_name(XklEngine * engine)
 {
-	return xkl_vtable->id;
+	return engine->priv->backend_id;
 }
 
 guint
-xkl_backend_get_features(void)
+xkl_engine_get_features(XklEngine * engine)
 {
-	return xkl_vtable->features;
+	return engine->priv->features;
 }
 
 void
-xkl_reset_all_info(const gchar reason[])
+xkl_engine_reset_all_info(XklEngine * engine, const gchar reason[])
 {
 	xkl_debug(150, "Resetting all the cached info, reason: [%s]\n",
 		  reason);
-	xkl_ensure_vtable_inited();
-	if (!(*xkl_vtable->if_cached_info_equals_actual_func) ()) {
-		(*xkl_vtable->free_all_info_func) ();
-		(*xkl_vtable->load_all_info_func) ();
+	xkl_engine_ensure_vtable_inited(engine);
+	if (!xkl_engine_vcall(engine, if_cached_info_equals_actual)
+	    ()) {
+		xkl_engine_vcall(engine, free_all_info) ();
+		xkl_engine_vcall(engine, load_all_info) ();
 	} else
 		xkl_debug(100,
 			  "NOT Resetting the cache: same configuration\n");
@@ -569,66 +557,75 @@ xkl_reset_all_info(const gchar reason[])
  * Calling through vtable
  */
 const gchar **
-xkl_groups_get_names(void)
+xkl_engine_groups_get_names(XklEngine * engine)
 {
-	xkl_ensure_vtable_inited();
-	return (*xkl_vtable->groups_get_names_func) ();
+	xkl_engine_ensure_vtable_inited(engine);
+	return (*engine->priv->get_groups_names) ();
 }
 
 guint
-xkl_groups_get_num(void)
+xkl_engine_get_num_groups(XklEngine * engine)
 {
-	xkl_ensure_vtable_inited();
-	return (*xkl_vtable->groups_get_num_func) ();
+	xkl_engine_ensure_vtable_inited(engine);
+	return (*engine->priv->get_num_groups) ();
 }
 
 void
-xkl_group_lock(int group)
+xkl_engine_group_lock(XklEngine * engine, int group)
 {
-	xkl_ensure_vtable_inited();
-	(*xkl_vtable->group_lock_func) (group);
+	xkl_engine_ensure_vtable_inited(engine);
+	xkl_engine_vcall(engine, lock_group) (group);
 }
 
 gint
-xkl_listen_pause(void)
+xkl_engine_pause_listen(XklEngine * engine)
 {
-	xkl_ensure_vtable_inited();
-	return (*xkl_vtable->listen_pause_func) ();
+	xkl_engine_ensure_vtable_inited(engine);
+	return xkl_engine_vcall(engine, pause_listen) ();
 }
 
 gint
-xkl_listen_resume(void)
+xkl_engine_resume_listen(XklEngine * engine)
 {
-	xkl_ensure_vtable_inited();
-	xkl_debug(150, "listenerType: %x\n", xkl_listener_type);
-	if ((*xkl_vtable->listen_resume_func) ())
+	xkl_engine_ensure_vtable_inited(engine);
+	xkl_debug(150, "listenerType: %x\n", engine->priv->listener_type);
+	if (xkl_engine_vcall(engine, resume_listen) ())
 		return 1;
 
-	xkl_select_input_merging(xkl_root_window,
-				 SubstructureNotifyMask |
-				 PropertyChangeMask);
-	xkl_ensure_vtable_inited();
-	(*xkl_vtable->get_server_state_func) (&xkl_current_state);
+	xkl_engine_select_input_merging(engine, engine->priv->root_window,
+					SubstructureNotifyMask |
+					PropertyChangeMask);
+
+// TODO
+#if 0
+	(*xkl_vtable->get_server_state_func) (&xkl_curr_state);
+#endif
 	return 0;
 }
 
 gboolean
-xkl_load_all_info(void)
+xkl_engine_load_all_info(XklEngine * engine)
 {
-	xkl_ensure_vtable_inited();
-	return (*xkl_vtable->load_all_info_func) ();
+	xkl_engine_ensure_vtable_inited(engine);
+	return xkl_engine_vcall(engine, load_all_info) ();
 }
 
 void
-xkl_free_all_info(void)
+xkl_engine_free_all_info(XklEngine * engine)
 {
-	xkl_ensure_vtable_inited();
-	(*xkl_vtable->free_all_info_func) ();
+	xkl_engine_ensure_vtable_inited(engine);
+	xkl_engine_vcall(engine, free_all_info) ();
 }
 
 guint
-xkl_groups_get_max_num(void)
+xkl_engine_get_max_num_groups(XklEngine * engine)
 {
-	xkl_ensure_vtable_inited();
-	return (*xkl_vtable->groups_get_max_num_func) ();
+	xkl_engine_ensure_vtable_inited(engine);
+	return (*engine->priv->get_max_num_groups) ();
+}
+
+XklEngine *
+xkl_get_the_engine()
+{
+	return the_engine;
 }

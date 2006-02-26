@@ -9,11 +9,27 @@
 
 #include <X11/Xlib.h>
 
-#include <glib.h>
+#include <glib-object.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+	typedef struct _XklEngine XklEngine;
+	typedef struct _XklEnginePrivate XklEnginePrivate;
+	typedef struct _XklEngineClass XklEngineClass;
+
+#define XKL_TYPE_ENGINE             (xkl_engine_get_type ())
+#define XKL_ENGINE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), XKL_TYPE_ENGINE, XklEngine))
+#define XKL_ENGINE_CLASS(obj)       (G_TYPE_CHECK_CLASS_CAST ((obj), XKL_ENGINE,  XklEngineClass))
+#define XKL_IS_ENGINE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), XKL_TYPE_ENGINE))
+#define XKL_IS_ENGINE_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE ((obj), XKL_TYPE_ENGINE))
+#define XKL_ENGINE_GET_CLASS        (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_ENGINE, XklEngineClass))
+
+#endif				// DOXYGEN_SHOULD_SKIP_THIS
+
 
 	typedef enum {
 /**
@@ -64,37 +80,83 @@ extern "C" {
 	} XklState;
 
 /**
- * @defgroup xklinitterm Library initialization and termination
- * @{
+ *	The main Xklavier engine class
  */
+	struct _XklEngine {
+/**
+ * The superclass object
+ */
+		GObject parent;
+/**
+ * Private data
+ */
+		XklEnginePrivate *priv;
+	};
 
 /**
- * Initializes internal structures. Does not start actual listening though.
- * Some apps can use xkl_avier for information retrieval but not for actual
- * processing.
- * @param dpy is an open display, will be tested for XKB extension
- * @return 0 if OK, otherwise last X error 
- * (special case: -1 if XKB extension is not present)
+ * The XklEngine class, derived from GObject
  */
-	extern gint xkl_init(Display * dpy);
+	struct _XklEngineClass {
+/**
+ * The superclass
+ */
+		GObjectClass parent_class;
 
 /**
- * Terminates everything...
+ * Used for notifying application of the XKB configuration change.
  */
-	extern gint xkl_term(void);
+		void (*config_notify) (XklEngine * engine);
+
+/**
+ * Used for notifying application of new window creation (actually, 
+ * registration).
+ * @param win is a new window
+ * @param parent is a new window's parent
+ * @return the initial group id for the window (-1 to use the default value)
+ */
+		 gint(*new_window_notify) (XklEngine * engine, Window win,
+					   Window parent);
+/**
+ * Used for notifying application of the window state change.
+ * @param changeType is a mask of changes
+ * @param group is a new group
+ * @param restore is indicator of whether this state is restored from
+ * saved state of set as new.
+ */
+		void (*state_notify) (XklEngine * engine,
+				      XklStateChange changeType,
+				      gint group, gboolean restore);
+
+	};
+
+
+/**
+ * Get type info for XklEngine
+ * @return GType for XklEngine
+ */
+	extern GType xkl_engine_get_type(void);
+
+
+/**
+ * Get the instance of the XklEngine. Within a process, there is always once instance
+ * @return the singleton instance
+ */
+	extern XklEngine *xkl_engine_get_instance(Display * display);
+
 
 /**
  * What kind of backend if used
  * @return some string id of the backend
  */
-	extern const gchar *xkl_backend_get_name(void);
+	extern const gchar *xkl_engine_get_backend_name(XklEngine *
+							engine);
 
 /**
  * Provides information regarding available backend features
  * (combination of XKLF_* constants)
  * @return ORed XKLF_* constants
  */
-	extern guint xkl_backend_get_features(void);
+	extern guint xkl_engine_get_features(XklEngine * engine);
 
 /**
  * Provides the information on maximum number of simultaneously supported 
@@ -102,8 +164,7 @@ extern "C" {
  * @return maximum number of the groups in configuration, 
  *         0 if no restrictions.
  */
-	extern unsigned xkl_groups_get_max_num(void);
-/** @} */
+	extern unsigned xkl_engine_get_max_num_groups(XklEngine * engine);
 
 /**
  * @defgroup xkbevents XKB event handling and management
@@ -132,25 +193,26 @@ extern "C" {
  * @param what any combination of XKLL_* constants
  * @return 0
  */
-	extern gint xkl_listen_start(guint what);
+	extern gint xkl_engine_start_listen(XklEngine * engine,
+					    guint what);
 
 /**
  * Stops listening for XKB-related events
  * @return 0
  */
-	extern gint xkl_listen_stop(void);
+	extern gint xkl_engine_stop_listen(XklEngine * engine);
 
 /**
  * Temporary pauses listening for XKB-related events
  * @return 0
  */
-	extern gint xkl_listen_pause(void);
+	extern gint xkl_engine_pause_listen(XklEngine * engine);
 
 /**
  * Resumes listening for XKB-related events
  * @return 0
  */
-	extern gint xkl_listen_resume(void);
+	extern gint xkl_engine_resume_listen(XklEngine * engine);
 
 /**
  * Grabs some key
@@ -158,7 +220,9 @@ extern "C" {
  * @param modifiers is a bitmask of modifiers
  * @return True on success
  */
-	extern gboolean xkl_key_grab(gint keycode, unsigned modifiers);
+	extern gboolean xkl_engine_grab_key(XklEngine * engine,
+					    gint keycode,
+					    unsigned modifiers);
 
 /**
  * Ungrabs some key
@@ -166,7 +230,9 @@ extern "C" {
  * @param modifiers is a bitmask of modifiers
  * @return True on success
  */
-	extern gboolean xkl_key_ungrab(gint keycode, unsigned modifiers);
+	extern gboolean xkl_engine_key_ungrab(XklEngine * engine,
+					      gint keycode,
+					      unsigned modifiers);
 
 /**
  * Processes X events. Should be included into the main event cycle of an
@@ -175,12 +241,15 @@ extern "C" {
  * @return 0 if the event it processed - 1 otherwise
  * @see xkl_StartListen
  */
-	extern gint xkl_events_filter(XEvent * evt);
+	extern gint xkl_engine_events_filter(XklEngine * engine,
+					     XEvent * evt);
 
 /**
  * Allows to switch (once) to the secondary group
  */
-	extern void xkl_group_allow_one_switch_to_secondary(void);
+	extern void
+	 xkl_engine_allow_one_switch_to_secondary_group(XklEngine *
+							engine);
 
 /** @} */
 
@@ -192,13 +261,13 @@ extern "C" {
 /**
  * @return currently focused window
  */
-	extern Window xkl_window_get_current(void);
+	extern Window xkl_engine_get_current_window(XklEngine * engine);
 
 /**
  * @return current state of the keyboard (in XKB terms). 
  * Returned value is a statically allocated buffer, should not be freed.
  */
-	extern XklState *xkl_state_get_current(void);
+	extern XklState *xkl_engine_get_current_state(XklEngine * engine);
 
 /** @} */
 
@@ -211,7 +280,7 @@ extern "C" {
  * @return the window title of some window or NULL. 
  * If not NULL, it should be freed with XFree
  */
-	extern gchar *xkl_window_get_title(Window w);
+	extern gchar *xkl_get_window_title(Window w);
 
 /** 
  * Finds the state for a given window (for its "App window").
@@ -220,20 +289,24 @@ extern "C" {
  * @return True on success, otherwise False 
  * (the error message can be obtained using xkl_GetLastError).
  */
-	extern gboolean xkl_state_get(Window win, XklState * state_out);
+	extern gboolean xkl_engine_get_state(XklEngine * engine,
+					     Window win,
+					     XklState * state_out);
 
 /**
  * Drops the state of a given window (of its "App window").
  * @param win is a target window
  */
-	extern void xkl_state_delete(Window win);
+	extern void xkl_engine_delete_state(XklEngine * engine,
+					    Window win);
 
 /** 
  * Stores ths state for a given window
  * @param win is a target window
  * @param state is a new state of the window
  */
-	extern void xkl_state_save(Window win, XklState * state);
+	extern void xkl_engine_save_state(XklEngine * engine, Window win,
+					  XklState * state);
 
 /**
  * Sets the "transparent" flag. It means focus switching onto 
@@ -242,15 +315,19 @@ extern "C" {
  * @param transparent - if true, the windows is transparent.
  * @see xkl_IsTranspatent
  */
-	extern void xkl_window_set_transparent(Window win,
-					       gboolean transparent);
+	extern void xkl_engine_set_window_transparent(XklEngine * engine,
+						      Window win,
+						      gboolean
+						      transparent);
 
 /**
  * Returns "transparent" flag. 
  * @param win is the window to get the transparent flag from.
  * @see xkl_SetTranspatent
  */
-	extern gboolean xkl_window_is_transparent(Window win);
+	extern gboolean xkl_engine_is_window_transparent(XklEngine *
+							 engine,
+							 Window win);
 
 /**
  * Checks whether 2 windows have the same topmost window
@@ -258,8 +335,8 @@ extern "C" {
  * @param win2 is second window
  * @return True is windows are in the same application
  */
-	extern gboolean xkl_windows_is_same_appication(Window win1,
-						       Window win2);
+	extern gboolean xkl_windows_from_same_toplevel_window(Window win1,
+							      Window win2);
 
 /** @} */
 
@@ -272,21 +349,23 @@ extern "C" {
  * @return the total number of groups in the current XKB configuration 
  * (keyboard)
  */
-	extern unsigned xkl_groups_get_num(void);
+	extern unsigned xkl_engine_get_num_groups(XklEngine * engine);
 
 /**
  * @return the array of group names for the current XKB configuration 
  * (keyboard).
  * This array is static, should not be freed
  */
-	extern const gchar **xkl_groups_get_names(void);
+	extern const gchar **xkl_engine_get_groups_names(XklEngine *
+							 engine);
 
 /**
  * @return the array of indicator names for the current XKB configuration 
  * (keyboard).
  * This array is static, should not be freed
  */
-	extern const gchar **xkl_indicators_get_names(void);
+	extern const gchar **xkl_engine_get_indicators_names(XklEngine *
+							     engine);
 
 /** @} */
 
@@ -299,19 +378,20 @@ extern "C" {
  * Calculates next group id. Does not change the state of anything.
  * @return next group id
  */
-	extern gint xkl_group_get_next(void);
+	extern gint xkl_engine_get_next_group(XklEngine * engine);
 
 /**
  * Calculates prev group id. Does not change the state of anything.
  * @return prev group id
  */
-	extern gint xkl_group_get_prev(void);
+	extern gint xkl_engine_get_prev_group(XklEngine * engine);
 
 /**
- * @return saved group id of the current client. 
+ * @return saved group id of the current window. 
  * Does not change the state of anything.
  */
-	extern gint xkl_group_get_restore(void);
+	extern gint xkl_engine_get_current_window_group(XklEngine *
+							engine);
 
 /**
  * Locks the group. Can be used after xkl_GetXXXGroup functions
@@ -320,75 +400,7 @@ extern "C" {
  * @see xkl_GetPrevGroup
  * @see xkl_GetRestoreGroup
  */
-	extern void xkl_group_lock(gint group);
-
-/** @} */
-
-/**
- * @defgroup callbacks Application callbacks support
- * @{
- */
-
-/**
- * Used for notifying application of the XKB configuration change.
- * @param data is anything which can be stored into the pointer
- * @see xkl_RegisterConfigCallback
- */
-	typedef void (*XklConfigNotifyFunc) (gpointer data);
-
-/**
- * Registers user callback. Only one callback can be registered at a time
- * @param func is the function to call
- * @param data is the data to pass
- * @see xkl_ConfigCallback
- */
-	extern gint xkl_register_config_callback(XklConfigNotifyFunc func,
-						 gpointer data);
-
-/**
- * Used for notifying application of new window creation (actually, 
- * registration).
- * @param win is a new window
- * @param parent is a new window's parent
- * @param data is anything which can be stored into the pointer
- * @return the initial group id for the window (-1 to use the default value)
- * @see xkl_register_config_callback
- * @see xkl_set_default_group
- * @see xkl_get_default_group
- */
-	typedef gint(*XklNewWindowNotifyFunc) (Window win, Window parent,
-					       gpointer data);
-
-/**
- * Registers user callback. Only one callback can be registered at a time
- * @param func is the function to call
- * @param data is the data to pass
- * @see XklWindowCallback
- */
-	extern gint xkl_register_new_window_callback(XklNewWindowNotifyFunc
-						     func, gpointer data);
-
-/**
- * Used for notifying application of the window state change.
- * @param changeType is a mask of changes
- * @param group is a new group
- * @param restore is indicator of whether this state is restored from
- * saved state of set as new.
- * @param data is anything which can be stored into the pointer
- * @see xkl_register_config_callback
- */
-	typedef void (*XklStateNotifyFunc) (XklStateChange changeType,
-					    gint group, gboolean restore,
-					    gpointer data);
-
-/**
- * Registers user callback. Only one callback can be registered at a time
- * @param func is the function to call
- * @param data is the data to pass
- * @see XklStateNotifyFunc
- */
-	extern gint xkl_register_state_callback(XklStateNotifyFunc func,
-						gpointer data);
+	extern void xkl_engine_lock_group(XklEngine * engine, gint group);
 
 /** @} */
 
@@ -401,23 +413,30 @@ extern "C" {
  * Sets the configuration parameter: group per application
  * @param isGlobal is a new parameter value
  */
-	extern void xkl_set_group_per_toplevel_window(gboolean isGlobal);
+	extern void xkl_engine_set_group_per_toplevel_window(XklEngine *
+							     engine,
+							     gboolean
+							     isGlobal);
 
 /**
  *  @return the value of the parameter: group per application
  */
-	extern gboolean xkl_is_group_per_toplevel_window(void);
+	extern gboolean xkl_engine_is_group_per_toplevel_window(XklEngine *
+								engine);
 
 /**
  * Sets the configuration parameter: perform indicators handling
  * @param whetherHandle is a new parameter value
  */
-	extern void xkl_set_indicators_handling(gboolean whetherHandle);
+	extern void xkl_engine_set_indicators_handling(XklEngine * engine,
+						       gboolean
+						       whetherHandle);
 
 /**
  * @return the value of the parameter: perform indicator handling
  */
-	extern gboolean xkl_get_indicators_handling(void);
+	extern gboolean xkl_engine_get_indicators_handling(XklEngine *
+							   engine);
 
 /**
  * Sets the secondary groups (one bit per group). 
@@ -425,26 +444,30 @@ extern "C" {
  * @param mask is a new group mask
  * @see xkl_allow_one_switch_to_secondary_group
  */
-	extern void xkl_set_secondary_groups_mask(guint mask);
+	extern void xkl_engine_set_secondary_groups_mask(XklEngine *
+							 engine,
+							 guint mask);
 
 /**
  * @return the secondary group mask
  */
-	extern guint xkl_get_secondary_groups_mask(void);
+	extern guint xkl_engine_get_secondary_groups_mask(XklEngine *
+							  engine);
 
 /**
  * Configures the default group set on window creation.
  * If -1, no default group is used
  * @param group the default group
  */
-	extern void xkl_group_set_default(gint group);
+	extern void xkl_engine_group_set_default(XklEngine * engine,
+						 gint group);
 
 /**
  * Returns the default group set on window creation
  * If -1, no default group is used
  * @return the default group
  */
-	extern gint xkl_group_get_default(void);
+	extern gint xkl_engine_group_get_default(XklEngine * engine);
 
 /** @} */
 
@@ -456,7 +479,7 @@ extern "C" {
 /**
  * @return the text message (statically allocated) of the last error
  */
-	extern const gchar *xkl_get_last_error(void);
+	extern const gchar *xkl_engine_get_last_error(XklEngine * engine);
 
 /**
  * Output (optionally) some debug info

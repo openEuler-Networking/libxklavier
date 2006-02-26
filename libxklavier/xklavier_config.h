@@ -88,8 +88,8 @@ extern "C" {
 		GObjectClass parent_class;
 	};
 /**
- * Get type info for XConfigItem
- * @return GType for XConfigItem
+ * Get type info for XklConfigItem
+ * @return GType for XklConfigItem
  */
 	extern GType xkl_config_item_get_type(void);
 
@@ -155,7 +155,7 @@ extern "C" {
 /**
  * Initializes XML configuration-related structures
  */
-	extern void xkl_config_init(void);
+	extern void xkl_config_init(XklEngine * engine);
 
 /**
  * Cleans XML configuration-related structures
