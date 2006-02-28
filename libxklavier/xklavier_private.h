@@ -243,7 +243,8 @@ extern gboolean xkl_engine_load_window_tree(XklEngine * engine);
 extern gboolean xkl_engine_load_subtree(XklEngine * engine, Window window,
 					gint level, XklState * init_state);
 
-extern gboolean xkl_window_has_wm_state(Window win);
+extern gboolean xkl_engine_if_window_has_wm_state(XklEngine * engine,
+						  Window win);
 
 
 /**
@@ -289,7 +290,8 @@ extern void xkl_engine_select_input_merging(XklEngine * engine, Window win,
 
 extern gchar *xkl_get_debug_window_title(Window win);
 
-extern Status xkl_status_query_tree(Window w,
+extern Status xkl_engine_query_tree(XklEngine * engine,
+				    Window w,
 				    Window * root_out,
 				    Window * parent_out,
 				    Window ** children_out,

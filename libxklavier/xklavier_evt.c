@@ -238,7 +238,7 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 				  "Same app window - just do nothing\n");
 	} else {
 		xkl_debug(150, "But it does not have xklavier_state\n");
-		if (xkl_window_has_wm_state(win)) {
+		if (xkl_engine_if_window_has_wm_state(engine, win)) {
 			xkl_debug(150,
 				  "But it does have wm_state so we'll add it\n");
 			engine->priv->curr_toplvl_win = toplevel_win;
@@ -397,7 +397,7 @@ xkl_engine_process_create_window_evt(XklEngine * engine,
 						PropertyChangeMask |
 						FocusChangeMask);
 
-		if (xkl_window_has_wm_state(cev->window)) {
+		if (xkl_engine_if_window_has_wm_state(engine, cev->window)) {
 			xkl_debug(200,
 				  "Just created window already has WM_STATE - so I'll add it");
 			xkl_engine_add_toplevel_window(engine, cev->window,

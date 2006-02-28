@@ -335,8 +335,11 @@ extern "C" {
  * @param win2 is second window
  * @return True is windows are in the same application
  */
-	extern gboolean xkl_windows_from_same_toplevel_window(Window win1,
-							      Window win2);
+	extern gboolean
+	    xkl_engine_is_window_from_same_toplevel_window(XklEngine *
+							   engine,
+							   Window win1,
+							   Window win2);
 
 /** @} */
 

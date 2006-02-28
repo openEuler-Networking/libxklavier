@@ -129,13 +129,14 @@ xkl_engine_find_toplevel_window_bottom_to_top(XklEngine * engine,
 		return FALSE;
 	}
 
-	if (xkl_window_has_wm_state(win)) {
+	if (xkl_engine_if_window_has_wm_state(engine, win)) {
 		*toplevel_win_out = win;
 		return TRUE;
 	}
 
 	engine->priv->last_error_code =
-	    xkl_status_query_tree(win, &rwin, &parent, &children, &num);
+	    xkl_engine_query_tree(engine, win, &rwin, &parent, &children,
+				  &num);
 
 	if (engine->priv->last_error_code != Success) {
 		*toplevel_win_out = (Window) NULL;
@@ -177,13 +178,14 @@ xkl_engine_find_toplevel_window(XklEngine * engine, Window win,
 		return FALSE;
 	}
 
-	if (xkl_window_has_wm_state(win)) {
+	if (xkl_engine_if_window_has_wm_state(engine, win)) {
 		*toplevel_win_out = win;
 		return TRUE;
 	}
 
 	engine->priv->last_error_code =
-	    xkl_status_query_tree(win, &rwin, &parent, &children, &num);
+	    xkl_engine_query_tree(engine, win, &rwin, &parent, &children,
+				  &num);
 
 	if (engine->priv->last_error_code != Success) {
 		*toplevel_win_out = (Window) NULL;
@@ -200,7 +202,7 @@ xkl_engine_find_toplevel_window(XklEngine * engine, Window win,
    */
 	child = children;
 	while (num) {
-		if (xkl_window_has_wm_state(*child)) {
+		if (xkl_engine_if_window_has_wm_state(engine, *child)) {
 			*toplevel_win_out = *child;
 			if (children != NULL)
 				XFree(children);
