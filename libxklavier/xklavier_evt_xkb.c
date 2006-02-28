@@ -12,7 +12,7 @@
  * XKB event handler
  */
 gint
-xkl_xkb_process_x_event(XEvent * xev)
+xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 {
 #ifdef XKB_HEADERS_PRESENT
 	gint i;
@@ -23,7 +23,7 @@ xkl_xkb_process_x_event(XEvent * xev)
 	if (xev->type != xkl_xkb_event_type)
 		return 0;
 
-	if (!(xkl_listener_type &
+	if (!(engine->priv->listener_type &
 	      (XKLL_MANAGE_WINDOW_STATES | XKLL_TRACK_KEYBOARD_STATE)))
 		return 0;
 
@@ -43,19 +43,20 @@ xkl_xkb_process_x_event(XEvent * xev)
 			  kev->state.locked_group);
 
 		if (kev->state.changed & GROUP_CHANGE_MASK)
-			xkl_process_state_modification(GROUP_CHANGED,
-						       kev->state.
-						       locked_group, 0,
-						       FALSE);
+			xkl_engine_process_state_modification(engine,
+							      GROUP_CHANGED,
+							      kev->state.
+							      locked_group,
+							      0, FALSE);
 		else {		/* ...not interested... */
 
 			xkl_debug(200,
 				  "This type of state notification is not regarding groups\n");
 			if (kev->state.locked_group !=
-			    xkl_current_state.group)
+			    engine->priv->curr_state.group)
 				xkl_debug(0,
 					  "ATTENTION! Currently cached group %d is not equal to the current group from the event: %d\n!",
-					  xkl_current_state.group,
+					  engine->priv->curr_state.group,
 					  kev->state.locked_group);
 		}
 
@@ -68,7 +69,7 @@ xkl_xkb_process_x_event(XEvent * xev)
 
 		xkl_debug(150, "XkbIndicatorStateNotify\n");
 
-		inds = xkl_current_state.indicators;
+		inds = engine->priv->curr_state.indicators;
 
 		ForPhysIndicators(i,
 				  bit) if (kev->indicators.changed & bit) {
@@ -78,8 +79,9 @@ xkl_xkb_process_x_event(XEvent * xev)
 				inds &= ~bit;
 		}
 
-		xkl_process_state_modification(INDICATORS_CHANGED,
-					       0, inds, TRUE);
+		xkl_engine_process_state_modification(engine,
+						      INDICATORS_CHANGED,
+						      0, inds, TRUE);
 		break;
 
     /**
@@ -98,7 +100,8 @@ xkl_xkb_process_x_event(XEvent * xev)
 	case XkbNewKeyboardNotify:
 		xkl_debug(150, "%s\n",
 			  xkl_xkb_event_get_name(kev->any.xkb_type));
-		xkl_reset_all_info("XKB event: XkbNewKeyboardNotify");
+		xkl_engine_reset_all_info(engine,
+					  "XKB event: XkbNewKeyboardNotify");
 		break;
 
     /**
@@ -117,7 +120,7 @@ xkl_xkb_process_x_event(XEvent * xev)
 }
 
 void
-xkl_xkb_indicators_set(const XklState * window_state)
+xkl_xkb_set_indicators(XklEngine * engine, const XklState * window_state)
 {
 #ifdef XKB_HEADERS_PRESENT
 	int i;
@@ -127,11 +130,11 @@ xkl_xkb_indicators_set(const XklState * window_state)
 			  bit) if (xkl_xkb_desc->names->indicators[i] !=
 				   None) {
 		gboolean status;
-		status = xkl_indicator_set(i,
-					   (window_state->
-					    indicators & bit) != 0);
+		status = xkl_engine_set_indicator(engine, i,
+						  (window_state->
+						   indicators & bit) != 0);
 		xkl_debug(150, "Set indicator \"%s\"/%d to %d: %d\n",
-			  xkl_indicator_names[i],
+			  xkl_xkb_indicator_names[i],
 			  xkl_xkb_desc->names->indicators[i],
 			  window_state->indicators & bit, status);
 	}

@@ -10,19 +10,19 @@
 #include "xklavier_private_xmm.h"
 
 static gint
-xkl_xmm_process_keypress_event(XKeyPressedEvent * kpe)
+xkl_xmm_process_keypress_event(XklEngine * engine, XKeyPressedEvent * kpe)
 {
-	if (xkl_listener_type & XKLL_MANAGE_LAYOUTS) {
+	if (engine->priv->listener_type & XKLL_MANAGE_LAYOUTS) {
 		xkl_debug(200, "Processing the KeyPress event\n");
 		gint current_shortcut = 0;
 		const XmmSwitchOption *sop =
-		    xkl_xmm_switch_option_find(kpe->keycode,
+		    xkl_xmm_find_switch_option(engine, kpe->keycode,
 					       kpe->state,
 					       &current_shortcut);
 		if (sop != NULL) {
 			xkl_debug(150, "It is THE shortcut\n");
 			XklState state;
-			xkl_xmm_state_get_server(&state);
+			xkl_xmm_get_server_state(engine, &state);
 			if (state.group != -1) {
 				gint new_group =
 				    (state.group +
@@ -33,7 +33,7 @@ xkl_xmm_process_keypress_event(XKeyPressedEvent * kpe)
 				xkl_debug(150,
 					  "Setting new xmm group %d\n",
 					  new_group);
-				xkl_xmm_group_lock(new_group);
+				xkl_xmm_lock_group(engine, new_group);
 				return 1;
 			}
 		}
@@ -42,7 +42,7 @@ xkl_xmm_process_keypress_event(XKeyPressedEvent * kpe)
 }
 
 static gint
-xkl_xmm_process_property_event(XPropertyEvent * kpe)
+xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
 {
 	xkl_debug(200, "Processing the PropertyNotify event: %d/%d\n",
 		  kpe->atom, xmm_state_atom);
@@ -51,35 +51,37 @@ xkl_xmm_process_property_event(XPropertyEvent * kpe)
    */
 	if (kpe->atom == xmm_state_atom) {
 		XklState state;
-		xkl_xmm_state_get_server(&state);
+		xkl_xmm_get_server_state(engine, &state);
 
-		if (xkl_listener_type & XKLL_MANAGE_LAYOUTS) {
+		if (engine->priv->listener_type & XKLL_MANAGE_LAYOUTS) {
 			xkl_debug(150,
 				  "Current group from the root window property %d\n",
 				  state.group);
-			xkl_xmm_shortcuts_ungrab();
-			xkl_xmm_group_actualize(state.group);
-			xkl_xmm_shortcuts_grab();
+			xkl_xmm_shortcuts_ungrab(engine);
+			xkl_xmm_actualize_group(engine, state.group);
+			xkl_xmm_shortcuts_grab(engine);
 			return 1;
 		}
 
-		if (xkl_listener_type &
+		if (engine->priv->listener_type &
 		    (XKLL_MANAGE_WINDOW_STATES |
 		     XKLL_TRACK_KEYBOARD_STATE)) {
 			xkl_debug(150,
 				  "XMM state changed, new 'group' %d\n",
 				  state.group);
 
-			xkl_process_state_modification(GROUP_CHANGED,
-						       state.group,
-						       0, False);
+			xkl_engine_process_state_modification(engine,
+							      GROUP_CHANGED,
+							      state.group,
+							      0, False);
 		}
 	} else
   /**
    * Configuration is changed!
    */
-	if (kpe->atom == xkl_vtable->base_config_atom) {
-		xkl_reset_all_info("base config atom changed");
+	if (kpe->atom == engine->priv->base_config_atom) {
+		xkl_engine_reset_all_info(engine,
+					  "base config atom changed");
 	}
 
 	return 0;
@@ -89,14 +91,16 @@ xkl_xmm_process_property_event(XPropertyEvent * kpe)
  * XMM event handler
  */
 gint
-xkl_xmm_process_x_event(XEvent * xev)
+xkl_xmm_process_x_event(XklEngine * engine, XEvent * xev)
 {
 	switch (xev->type) {
 	case KeyPress:
-		return xkl_xmm_process_keypress_event((XKeyPressedEvent *)
+		return xkl_xmm_process_keypress_event(engine,
+						      (XKeyPressedEvent *)
 						      xev);
 	case PropertyNotify:
-		return xkl_xmm_process_property_event((XPropertyEvent *)
+		return xkl_xmm_process_property_event(engine,
+						      (XPropertyEvent *)
 						      xev);
 	}
 	return 0;
@@ -107,7 +111,8 @@ xkl_xmm_process_x_event(XEvent * xev)
  * belong to Caps/Num/Scroll lock
  */
 static void
-xkl_xmm_init_xmm_indicators_map(guint * p_caps_lock_mask,
+xkl_xmm_init_xmm_indicators_map(XklEngine * engine,
+				guint * p_caps_lock_mask,
 				guint * p_num_lock_mask,
 				guint * p_scroll_lock_mask)
 {
@@ -115,11 +120,12 @@ xkl_xmm_init_xmm_indicators_map(guint * p_caps_lock_mask,
 	KeyCode *kcmap, nlkc, clkc, slkc;
 	int m, k, mask;
 
-	xmkm = XGetModifierMapping(xkl_display);
+	Display *display = xkl_engine_get_display(engine);
+	xmkm = XGetModifierMapping(display);
 	if (xmkm) {
-		clkc = XKeysymToKeycode(xkl_display, XK_Num_Lock);
-		nlkc = XKeysymToKeycode(xkl_display, XK_Caps_Lock);
-		slkc = XKeysymToKeycode(xkl_display, XK_Scroll_Lock);
+		clkc = XKeysymToKeycode(display, XK_Num_Lock);
+		nlkc = XKeysymToKeycode(display, XK_Caps_Lock);
+		slkc = XKeysymToKeycode(display, XK_Scroll_Lock);
 
 		kcmap = xmkm->modifiermap;
 		mask = 1;
@@ -137,15 +143,16 @@ xkl_xmm_init_xmm_indicators_map(guint * p_caps_lock_mask,
 }
 
 void
-xkl_xmm_grab_ignoring_indicators(gint keycode, guint modifiers)
+xkl_xmm_grab_ignoring_indicators(XklEngine * engine, gint keycode,
+				 guint modifiers)
 {
 	guint caps_lock_mask = 0, num_lock_mask = 0, scroll_lock_mask = 0;
 
-	xkl_xmm_init_xmm_indicators_map(&caps_lock_mask, &num_lock_mask,
-					&scroll_lock_mask);
+	xkl_xmm_init_xmm_indicators_map(engine, &caps_lock_mask,
+					&num_lock_mask, &scroll_lock_mask);
 
 #define GRAB(mods) \
-  xkl_key_grab( keycode, modifiers|(mods) )
+  xkl_engine_grab_key(engine, keycode, modifiers|(mods))
 
 	GRAB(0);
 	GRAB(caps_lock_mask);
@@ -159,15 +166,16 @@ xkl_xmm_grab_ignoring_indicators(gint keycode, guint modifiers)
 }
 
 void
-xkl_xmm_ungrab_ignoring_indicators(gint keycode, guint modifiers)
+xkl_xmm_ungrab_ignoring_indicators(XklEngine * engine, gint keycode,
+				   guint modifiers)
 {
 	guint caps_lock_mask = 0, num_lock_mask = 0, scroll_lock_mask = 0;
 
-	xkl_xmm_init_xmm_indicators_map(&caps_lock_mask, &num_lock_mask,
-					&scroll_lock_mask);
+	xkl_xmm_init_xmm_indicators_map(engine, &caps_lock_mask,
+					&num_lock_mask, &scroll_lock_mask);
 
 #define UNGRAB(mods) \
-  xkl_key_ungrab( keycode, modifiers|(mods) )
+  xkl_engine_ungrab_key(engine, keycode, modifiers|(mods))
 
 	UNGRAB(0);
 	UNGRAB(caps_lock_mask);

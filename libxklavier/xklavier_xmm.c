@@ -22,13 +22,13 @@ XklConfigRec current_xmm_config;
 Atom xmm_state_atom;
 
 const gchar **
-xkl_xmm_groups_get_names(void)
+xkl_xmm_get_groups_names(XklEngine * engine)
 {
 	return (const gchar **) current_xmm_config.layouts;
 }
 
 void
-xkl_xmm_shortcuts_grab(void)
+xkl_xmm_shortcuts_grab(XklEngine * engine)
 {
 	const XmmShortcut *shortcut;
 	const XmmSwitchOption *option = xkl_xmm_shortcut_get_current();
@@ -40,15 +40,16 @@ xkl_xmm_shortcuts_grab(void)
 	shortcut = option->shortcuts;
 	while (shortcut->keysym != XK_VoidSymbol) {
 		int keycode =
-		    XKeysymToKeycode(xkl_display, shortcut->keysym);
-		xkl_xmm_grab_ignoring_indicators(keycode,
+		    XKeysymToKeycode(xkl_engine_get_display(engine),
+				     shortcut->keysym);
+		xkl_xmm_grab_ignoring_indicators(engine, keycode,
 						 shortcut->modifiers);
 		shortcut++;
 	}
 }
 
 void
-xkl_xmm_shortcuts_ungrab(void)
+xkl_xmm_shortcuts_ungrab(XklEngine * engine)
 {
 	const XmmShortcut *shortcut;
 	const XmmSwitchOption *option = xkl_xmm_shortcut_get_current();
@@ -59,8 +60,9 @@ xkl_xmm_shortcuts_ungrab(void)
 	shortcut = option->shortcuts;
 	while (shortcut->keysym != XK_VoidSymbol) {
 		int keycode =
-		    XKeysymToKeycode(xkl_display, shortcut->keysym);
-		xkl_xmm_ungrab_ignoring_indicators(keycode,
+		    XKeysymToKeycode(xkl_engine_get_display(engine),
+				     shortcut->keysym);
+		xkl_xmm_ungrab_ignoring_indicators(engine, keycode,
 						   shortcut->modifiers);
 		shortcut++;
 	}
@@ -102,7 +104,7 @@ xkl_xmm_shortcut_get_current_option_name(void)
 }
 
 const XmmSwitchOption *
-xkl_xmm_switch_option_find(gint keycode,
+xkl_xmm_find_switch_option(XklEngine * engine, gint keycode,
 			   guint state, gint * current_shortcut_rv)
 {
 	const XmmSwitchOption *rv = xkl_xmm_shortcut_get_current();
@@ -110,10 +112,10 @@ xkl_xmm_switch_option_find(gint keycode,
 	if (rv != NULL) {
 		XmmShortcut *sc = rv->shortcuts;
 		while (sc->keysym != XK_VoidSymbol) {
-			if ((XKeysymToKeycode(xkl_display, sc->keysym) ==
-			     keycode)
-			    && ((state & sc->modifiers) ==
-				sc->modifiers)) {
+			if ((XKeysymToKeycode
+			     (xkl_engine_get_display(engine),
+			      sc->keysym) == keycode)
+			    && ((state & sc->modifiers) == sc->modifiers)) {
 				return rv;
 			}
 			sc++;
@@ -123,29 +125,29 @@ xkl_xmm_switch_option_find(gint keycode,
 }
 
 gint
-xkl_xmm_listen_resume(void)
+xkl_xmm_resume_listen(XklEngine * engine)
 {
-	if (xkl_listener_type & XKLL_MANAGE_LAYOUTS)
-		xkl_xmm_shortcuts_grab();
+	if (engine->priv->listener_type & XKLL_MANAGE_LAYOUTS)
+		xkl_xmm_shortcuts_grab(engine);
 	return 0;
 }
 
 gint
-xkl_xmm_listen_pause(void)
+xkl_xmm_pause_listen(XklEngine * engine)
 {
-	if (xkl_listener_type & XKLL_MANAGE_LAYOUTS)
-		xkl_xmm_shortcuts_ungrab();
+	if (engine->priv->listener_type & XKLL_MANAGE_LAYOUTS)
+		xkl_xmm_shortcuts_ungrab(engine);
 	return 0;
 }
 
 guint
-xkl_xmm_groups_get_max_num(void)
+xkl_xmm_get_max_num_groups(XklEngine * engine)
 {
 	return 0;
 }
 
 guint
-xkl_xmm_groups_get_num(void)
+xkl_xmm_get_num_groups(XklEngine * engine)
 {
 	gint rv = 0;
 	gchar **p = current_xmm_config.layouts;
@@ -156,7 +158,7 @@ xkl_xmm_groups_get_num(void)
 }
 
 void
-xkl_xmm_free_all_info(void)
+xkl_xmm_free_all_info(XklEngine * engine)
 {
 	if (current_xmm_rules != NULL) {
 		g_free(current_xmm_rules);
@@ -166,20 +168,20 @@ xkl_xmm_free_all_info(void)
 }
 
 gboolean
-xkl_xmm_if_cached_info_equals_actual(void)
+xkl_xmm_if_cached_info_equals_actual(XklEngine * engine)
 {
 	return FALSE;
 }
 
 gboolean
-xkl_xmm_load_all_info()
+xkl_xmm_load_all_info(XklEngine * engine)
 {
 	return xkl_config_get_full_from_server(&current_xmm_rules,
 					       &current_xmm_config);
 }
 
 void
-xkl_xmm_state_get_server(XklState * state)
+xkl_xmm_get_server_state(XklEngine * engine, XklState * state)
 {
 	unsigned char *propval = NULL;
 	Atom actual_type;
@@ -190,11 +192,12 @@ xkl_xmm_state_get_server(XklState * state)
 
 	memset(state, 0, sizeof(*state));
 
-	result = XGetWindowProperty(xkl_display, xkl_root_window,
-				    xmm_state_atom, 0L, 1L,
-				    False, XA_INTEGER, &actual_type,
-				    &actual_format, &actual_items,
-				    &bytes_remaining, &propval);
+	result =
+	    XGetWindowProperty(xkl_engine_get_display(engine),
+			       engine->priv->root_window, xmm_state_atom,
+			       0L, 1L, False, XA_INTEGER, &actual_type,
+			       &actual_format, &actual_items,
+			       &bytes_remaining, &propval);
 
 	if (Success == result) {
 		if (actual_format == 32 || actual_items == 1) {
@@ -212,13 +215,13 @@ xkl_xmm_state_get_server(XklState * state)
 }
 
 void
-xkl_xmm_group_actualize(gint group)
+xkl_xmm_group_actualize(XklEngine * engine, gint group)
 {
 	char cmd[1024];
 	int res;
 	const gchar *layout_name = NULL;
 
-	if (xkl_xmm_groups_get_num() < group)
+	if (xkl_xmm_get_num_groups(engine) < group)
 		return;
 
 	layout_name = current_xmm_config.layouts[group];
@@ -232,66 +235,65 @@ xkl_xmm_group_actualize(gint group)
 	} else if (res < 0) {
 		xkl_debug(0, "Could not execute xmodmap: %d\n", res);
 	}
-	XSync(xkl_display, False);
+	XSync(xkl_engine_get_display(engine), False);
 }
 
 void
-xkl_xmm_group_lock(gint group)
+xkl_xmm_lock_group(XklEngine * engine, gint group)
 {
 	CARD32 propval;
 
-	if (xkl_xmm_groups_get_num() < group)
+	if (xkl_xmm_get_num_groups(engine) < group)
 		return;
 
 	/* updating the status property */
 	propval = group;
-	XChangeProperty(xkl_display, xkl_root_window, xmm_state_atom,
+	Display *display = xkl_engine_get_display(engine);
+	XChangeProperty(display, engine->priv->root_window, xmm_state_atom,
 			XA_INTEGER, 32, PropModeReplace,
 			(unsigned char *) &propval, 1);
-	XSync(xkl_display, False);
+	XSync(display, False);
 }
 
 gint
-xkl_xmm_init(void)
+xkl_xmm_init(XklEngine * engine)
 {
-	static XklVTable xkl_xmm_vtable = {
-		"xmodmap",
-		XKLF_MULTIPLE_LAYOUTS_SUPPORTED |
-		    XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT,
-		xkl_xmm_config_activate,
-		xkl_xmm_config_init,
-		xkl_xmm_config_registry_load,
-		NULL,		/* no write_file */
+	engine->priv->backend_id = "xmodmap";
+	engine->priv->features = XKLF_MULTIPLE_LAYOUTS_SUPPORTED |
+	    XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT;
+	engine->priv->activate_config = xkl_xmm_activate_config;
+	engine->priv->init_config = xkl_xmm_init_config;
+	engine->priv->load_config_registry = xkl_xmm_load_config_registry;
+	engine->priv->write_config_to_file = NULL;
 
-		xkl_xmm_groups_get_names,
-		xkl_xmm_groups_get_max_num,
-		xkl_xmm_groups_get_num,
-		xkl_xmm_group_lock,
+	engine->priv->get_groups_names = xkl_xmm_get_groups_names;
+	engine->priv->get_max_num_groups = xkl_xmm_get_max_num_groups;
+	engine->priv->get_num_groups = xkl_xmm_get_num_groups;
+	engine->priv->lock_group = xkl_xmm_lock_group;
 
-		xkl_xmm_process_x_event,
-		xkl_xmm_free_all_info,
-		xkl_xmm_if_cached_info_equals_actual,
-		xkl_xmm_load_all_info,
-		xkl_xmm_state_get_server,
-		xkl_xmm_listen_pause,
-		xkl_xmm_listen_resume,
-		NULL,		/* no indicators_set */
-	};
+	engine->priv->process_x_event = xkl_xmm_process_x_event;
+	engine->priv->free_all_info = xkl_xmm_free_all_info;
+	engine->priv->if_cached_info_equals_actual =
+	    xkl_xmm_if_cached_info_equals_actual;
+	engine->priv->load_all_info = xkl_xmm_load_all_info;
+	engine->priv->get_server_state = xkl_xmm_get_server_state;
+	engine->priv->pause_listen = xkl_xmm_pause_listen;
+	engine->priv->resume_listen = xkl_xmm_resume_listen;
+	engine->priv->set_indicators = NULL;
 
 	if (getenv("XKL_XMODMAP_DISABLE") != NULL)
 		return -1;
 
-	xkl_xmm_vtable.base_config_atom =
-	    XInternAtom(xkl_display, "_XMM_NAMES", False);
-	xkl_xmm_vtable.backup_config_atom =
-	    XInternAtom(xkl_display, "_XMM_NAMES_BACKUP", False);
+	Display *display = xkl_engine_get_display(engine);
+	engine->priv->base_config_atom =
+	    XInternAtom(display, "_XMM_NAMES", False);
+	engine->priv->backup_config_atom =
+	    XInternAtom(display, "_XMM_NAMES_BACKUP", False);
 
-	xmm_state_atom = XInternAtom(xkl_display, "_XMM_STATE", False);
+	xmm_state_atom = XInternAtom(display, "_XMM_STATE", False);
 
-	xkl_xmm_vtable.default_model = "generic";
-	xkl_xmm_vtable.default_layout = "us";
-
-	xkl_vtable = &xkl_xmm_vtable;
+	engine->priv->default_model = "generic";
+	engine->priv->default_layout = "us";
 
 	return 0;
 }

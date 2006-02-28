@@ -33,15 +33,16 @@
 static XkbRF_RulesPtr xkl_rules;
 
 static XkbRF_RulesPtr
-xkl_rules_set_load(void)
+xkl_rules_set_load(XklEngine * engine)
 {
 	XkbRF_RulesPtr rules_set = NULL;
 	char file_name[MAXPATHLEN] = "";
-	char *rf = xkl_rules_set_get_name(XKB_DEFAULT_RULESET);
+	char *rf =
+	    xkl_engine_get_ruleset_name(engine, XKB_DEFAULT_RULESET);
 	char *locale = NULL;
 
 	if (rf == NULL) {
-		xkl_last_error_message =
+		engine->priv->last_error_message =
 		    "Could not find the XKB rules set";
 		return NULL;
 	}
@@ -54,7 +55,7 @@ xkl_rules_set_load(void)
 	rules_set = XkbRF_Load(file_name, locale, True, True);
 
 	if (rules_set == NULL) {
-		xkl_last_error_message = "Could not load rules";
+		engine->priv->last_error_message = "Could not load rules";
 		return NULL;
 	}
 	return rules_set;
@@ -78,11 +79,13 @@ xkl_xkb_config_init(void)
 }
 
 gboolean
-xkl_xkb_config_registry_load(void)
+xkl_xkb_load_config_registry(XklConfig * config)
 {
 	struct stat stat_buf;
 	char file_name[MAXPATHLEN] = "";
-	char *rf = xkl_rules_set_get_name(XKB_DEFAULT_RULESET);
+	char *rf =
+	    xkl_engine_get_ruleset_name(xkl_config_get_engine(config),
+					XKB_DEFAULT_RULESET);
 
 	if (rf == NULL)
 		return FALSE;
@@ -95,12 +98,13 @@ xkl_xkb_config_registry_load(void)
 			  sizeof file_name);
 	}
 
-	return xkl_config_registry_load_from_file(file_name);
+	return xkl_config_load_registry_from_file(config, file_name);
 }
 
 #ifdef XKB_HEADERS_PRESENT
 gboolean
-xkl_xkb_config_native_prepare(const XklConfigRec * data,
+xkl_xkb_config_native_prepare(XklConfig * config,
+			      const XklConfigRec * data,
 			      XkbComponentNamesPtr component_names_ptr)
 {
 	XkbRF_VarDefsRec xkl_var_defs;
@@ -108,7 +112,8 @@ xkl_xkb_config_native_prepare(const XklConfigRec * data,
 
 	memset(&xkl_var_defs, 0, sizeof(xkl_var_defs));
 
-	xkl_rules = xkl_rules_set_load();
+	XklEngine *engine = xkl_config_get_engine(config);
+	xkl_rules = xkl_rules_set_load(engine);
 	if (!xkl_rules) {
 		return FALSE;
 	}
@@ -133,10 +138,10 @@ xkl_xkb_config_native_prepare(const XklConfigRec * data,
 	g_free(xkl_var_defs.options);
 
 	if (!got_components) {
-		xkl_last_error_message =
+		engine->priv->last_error_message =
 		    "Could not translate rules into components";
 		/* Just cleanup the stuff in case of failure */
-		xkl_xkb_config_native_cleanup(component_names_ptr);
+		xkl_xkb_config_native_cleanup(config, component_names_ptr);
 
 		return FALSE;
 	}
@@ -158,7 +163,8 @@ xkl_xkb_config_native_prepare(const XklConfigRec * data,
 }
 
 void
-xkl_xkb_config_native_cleanup(XkbComponentNamesPtr component_names_ptr)
+xkl_xkb_config_native_cleanup(XklConfig * config,
+			      XkbComponentNamesPtr component_names_ptr)
 {
 	xkl_rules_set_free();
 
@@ -171,7 +177,8 @@ xkl_xkb_config_native_cleanup(XkbComponentNamesPtr component_names_ptr)
 }
 
 static XkbDescPtr
-xkl_config_get_keyboard(XkbComponentNamesPtr component_names_ptr,
+xkl_config_get_keyboard(XklConfig * config,
+			XkbComponentNamesPtr component_names_ptr,
 			gboolean activate)
 {
 	XkbDescPtr xkb = NULL;
@@ -189,6 +196,9 @@ xkl_config_get_keyboard(XkbComponentNamesPtr component_names_ptr,
 	FILE *tmpxkm;
 	XkbFileInfo result;
 	int xkmloadres;
+
+	XklEngine *engine = xkl_config_get_engine(config);
+	Display *display = xkl_engine_get_display(engine);
 
 	if (tmpnam(xkm_fn) != NULL && tmpnam(xkb_fn) != NULL) {
 		pid_t cpid, pid;
@@ -259,7 +269,7 @@ xkl_config_get_keyboard(XkbComponentNamesPtr component_names_ptr,
 				result.xkb = XkbAllocKeyboard();
 
 				if (Success ==
-				    XkbChangeKbdDisplay(xkl_display,
+				    XkbChangeKbdDisplay(display,
 							&result)) {
 					xkl_debug(150,
 						  "Hacked the kbddesc - set the display...\n");
@@ -382,7 +392,7 @@ _XklXkbConfigCleanupNative(gpointer componentNamesPtr)
 
 /* check only client side support */
 gboolean
-xkl_xkb_config_multiple_layouts_supported(void)
+xkl_xkb_config_multiple_layouts_supported(XklConfig * config)
 {
 	enum { NON_SUPPORTED, SUPPORTED, UNCHECKED };
 
@@ -405,11 +415,13 @@ xkl_xkb_config_multiple_layouts_supported(void)
 		xkl_debug(100, "!!! Checking multiple layouts support\n");
 		support_state = NON_SUPPORTED;
 #ifdef XKB_HEADERS_PRESENT
-		if (xkl_xkb_config_native_prepare(&data, &component_names)) {
+		if (xkl_xkb_config_native_prepare
+		    (config, &data, &component_names)) {
 			xkl_debug(100,
 				  "!!! Multiple layouts ARE supported\n");
 			support_state = SUPPORTED;
-			xkl_xkb_config_native_cleanup(&component_names);
+			xkl_xkb_config_native_cleanup(config,
+						      &component_names);
 		} else {
 			xkl_debug(100,
 				  "!!! Multiple layouts ARE NOT supported\n");
@@ -420,7 +432,7 @@ xkl_xkb_config_multiple_layouts_supported(void)
 }
 
 gboolean
-xkl_xkb_config_activate(const XklConfigRec * data)
+xkl_xkb_activate_config(XklConfig * config, const XklConfigRec * data)
 {
 	gboolean rv = FALSE;
 #if 0
@@ -445,37 +457,43 @@ xkl_xkb_config_activate(const XklConfigRec * data)
 #ifdef XKB_HEADERS_PRESENT
 	XkbComponentNamesRec component_names;
 	memset(&component_names, 0, sizeof(component_names));
+	XklEngine *engine = xkl_config_get_engine(config);
 
-	if (xkl_xkb_config_native_prepare(data, &component_names)) {
+	if (xkl_xkb_config_native_prepare(config, data, &component_names)) {
 		XkbDescPtr xkb;
-		xkb = xkl_config_get_keyboard(&component_names, TRUE);
+		xkb =
+		    xkl_config_get_keyboard(config, &component_names,
+					    TRUE);
 		if (xkb != NULL) {
 			if (xkl_set_names_prop
-			    (xkl_vtable->base_config_atom,
-			     xkl_rules_set_get_name(XKB_DEFAULT_RULESET),
+			    (engine->priv->base_config_atom,
+			     xkl_engine_get_ruleset_name(engine,
+							 XKB_DEFAULT_RULESET),
 			     data))
 				/* We do not need to check the result of _XklGetRulesSetName - 
 				   because PrepareBeforeKbd did it for us */
 				rv = TRUE;
 			else
-				xkl_last_error_message =
+				engine->priv->last_error_message =
 				    "Could not set names property";
 			XkbFreeKeyboard(xkb, XkbAllComponentsMask, True);
 		} else {
-			xkl_last_error_message =
+			engine->priv->last_error_message =
 			    "Could not load keyboard description";
 		}
-		xkl_xkb_config_native_cleanup(&component_names);
+		xkl_xkb_config_native_cleanup(config, &component_names);
 	}
 #endif
 	return rv;
 }
 
 gboolean
-xkl_xkb_config_write_file(const char *file_name,
-			  const XklConfigRec * data, const gboolean binary)
+xkl_xkb_write_config_to_file(XklConfig * config, const char *file_name,
+			     const XklConfigRec * data,
+			     const gboolean binary)
 {
 	gboolean rv = FALSE;
+	XklEngine *engine = xkl_config_get_engine(config);
 
 #ifdef XKB_HEADERS_PRESENT
 	XkbComponentNamesRec component_names;
@@ -483,15 +501,18 @@ xkl_xkb_config_write_file(const char *file_name,
 	XkbFileInfo dump_info;
 
 	if (output == NULL) {
-		xkl_last_error_message = "Could not open the XKB file";
+		engine->priv->last_error_message =
+		    "Could not open the XKB file";
 		return FALSE;
 	}
 
 	memset(&component_names, 0, sizeof(component_names));
 
-	if (xkl_xkb_config_native_prepare(data, &component_names)) {
+	if (xkl_xkb_config_native_prepare(config, data, &component_names)) {
 		XkbDescPtr xkb;
-		xkb = xkl_config_get_keyboard(&component_names, FALSE);
+		xkb =
+		    xkl_config_get_keyboard(config, &component_names,
+					    FALSE);
 		if (xkb != NULL) {
 			dump_info.defined = 0;
 			dump_info.xkb = xkb;
@@ -505,9 +526,9 @@ xkl_xkb_config_write_file(const char *file_name,
 			XkbFreeKeyboard(xkb, XkbGBN_AllComponentsMask,
 					True);
 		} else
-			xkl_last_error_message =
+			engine->priv->last_error_message =
 			    "Could not load keyboard description";
-		xkl_xkb_config_native_cleanup(&component_names);
+		xkl_xkb_config_native_cleanup(config, &component_names);
 	}
 	fclose(output);
 #endif

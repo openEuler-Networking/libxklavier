@@ -10,23 +10,28 @@
 Window xkl_toplevel_window_prev;
 
 void
-xkl_toplevel_window_set_transparent(Window toplevel_win,
-				    gboolean transparent)
+xkl_engine_set_toplevel_window_transparent(XklEngine * engine,
+					   Window toplevel_win,
+					   gboolean transparent)
 {
 	gboolean oldval;
 
-	oldval = xkl_window_is_transparent(toplevel_win);
+	oldval =
+	    xkl_engine_is_toplevel_window_transparent(engine,
+						      toplevel_win);
 	xkl_debug(150, "toplevel_win " WINID_FORMAT " was %stransparent\n",
 		  toplevel_win, oldval ? "" : "not ");
 	if (transparent && !oldval) {
 		CARD32 prop = 1;
-		XChangeProperty(xkl_display, toplevel_win,
-				xkl_atoms[XKLAVIER_TRANSPARENT],
+		XChangeProperty(xkl_engine_get_display(engine),
+				toplevel_win,
+				engine->priv->atoms[XKLAVIER_TRANSPARENT],
 				XA_INTEGER, 32, PropModeReplace,
 				(const unsigned char *) &prop, 1);
 	} else if (!transparent && oldval) {
-		XDeleteProperty(xkl_display, toplevel_win,
-				xkl_atoms[XKLAVIER_TRANSPARENT]);
+		XDeleteProperty(xkl_engine_get_display(engine),
+				toplevel_win,
+				engine->priv->atoms[XKLAVIER_TRANSPARENT]);
 	}
 }
 
@@ -37,25 +42,28 @@ xkl_toplevel_window_set_transparent(Window toplevel_win,
  * Note: User's callback is called
  */
 void
-xkl_toplevel_window_add(Window toplevel_win, Window parent,
-			gboolean ignore_existing_state,
-			XklState * init_state)
+xkl_engine_add_toplevel_window(XklEngine * engine, Window toplevel_win,
+			       Window parent,
+			       gboolean ignore_existing_state,
+			       XklState * init_state)
 {
 	XklState state = *init_state;
 	gint default_group_to_use = -1;
 
-	if (toplevel_win == xkl_root_window)
+	if (toplevel_win == engine->priv->root_window)
 		xkl_debug(150, "??? root app win ???\n");
 
 	xkl_debug(150,
 		  "Trying to add window " WINID_FORMAT
 		  "/%s with group %d\n", toplevel_win,
-		  xkl_window_get_debug_title(toplevel_win),
+		  xkl_get_debug_window_title(toplevel_win),
 		  init_state->group);
 
 	if (!ignore_existing_state) {
 		gboolean have_state =
-		    xkl_toplevel_window_get_state(toplevel_win, &state);
+		    xkl_engine_get_toplevel_window_state(engine,
+							 toplevel_win,
+							 &state);
 
 		if (have_state) {
 			xkl_debug(150,
@@ -66,27 +74,33 @@ xkl_toplevel_window_add(Window toplevel_win, Window parent,
 		}
 	}
 
+/* TODO
 	if (xkl_new_window_callback != NULL)
 		default_group_to_use =
 		    (*xkl_new_window_callback) (toplevel_win, parent,
 						xkl_new_window_callback_data);
+*/
 
 	if (default_group_to_use == -1)
-		default_group_to_use = xkl_default_group;
+		default_group_to_use = engine->priv->default_group;
 
 	if (default_group_to_use != -1)
 		state.group = default_group_to_use;
 
-	xkl_toplevel_window_save_state(toplevel_win, &state);
-	xkl_select_input_merging(toplevel_win,
-				 FocusChangeMask | PropertyChangeMask);
+	xkl_engine_save_toplevel_window_state(engine, toplevel_win,
+					      &state);
+	xkl_engine_select_input_merging(engine, toplevel_win,
+					FocusChangeMask |
+					PropertyChangeMask);
 
 	if (default_group_to_use != -1) {
-		if (xkl_current_client == toplevel_win) {
-			if ((xkl_secondary_groups_mask &
+		if (engine->priv->curr_toplvl_win == toplevel_win) {
+			if ((engine->priv->secondary_groups_mask &
 			     (1 << default_group_to_use)) != 0)
-				xkl_group_allow_one_switch_to_secondary();
-			xkl_group_lock(default_group_to_use);
+				xkl_engine_allow_one_switch_to_secondary_group
+				    (engine);
+			xkl_engine_lock_group(engine,
+					      default_group_to_use);
 		}
 	}
 
@@ -100,16 +114,18 @@ xkl_toplevel_window_add(Window toplevel_win, Window parent,
  * Checks the window and goes up
  */
 gboolean
-xkl_toplevel_window_find_bottom_to_top(Window win,
-				       Window * toplevel_win_out)
+xkl_engine_find_toplevel_window_bottom_to_top(XklEngine * engine,
+					      Window win,
+					      Window * toplevel_win_out)
 {
 	Window parent = (Window) NULL, rwin = (Window) NULL, *children =
 	    NULL;
 	guint num = 0;
 
-	if (win == (Window) NULL || win == xkl_root_window) {
+	if (win == (Window) NULL || win == engine->priv->root_window) {
 		*toplevel_win_out = win;
-		xkl_last_error_message = "The window is either 0 or root";
+		engine->priv->last_error_message =
+		    "The window is either 0 or root";
 		return FALSE;
 	}
 
@@ -118,10 +134,10 @@ xkl_toplevel_window_find_bottom_to_top(Window win,
 		return TRUE;
 	}
 
-	xkl_last_error_code =
+	engine->priv->last_error_code =
 	    xkl_status_query_tree(win, &rwin, &parent, &children, &num);
 
-	if (xkl_last_error_code != Success) {
+	if (engine->priv->last_error_code != Success) {
 		*toplevel_win_out = (Window) NULL;
 		return FALSE;
 	}
@@ -129,8 +145,9 @@ xkl_toplevel_window_find_bottom_to_top(Window win,
 	if (children != NULL)
 		XFree(children);
 
-	return xkl_toplevel_window_find_bottom_to_top(parent,
-						      toplevel_win_out);
+	return xkl_engine_find_toplevel_window_bottom_to_top(engine,
+							     parent,
+							     toplevel_win_out);
 }
 
 /**
@@ -141,16 +158,18 @@ xkl_toplevel_window_find_bottom_to_top(Window win,
  * NOTE: root window cannot be "App window" under normal circumstances
  */
 gboolean
-xkl_toplevel_window_find(Window win, Window * toplevel_win_out)
+xkl_engine_find_toplevel_window(XklEngine * engine, Window win,
+				Window * toplevel_win_out)
 {
 	Window parent = (Window) NULL,
 	    rwin = (Window) NULL, *children = NULL, *child;
 	guint num = 0;
 	gboolean rv;
 
-	if (win == (Window) NULL || win == xkl_root_window) {
+	if (win == (Window) NULL || win == engine->priv->root_window) {
 		*toplevel_win_out = (Window) NULL;
-		xkl_last_error_message = "The window is either 0 or root";
+		engine->priv->last_error_message =
+		    "The window is either 0 or root";
 		xkl_debug(150,
 			  "Window " WINID_FORMAT
 			  " is either 0 or root so could not get the app window for it\n",
@@ -163,10 +182,10 @@ xkl_toplevel_window_find(Window win, Window * toplevel_win_out)
 		return TRUE;
 	}
 
-	xkl_last_error_code =
+	engine->priv->last_error_code =
 	    xkl_status_query_tree(win, &rwin, &parent, &children, &num);
 
-	if (xkl_last_error_code != Success) {
+	if (engine->priv->last_error_code != Success) {
 		*toplevel_win_out = (Window) NULL;
 		xkl_debug(150,
 			  "Could not get tree for window " WINID_FORMAT
@@ -194,13 +213,13 @@ xkl_toplevel_window_find(Window win, Window * toplevel_win_out)
 	if (children != NULL)
 		XFree(children);
 
-	rv = xkl_toplevel_window_find_bottom_to_top(parent,
-						    toplevel_win_out);
+	rv = xkl_engine_find_toplevel_window_bottom_to_top(engine, parent,
+							   toplevel_win_out);
 
 	if (!rv)
 		xkl_debug(200,
 			  "Could not get the app window for " WINID_FORMAT
-			  "/%s\n", win, xkl_window_get_debug_title(win));
+			  "/%s\n", win, xkl_get_debug_window_title(win));
 
 	return rv;
 }
@@ -209,7 +228,9 @@ xkl_toplevel_window_find(Window win, Window * toplevel_win_out)
  * Gets the state from the window property
  */
 gboolean
-xkl_toplevel_window_get_state(Window toplevel_win, XklState * state_out)
+xkl_engine_get_toplevel_window_state(XklEngine * engine,
+				     Window toplevel_win,
+				     XklState * state_out)
 {
 	Atom type_ret;
 	int format_ret;
@@ -221,13 +242,14 @@ xkl_toplevel_window_get_state(Window toplevel_win, XklState * state_out)
 	guint inds = 0;
 
 	if ((XGetWindowProperty
-	     (xkl_display, toplevel_win, xkl_atoms[XKLAVIER_STATE], 0L,
-	      XKLAVIER_STATE_PROP_LENGTH, False,
-	      XA_INTEGER, &type_ret, &format_ret, &nitems, &rest,
+	     (xkl_engine_get_display(engine), toplevel_win,
+	      engine->priv->atoms[XKLAVIER_STATE], 0L,
+	      XKLAVIER_STATE_PROP_LENGTH, False, XA_INTEGER, &type_ret,
+	      &format_ret, &nitems, &rest,
 	      (unsigned char **) (void *) &prop) == Success)
 	    && (type_ret == XA_INTEGER) && (format_ret == 32)) {
 		grp = prop[0];
-		if (grp >= xkl_groups_get_num() || grp < 0)
+		if (grp >= xkl_engine_get_num_groups(engine) || grp < 0)
 			grp = 0;
 
 		inds = prop[1];
@@ -247,13 +269,13 @@ xkl_toplevel_window_get_state(Window toplevel_win, XklState * state_out)
 			  "Appwin " WINID_FORMAT
 			  ", '%s' has the group %d, indicators %X\n",
 			  toplevel_win,
-			  xkl_window_get_debug_title(toplevel_win), grp,
+			  xkl_get_debug_window_title(toplevel_win), grp,
 			  inds);
 	else
 		xkl_debug(150,
 			  "Appwin " WINID_FORMAT
 			  ", '%s' does not have state\n", toplevel_win,
-			  xkl_window_get_debug_title(toplevel_win));
+			  xkl_get_debug_window_title(toplevel_win));
 
 	return ret;
 }
@@ -262,26 +284,29 @@ xkl_toplevel_window_get_state(Window toplevel_win, XklState * state_out)
  * Deletes the state from the window properties
  */
 void
-xkl_toplevel_window_remove_state(Window toplevel_win)
+xkl_engine_remove_toplevel_window_state(XklEngine * engine,
+					Window toplevel_win)
 {
-	XDeleteProperty(xkl_display, toplevel_win,
-			xkl_atoms[XKLAVIER_STATE]);
+	XDeleteProperty(xkl_engine_get_display(engine), toplevel_win,
+			engine->priv->atoms[XKLAVIER_STATE]);
 }
 
 /**
  * Saves the state into the window properties
  */
 void
-xkl_toplevel_window_save_state(Window toplevel_win, XklState * state)
+xkl_engine_save_toplevel_window_state(XklEngine * engine,
+				      Window toplevel_win,
+				      XklState * state)
 {
 	CARD32 prop[XKLAVIER_STATE_PROP_LENGTH];
 
 	prop[0] = state->group;
 	prop[1] = state->indicators;
 
-	XChangeProperty(xkl_display, toplevel_win,
-			xkl_atoms[XKLAVIER_STATE], XA_INTEGER, 32,
-			PropModeReplace, (const unsigned char *) prop,
+	XChangeProperty(xkl_engine_get_display(engine), toplevel_win,
+			engine->priv->atoms[XKLAVIER_STATE], XA_INTEGER,
+			32, PropModeReplace, (const unsigned char *) prop,
 			XKLAVIER_STATE_PROP_LENGTH);
 
 	xkl_debug(160,
@@ -291,16 +316,18 @@ xkl_toplevel_window_save_state(Window toplevel_win, XklState * state)
 }
 
 gboolean
-xkl_toplevel_window_is_transparent(Window toplevel_win)
+xkl_engine_is_toplevel_window_transparent(XklEngine * engine,
+					  Window toplevel_win)
 {
 	Atom type_ret;
 	int format_ret;
 	unsigned long nitems, rest;
 	CARD32 *prop = NULL;
 	if ((XGetWindowProperty
-	     (xkl_display, toplevel_win, xkl_atoms[XKLAVIER_TRANSPARENT],
-	      0L, 1, False, XA_INTEGER, &type_ret, &format_ret, &nitems,
-	      &rest, (unsigned char **) (void *) &prop) == Success)
+	     (xkl_engine_get_display(engine), toplevel_win,
+	      engine->priv->atoms[XKLAVIER_TRANSPARENT], 0L, 1, False,
+	      XA_INTEGER, &type_ret, &format_ret, &nitems, &rest,
+	      (unsigned char **) (void *) &prop) == Success)
 	    && (type_ret == XA_INTEGER) && (format_ret == 32)) {
 		if (prop != NULL)
 			XFree(prop);

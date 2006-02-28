@@ -15,7 +15,7 @@ xkl_engine_events_filter(XklEngine * engine, XEvent * xev)
 		  "**> Filtering event %d of type %d from window %d\n",
 		  pe->serial, pe->type, pe->window);
 	xkl_engine_ensure_vtable_inited(engine);
-	if (!xkl_engine_vcall(engine, process_x_event) (xev))
+	if (!xkl_engine_vcall(engine, process_x_event) (engine, xev))
 		switch (xev->type) {	/* core events */
 		case FocusIn:
 			xkl_engine_process_focus_in_evt(engine,
@@ -222,7 +222,8 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 					    (engine);
 					xkl_engine_vcall(engine,
 							 set_indicators)
-					    (&selected_window_state);
+					    (engine,
+					     &selected_window_state);
 				} else
 					xkl_debug(150,
 						  "Not restoring the indicators %X after gaining focus: indicator handling is not enabled\n",

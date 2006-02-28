@@ -25,11 +25,12 @@ xkl_xmm_config_init(void)
 }
 
 gboolean
-xkl_xmm_config_registry_load(void)
+xkl_xmm_load_config_registry(XklConfig * config)
 {
 	struct stat stat_buf;
 	gchar file_name[MAXPATHLEN] = "";
-	gchar *rf = xkl_rules_set_get_name("");
+	XklEngine *engine = xkl_config_get_engine(config);
+	gchar *rf = xkl_engine_get_ruleset_name(engine, "");
 
 	if (rf == NULL || rf[0] == '\0')
 		return FALSE;
@@ -38,20 +39,21 @@ xkl_xmm_config_registry_load(void)
 		   rf);
 
 	if (stat(file_name, &stat_buf) != 0) {
-		xkl_last_error_message = "No rules file found";
+		engine->priv->last_error_message = "No rules file found";
 		return FALSE;
 	}
 
-	return xkl_config_registry_load_from_file(file_name);
+	return xkl_config_load_registry_from_file(config, file_name);
 }
 
 gboolean
-xkl_xmm_config_activate(const XklConfigRec * data)
+xkl_xmm_activate_config(XklConfig * config, const XklConfigRec * data)
 {
 	gboolean rv;
-	rv = xkl_set_names_prop(xkl_vtable->base_config_atom,
+	XklEngine *engine = xkl_config_get_engine(config);
+	rv = xkl_set_names_prop(engine->priv->base_config_atom,
 				current_xmm_rules, data);
 	if (rv)
-		xkl_xmm_group_lock(0);
+		xkl_xmm_lock_group(engine, 0);
 	return rv;
 }

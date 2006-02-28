@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+#include <libxml/xpath.h>
+
 #include <libxklavier/xklavier_config.h>
 
 enum { WM_NAME,
@@ -60,14 +62,15 @@ struct _XklEnginePrivate {
    * xkb: create proper the XkbDescRec and send it to the server
    * xmodmap: save the property, init layout #1
    */
-	 gboolean(*activate_config) (const XklConfigRec * data);
+	 gboolean(*activate_config) (XklConfig * config,
+				     const XklConfigRec * data);
 
   /**
    * Background-specific initialization.
    * xkb: XkbInitAtoms - init internal xkb atoms table
    * xmodmap: void.
    */
-	void (*init_config) (void);
+	void (*init_config) (XklConfig * config);
 
   /**
    * Loads the registry tree into DOM (using whatever path(s))
@@ -75,7 +78,7 @@ struct _XklEnginePrivate {
    * xkb: loads xml from XKB_BASE+"/rules/"+ruleset+".xml"
    * xmodmap: loads xml from XMODMAP_BASE+"/"+ruleset+".xml"
    */
-	 gboolean(*load_config_registry) (void);
+	 gboolean(*load_config_registry) (XklConfig * config);
 
   /**
    * Write the configuration into the file (binary/textual)
@@ -83,7 +86,8 @@ struct _XklEnginePrivate {
    * xmodmap: if text requested, just dump XklConfigRec to the 
    * file - not really useful. If binary - fail (not supported)
    */
-	 gboolean(*write_config_to_file) (const gchar * file_name,
+	 gboolean(*write_config_to_file) (XklConfig * config,
+					  const gchar * file_name,
 					  const XklConfigRec * data,
 					  const gboolean binary);
 
@@ -92,21 +96,21 @@ struct _XklEnginePrivate {
    * xkb: return cached list of the group names
    * xmodmap: return the list of layouts from the internal XklConfigRec
    */
-	const gchar **(*get_groups_names) (void);
+	const gchar **(*get_groups_names) (XklEngine * engine);
 
   /**
    * Get the maximum number of loaded groups
    * xkb: returns 1 or XkbNumKbdGroups
    * xmodmap: return 0
    */
-	 guint(*get_max_num_groups) (void);
+	 guint(*get_max_num_groups) (XklEngine * engine);
 
   /**
    * Get the number of loaded groups
    * xkb: return from the cached XkbDesc
    * xmodmap: return number of layouts from internal XklConfigRec
    */
-	 guint(*get_num_groups) (void);
+	 guint(*get_num_groups) (XklEngine * engine);
 
   /**
    * Switches the keyboard to the group N
@@ -114,63 +118,65 @@ struct _XklEnginePrivate {
    * xmodmap: changes the root window property 
    * (listener invokes xmodmap with appropriate config file).
    */
-	void (*lock_group) (gint group);
+	void (*lock_group) (XklEngine * engine, gint group);
 
   /**
    * Handles X events.
    * xkb: XkbEvent handling
    * xmodmap: keep track on the root window properties. What else can we do?
    */
-	 gint(*process_x_event) (XEvent * xev);
+	 gint(*process_x_event) (XklEngine * engine, XEvent * xev);
 
   /**
    * Flushes the cached server config info.
    * xkb: frees XkbDesc
    * xmodmap: frees internal XklConfigRec
    */
-	void (*free_all_info) (void);
+	void (*free_all_info) (XklEngine * engine);
 
   /**
    * Compares the cached info with the actual one, from the server
    * xkb: Compares some parts of XkbDescPtr
    * xmodmap: returns False
    */
-	 gboolean(*if_cached_info_equals_actual) (void);
+	 gboolean(*if_cached_info_equals_actual) (XklEngine * engine);
 
   /**
    * Loads the configuration info from the server
    * xkb: loads XkbDesc, names, indicators
    * xmodmap: loads internal XklConfigRec from server
    */
-	 gboolean(*load_all_info) (void);
+	 gboolean(*load_all_info) (XklEngine * engine);
 
   /**
    * Gets the current state
    * xkb: XkbGetState and XkbGetIndicatorState
    * xmodmap: check the root window property (regarding the group)
    */
-	void (*get_server_state) (XklState * current_state_out);
+	void (*get_server_state) (XklEngine * engine,
+				  XklState * current_state_out);
 
   /**
    * Stop tracking the keyboard-related events
    * xkb: XkbSelectEvents(..., 0)
    * xmodmap: Ungrab the switching shortcut.
    */
-	 gint(*pause_listen) (void);
+	 gint(*pause_listen) (XklEngine * engine);
 
   /**
    * Start tracking the keyboard-related events
    * xkb: XkbSelectEvents + XkbSelectEventDetails
    * xmodmap: Grab the switching shortcut.
    */
-	 gint(*resume_listen) (void);
+	 gint(*resume_listen) (XklEngine * engine);
 
   /**
    * Set the indicators state from the XklState
    * xkb: XklSetIndicator for all indicators
    * xmodmap: NULL. Not supported
    */
-	void (*set_indicators) (const XklState * window_state);
+	void (*set_indicators) (XklEngine * engine,
+				const XklState * window_state);
 
 	/* all data is private - no direct access */
   /**
@@ -201,6 +207,13 @@ struct _XklEnginePrivate {
 
 extern XklEngine *xkl_get_the_engine(void);
 
+struct _XklConfigPrivate {
+	XklEngine *engine;
+
+	xmlDocPtr doc;
+
+	xmlXPathContextPtr xpath_context;
+};
 
 extern void xkl_engine_ensure_vtable_inited(XklEngine * engine);
 
@@ -282,7 +295,7 @@ extern Status xkl_status_query_tree(Window w,
 				    Window ** children_out,
 				    guint * nchildren_out);
 
-extern gboolean xkl_engine_indicator_set(XklEngine * engine,
+extern gboolean xkl_engine_set_indicator(XklEngine * engine,
 					 gint indicator_num, gboolean set);
 
 extern void xkl_engine_try_call_state_func(XklEngine * engine,
@@ -295,7 +308,8 @@ extern gchar *xkl_locale_from_utf8(const gchar * utf8string);
 
 extern gint xkl_get_language_priority(const gchar * language);
 
-extern gchar *xkl_engine_get_ruleset_name(XklEngine * engine, const gchar default_ruleset[]);
+extern gchar *xkl_engine_get_ruleset_name(XklEngine * engine,
+					  const gchar default_ruleset[]);
 
 extern gboolean xkl_config_get_full_from_server(gchar ** rules_file_out,
 						XklConfigRec * data);
@@ -351,6 +365,7 @@ extern void xkl_engine_one_switch_to_secondary_group_performed(XklEngine *
 
 #define xkl_engine_get_display(engine) ((engine)->priv->display)
 #define xkl_engine_vcall(engine,func)  (*(engine)->priv->func)
+#define xkl_config_get_engine(config) ((config)->priv->engine)
 
 extern gint xkl_debug_level;
 

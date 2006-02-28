@@ -545,9 +545,9 @@ xkl_engine_reset_all_info(XklEngine * engine, const gchar reason[])
 		  reason);
 	xkl_engine_ensure_vtable_inited(engine);
 	if (!xkl_engine_vcall(engine, if_cached_info_equals_actual)
-	    ()) {
-		xkl_engine_vcall(engine, free_all_info) ();
-		xkl_engine_vcall(engine, load_all_info) ();
+	    (engine)) {
+		xkl_engine_vcall(engine, free_all_info) (engine);
+		xkl_engine_vcall(engine, load_all_info) (engine);
 	} else
 		xkl_debug(100,
 			  "NOT Resetting the cache: same configuration\n");
@@ -560,28 +560,28 @@ const gchar **
 xkl_engine_groups_get_names(XklEngine * engine)
 {
 	xkl_engine_ensure_vtable_inited(engine);
-	return (*engine->priv->get_groups_names) ();
+	return (*engine->priv->get_groups_names) (engine);
 }
 
 guint
 xkl_engine_get_num_groups(XklEngine * engine)
 {
 	xkl_engine_ensure_vtable_inited(engine);
-	return (*engine->priv->get_num_groups) ();
+	return (*engine->priv->get_num_groups) (engine);
 }
 
 void
-xkl_engine_group_lock(XklEngine * engine, int group)
+xkl_engine_lock_group(XklEngine * engine, int group)
 {
 	xkl_engine_ensure_vtable_inited(engine);
-	xkl_engine_vcall(engine, lock_group) (group);
+	xkl_engine_vcall(engine, lock_group) (engine, group);
 }
 
 gint
 xkl_engine_pause_listen(XklEngine * engine)
 {
 	xkl_engine_ensure_vtable_inited(engine);
-	return xkl_engine_vcall(engine, pause_listen) ();
+	return xkl_engine_vcall(engine, pause_listen) (engine);
 }
 
 gint
@@ -589,7 +589,7 @@ xkl_engine_resume_listen(XklEngine * engine)
 {
 	xkl_engine_ensure_vtable_inited(engine);
 	xkl_debug(150, "listenerType: %x\n", engine->priv->listener_type);
-	if (xkl_engine_vcall(engine, resume_listen) ())
+	if (xkl_engine_vcall(engine, resume_listen) (engine))
 		return 1;
 
 	xkl_engine_select_input_merging(engine, engine->priv->root_window,
@@ -607,21 +607,21 @@ gboolean
 xkl_engine_load_all_info(XklEngine * engine)
 {
 	xkl_engine_ensure_vtable_inited(engine);
-	return xkl_engine_vcall(engine, load_all_info) ();
+	return xkl_engine_vcall(engine, load_all_info) (engine);
 }
 
 void
 xkl_engine_free_all_info(XklEngine * engine)
 {
 	xkl_engine_ensure_vtable_inited(engine);
-	xkl_engine_vcall(engine, free_all_info) ();
+	xkl_engine_vcall(engine, free_all_info) (engine);
 }
 
 guint
 xkl_engine_get_max_num_groups(XklEngine * engine)
 {
 	xkl_engine_ensure_vtable_inited(engine);
-	return (*engine->priv->get_max_num_groups) ();
+	return (*engine->priv->get_max_num_groups) (engine);
 }
 
 XklEngine *

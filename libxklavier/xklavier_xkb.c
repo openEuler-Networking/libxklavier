@@ -14,22 +14,23 @@ XkbDescPtr xkl_xkb_desc;
 
 static XkbDescPtr precached_xkb = NULL;
 
-gchar *xkl_indicator_names[XkbNumIndicators];
-
 gint xkl_xkb_event_type, xkl_xkb_error_code;
+
+gchar *xkl_xkb_indicator_names[XkbNumIndicators];
 
 static gchar *group_names[XkbNumKbdGroups];
 
 const gchar **
-xkl_xkb_groups_get_names(void)
+xkl_xkb_get_groups_names(XklEngine * engine)
 {
 	return (const gchar **) group_names;
 }
 
 gint
-xkl_xkb_listen_pause(void)
+xkl_xkb_pause_listen(XklEngine * engine)
 {
-	XkbSelectEvents(xkl_display, XkbUseCoreKbd, XkbAllEventsMask, 0);
+	XkbSelectEvents(xkl_engine_get_display(engine), XkbUseCoreKbd,
+			XkbAllEventsMask, 0);
 /*  XkbSelectEventDetails( xkl_display,
                          XkbUseCoreKbd,
                        XkbStateNotify,
@@ -42,7 +43,7 @@ xkl_xkb_listen_pause(void)
 }
 
 gint
-xkl_xkb_listen_resume(void)
+xkl_xkb_resume_listen(XklEngine * engine)
 {
 	/* What events we want */
 #define XKB_EVT_MASK \
@@ -53,13 +54,14 @@ xkl_xkb_listen_resume(void)
           XkbIndicatorMapNotifyMask| \
           XkbNewKeyboardNotifyMask)
 
-	XkbSelectEvents(xkl_display, XkbUseCoreKbd, XKB_EVT_MASK,
+	Display *display = xkl_engine_get_display(engine);
+	XkbSelectEvents(display, XkbUseCoreKbd, XKB_EVT_MASK,
 			XKB_EVT_MASK);
 
 #define XKB_STATE_EVT_DTL_MASK \
          (XkbGroupStateMask)
 
-	XkbSelectEventDetails(xkl_display,
+	XkbSelectEventDetails(display,
 			      XkbUseCoreKbd,
 			      XkbStateNotify,
 			      XKB_STATE_EVT_DTL_MASK,
@@ -68,7 +70,7 @@ xkl_xkb_listen_resume(void)
 #define XKB_NAMES_EVT_DTL_MASK \
          (XkbGroupNamesMask|XkbIndicatorNamesMask)
 
-	XkbSelectEventDetails(xkl_display,
+	XkbSelectEventDetails(display,
 			      XkbUseCoreKbd,
 			      XkbNamesNotify,
 			      XKB_NAMES_EVT_DTL_MASK,
@@ -77,14 +79,14 @@ xkl_xkb_listen_resume(void)
 }
 
 guint
-xkl_xkb_groups_get_max_num(void)
+xkl_xkb_get_max_num_groups(XklEngine * engine)
 {
-	return xkl_vtable->features & XKLF_MULTIPLE_LAYOUTS_SUPPORTED ?
+	return engine->priv->features & XKLF_MULTIPLE_LAYOUTS_SUPPORTED ?
 	    XkbNumKbdGroups : 1;
 }
 
 guint
-xkl_xkb_groups_get_num(void)
+xkl_xkb_get_num_groups(XklEngine * engine)
 {
 	return xkl_xkb_desc->ctrls->num_groups;
 }
@@ -97,10 +99,10 @@ xkl_xkb_groups_get_num(void)
   ( XkbGroupNamesMask | XkbIndicatorNamesMask )
 
 void
-xkl_xkb_free_all_info(void)
+xkl_xkb_free_all_info(XklEngine * engine)
 {
 	gint i;
-	gchar **pi = xkl_indicator_names;
+	gchar **pi = xkl_xkb_indicator_names;
 	for (i = 0; i < XkbNumIndicators; i++, pi++) {
 		/* only free non-empty ones */
 		if (*pi && **pi)
@@ -127,26 +129,28 @@ xkl_xkb_free_all_info(void)
 }
 
 static gboolean
-xkl_xkb_load_precached_xkb(void)
+xkl_xkb_load_precached_xkb(XklEngine * engine)
 {
 	gboolean rv = FALSE;
 	Status status;
 
-	precached_xkb = XkbGetMap(xkl_display, KBD_MASK, XkbUseCoreKbd);
+	Display *display = xkl_engine_get_display(engine);
+	precached_xkb = XkbGetMap(display, KBD_MASK, XkbUseCoreKbd);
 	if (precached_xkb != NULL) {
-		rv = Success == (status = XkbGetControls(xkl_display,
+		rv = Success == (status = XkbGetControls(display,
 							 CTRLS_MASK,
 							 precached_xkb)) &&
-		    Success == (status = XkbGetNames(xkl_display,
+		    Success == (status = XkbGetNames(display,
 						     NAMES_MASK,
 						     precached_xkb)) &&
-		    Success == (status = XkbGetIndicatorMap(xkl_display,
+		    Success == (status = XkbGetIndicatorMap(display,
 							    XkbAllIndicatorsMask,
 							    precached_xkb));
 		if (!rv) {
-			xkl_last_error_message =
+			engine->priv->last_error_message =
 			    "Could not load controls/names/indicators";
-			xkl_debug(0, "%s: %d\n", xkl_last_error_message,
+			xkl_debug(0, "%s: %d\n",
+				  engine->priv->last_error_message,
 				  status);
 			XkbFreeKeyboard(precached_xkb,
 					XkbAllComponentsMask, True);
@@ -156,13 +160,13 @@ xkl_xkb_load_precached_xkb(void)
 }
 
 gboolean
-xkl_xkb_if_cached_info_equals_actual(void)
+xkl_xkb_if_cached_info_equals_actual(XklEngine * engine)
 {
 	gint i;
 	Atom *pa1, *pa2;
 	gboolean rv = FALSE;
 
-	if (xkl_xkb_load_precached_xkb()) {
+	if (xkl_xkb_load_precached_xkb(engine)) {
 		/* First, compare the number of groups */
 		if (xkl_xkb_desc->ctrls->num_groups ==
 		    precached_xkb->ctrls->num_groups) {
@@ -205,16 +209,18 @@ xkl_xkb_if_cached_info_equals_actual(void)
  * Load some XKB parameters
  */
 gboolean
-xkl_xkb_load_all_info(void)
+xkl_xkb_load_all_info(XklEngine * engine)
 {
 	gint i;
 	Atom *pa;
 	gchar **group_name;
-	gchar **pi = xkl_indicator_names;
+	gchar **pi = xkl_xkb_indicator_names;
+	Display *display = xkl_engine_get_display(engine);
 
 	if (precached_xkb == NULL)
-		if (!xkl_xkb_load_precached_xkb()) {
-			xkl_last_error_message = "Could not load keyboard";
+		if (!xkl_xkb_load_precached_xkb(engine)) {
+			engine->priv->last_error_message =
+			    "Could not load keyboard";
 			return FALSE;
 		}
 
@@ -232,19 +238,20 @@ xkl_xkb_load_all_info(void)
 	for (i = xkl_xkb_desc->ctrls->num_groups; --i >= 0;
 	     pa++, group_name++) {
 		*group_name =
-		    XGetAtomName(xkl_display,
-				 *pa == None ? XInternAtom(xkl_display,
+		    XGetAtomName(display,
+				 *pa == None ? XInternAtom(display,
 							   "-",
 							   False) : *pa);
 		xkl_debug(200, "Group %d has name [%s]\n", i, *group_name);
 	}
 
-	xkl_last_error_code =
-	    XkbGetIndicatorMap(xkl_display, XkbAllIndicatorsMask,
+	engine->priv->last_error_code =
+	    XkbGetIndicatorMap(display, XkbAllIndicatorsMask,
 			       xkl_xkb_desc);
 
-	if (xkl_last_error_code != Success) {
-		xkl_last_error_message = "Could not load indicator map";
+	if (engine->priv->last_error_code != Success) {
+		engine->priv->last_error_message =
+		    "Could not load indicator map";
 		return FALSE;
 	}
 
@@ -253,7 +260,7 @@ xkl_xkb_load_all_info(void)
 	for (i = XkbNumIndicators; --i >= 0; pi++, pa++) {
 		Atom a = *pa;
 		if (a != None)
-			*pi = XGetAtomName(xkl_display, a);
+			*pi = XGetAtomName(display, a);
 		else
 			*pi = "";
 
@@ -262,35 +269,39 @@ xkl_xkb_load_all_info(void)
 
 	xkl_debug(200, "Real indicators are %X\n",
 		  xkl_xkb_desc->indicators->phys_indicators);
-
+// TODO
+#if 0
 	if (xkl_config_callback != NULL)
 		(*xkl_config_callback) (xkl_config_callback_data);
+#endif
 	return TRUE;
 }
 
 void
-xkl_xkb_group_lock(int group)
+xkl_xkb_lock_group(XklEngine * engine, gint group)
 {
+	Display *display = xkl_engine_get_display(engine);
 	xkl_debug(100, "Posted request for change the group to %d ##\n",
 		  group);
-	XkbLockGroup(xkl_display, XkbUseCoreKbd, group);
-	XSync(xkl_display, False);
+	XkbLockGroup(display, XkbUseCoreKbd, group);
+	XSync(display, False);
 }
 
 /**
  * Updates current internal state from X state
  */
 void
-xkl_xkb_get_server_state(XklState * current_state_out)
+xkl_xkb_get_server_state(XklEngine * engine, XklState * current_state_out)
 {
 	XkbStateRec state;
+	Display *display = xkl_engine_get_display(engine);
 
 	current_state_out->group = 0;
-	if (Success == XkbGetState(xkl_display, XkbUseCoreKbd, &state))
+	if (Success == XkbGetState(display, XkbUseCoreKbd, &state))
 		current_state_out->group = state.locked_group;
 
 	if (Success ==
-	    XkbGetIndicatorState(xkl_display, XkbUseCoreKbd,
+	    XkbGetIndicatorState(display, XkbUseCoreKbd,
 				 &current_state_out->indicators))
 		current_state_out->indicators &=
 		    xkl_xkb_desc->indicators->phys_indicators;
@@ -302,9 +313,10 @@ xkl_xkb_get_server_state(XklState * current_state_out)
  * Actually taken from mxkbledpanel, valueChangedProc
  */
 gboolean
-xkl_indicator_set(gint indicator_num, gboolean set)
+xkl_set_indicator(XklEngine * engine, gint indicator_num, gboolean set)
 {
 	XkbIndicatorMapPtr map;
+	Display *display = xkl_engine_get_display(engine);
 
 	map = xkl_xkb_desc->indicators->maps + indicator_num;
 
@@ -334,7 +346,7 @@ xkl_indicator_set(gint indicator_num, gboolean set)
 		{
 			if (xkl_xkb_desc->names->
 			    indicators[indicator_num] != None)
-				XkbSetNamedIndicator(xkl_display,
+				XkbSetNamedIndicator(display,
 						     XkbUseCoreKbd,
 						     xkl_xkb_desc->names->
 						     indicators
@@ -345,10 +357,10 @@ xkl_indicator_set(gint indicator_num, gboolean set)
 				xkc.led = indicator_num;
 				xkc.led_mode =
 				    set ? LedModeOn : LedModeOff;
-				XChangeKeyboardControl(xkl_display,
+				XChangeKeyboardControl(display,
 						       KBLed | KBLedMode,
 						       &xkc);
-				XSync(xkl_display, False);
+				XSync(display, False);
 			}
 
 			return TRUE;
@@ -369,13 +381,12 @@ xkl_indicator_set(gint indicator_num, gboolean set)
 	if (map->ctrls) {
 		gulong which = map->ctrls;
 
-		XkbGetControls(xkl_display, XkbAllControlsMask,
-			       xkl_xkb_desc);
+		XkbGetControls(display, XkbAllControlsMask, xkl_xkb_desc);
 		if (set)
 			xkl_xkb_desc->ctrls->enabled_ctrls |= which;
 		else
 			xkl_xkb_desc->ctrls->enabled_ctrls &= ~which;
-		XkbSetControls(xkl_display, which | XkbControlsEnabledMask,
+		XkbSetControls(display, which | XkbControlsEnabledMask,
 			       xkl_xkb_desc);
 	}
 
@@ -404,7 +415,7 @@ xkl_indicator_set(gint indicator_num, gboolean set)
 				/* Important: Groups should be ignored here - because they are handled separately! */
 				/* XklLockGroup( group ); */
 			} else if (map->which_groups & XkbIM_UseLatched)
-				XkbLatchGroup(xkl_display, XkbUseCoreKbd,
+				XkbLatchGroup(display, XkbUseCoreKbd,
 					      group);
 			else {
 				/* Can do nothing. Just ignore the indicator */
@@ -420,7 +431,7 @@ xkl_indicator_set(gint indicator_num, gboolean set)
 					group = i;
 					break;
 				}
-			xkl_group_lock(group);
+			xkl_xkb_lock_group(engine, group);
 		}
 	}
 
@@ -447,10 +458,10 @@ xkl_indicator_set(gint indicator_num, gboolean set)
 
 		if (map->
 		    which_mods & (XkbIM_UseLocked | XkbIM_UseEffective))
-			XkbLockModifiers(xkl_display, XkbUseCoreKbd,
+			XkbLockModifiers(display, XkbUseCoreKbd,
 					 affect, mods);
 		else if (map->which_mods & XkbIM_UseLatched)
-			XkbLatchModifiers(xkl_display, XkbUseCoreKbd,
+			XkbLatchModifiers(display, XkbUseCoreKbd,
 					  affect, mods);
 		else {
 			return TRUE;
@@ -462,87 +473,85 @@ xkl_indicator_set(gint indicator_num, gboolean set)
 #endif
 
 gint
-xkl_xkb_init(void)
+xkl_xkb_init(XklEngine * engine)
 {
+	Display *display = xkl_engine_get_display(engine);
 #ifdef XKB_HEADERS_PRESENT
 	gint opcode;
 	gboolean xkl_xkb_ext_present;
-	static XklVTable xkl_xkb_vtable = {
-		"XKB",
-		XKLF_CAN_TOGGLE_INDICATORS |
-		    XKLF_CAN_OUTPUT_CONFIG_AS_ASCII |
-		    XKLF_CAN_OUTPUT_CONFIG_AS_BINARY,
-		xkl_xkb_config_activate,
-		xkl_xkb_config_init,
-		xkl_xkb_config_registry_load,
-		xkl_xkb_config_write_file,
 
-		xkl_xkb_groups_get_names,
-		xkl_xkb_groups_get_max_num,
-		xkl_xkb_groups_get_num,
-		xkl_xkb_group_lock,
-
-		xkl_xkb_process_x_event,
-		xkl_xkb_free_all_info,
-		xkl_xkb_if_cached_info_equals_actual,
-		xkl_xkb_load_all_info,
-		xkl_xkb_get_server_state,
-		xkl_xkb_listen_pause,
-		xkl_xkb_listen_resume,
-		xkl_xkb_indicators_set,
-	};
+	engine->priv->backend_id = "XKB";
+	engine->priv->features = XKLF_CAN_TOGGLE_INDICATORS |
+	    XKLF_CAN_OUTPUT_CONFIG_AS_ASCII |
+	    XKLF_CAN_OUTPUT_CONFIG_AS_BINARY;
+	engine->priv->activate_config = xkl_xkb_activate_config;
+	engine->priv->init_config = xkl_xkb_init_config;
+	engine->priv->load_config_registry = xkl_xkb_load_config_registry;
+	engine->priv->write_config_to_file = xkl_xkb_write_config_to_file;
+	engine->priv->get_groups_names = xkl_xkb_get_groups_names;
+	engine->priv->get_max_num_groups = xkl_xkb_get_max_num_groups;
+	engine->priv->get_num_groups = xkl_xkb_get_num_groups;
+	engine->priv->lock_group = xkl_xkb_lock_group;
+	engine->priv->process_x_event = xkl_xkb_process_x_event;
+	engine->priv->free_all_info = xkl_xkb_free_all_info;
+	engine->priv->if_cached_info_equals_actual =
+	    xkl_xkb_if_cached_info_equals_actual;
+	engine->priv->load_all_info = xkl_xkb_load_all_info;
+	engine->priv->get_server_state = xkl_xkb_get_server_state;
+	engine->priv->pause_listen = xkl_xkb_pause_listen;
+	engine->priv->resume_listen = xkl_xkb_resume_listen;
+	engine->priv->set_indicators = xkl_xkb_set_indicators;
 
 	if (getenv("XKL_XKB_DISABLE") != NULL)
 		return -1;
 
-	xkl_xkb_ext_present = XkbQueryExtension(xkl_display,
+	xkl_xkb_ext_present = XkbQueryExtension(display,
 						&opcode,
 						&xkl_xkb_event_type,
 						&xkl_xkb_error_code, NULL,
 						NULL);
 	if (!xkl_xkb_ext_present) {
 		XSetErrorHandler((XErrorHandler)
-				 xkl_default_error_handler);
+				 engine->priv->default_error_handler);
 		return -1;
 	}
 
 	xkl_debug(160,
 		  "xkbEvenType: %X, xkbError: %X, display: %p, root: "
 		  WINID_FORMAT "\n", xkl_xkb_event_type,
-		  xkl_xkb_error_code, xkl_display, xkl_root_window);
+		  xkl_xkb_error_code, display, engine->priv->root_window);
 
-	xkl_xkb_vtable.base_config_atom =
-	    XInternAtom(xkl_display, _XKB_RF_NAMES_PROP_ATOM, False);
-	xkl_xkb_vtable.backup_config_atom =
-	    XInternAtom(xkl_display, "_XKB_RULES_NAMES_BACKUP", False);
+	engine->priv->base_config_atom =
+	    XInternAtom(display, _XKB_RF_NAMES_PROP_ATOM, False);
+	engine->priv->backup_config_atom =
+	    XInternAtom(display, "_XKB_RULES_NAMES_BACKUP", False);
 
-	xkl_xkb_vtable.default_model = "pc101";
-	xkl_xkb_vtable.default_layout = "us";
+	engine->priv->default_model = "pc101";
+	engine->priv->default_layout = "us";
 
-	xkl_vtable = &xkl_xkb_vtable;
 
 	/* First, we have to assign xkl_vtable - 
 	   because this function uses it */
 
-	if (xkl_xkb_config_multiple_layouts_supported())
-		xkl_xkb_vtable.features |= XKLF_MULTIPLE_LAYOUTS_SUPPORTED;
+	if (xkl_xkb_multiple_layouts_supported(engine))
+		engine->priv->features |= XKLF_MULTIPLE_LAYOUTS_SUPPORTED;
 
 	return 0;
 #else
 	xkl_debug(160,
 		  "NO XKB LIBS, display: %p, root: " WINID_FORMAT
-		  "\n", xkl_display, xkl_root_window);
+		  "\n", display, engine->priv->root_window);
 	return -1;
 #endif
 }
 
 #ifdef XKB_HEADERS_PRESENT
 const gchar *
-xkl_xkb_event_get_name(int xkb_type)
+xkl_xkb_event_get_name(gint xkb_type)
 {
 	/* Not really good to use the fact of consecutivity
 	   but XKB protocol extension is already standartized so... */
-	static const char *evt_names[] = {
+	static const gchar *evt_names[] = {
 		"XkbNewKeyboardNotify",
 		"XkbMapNotify",
 		"XkbStateNotify",

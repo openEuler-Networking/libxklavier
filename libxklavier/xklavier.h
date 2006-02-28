@@ -230,7 +230,7 @@ extern "C" {
  * @param modifiers is a bitmask of modifiers
  * @return True on success
  */
-	extern gboolean xkl_engine_key_ungrab(XklEngine * engine,
+	extern gboolean xkl_engine_ungrab_key(XklEngine * engine,
 					      gint keycode,
 					      unsigned modifiers);
 

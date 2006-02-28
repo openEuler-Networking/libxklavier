@@ -33,10 +33,22 @@ extern "C" {
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+	typedef struct _XklConfig XklConfig;
+	typedef struct _XklConfigPrivate XklConfigPrivate;
+	typedef struct _XklConfigClass XklConfigClass;
+
 	typedef struct _XklConfigItem XklConfigItem;
 	typedef struct _XklConfigItemClass XklConfigItemClass;
+
 	typedef struct _XklConfigRec XklConfigRec;
 	typedef struct _XklConfigRecClass XklConfigRecClass;
+
+#define XKL_TYPE_CONFIG             (xkl_config_get_type ())
+#define XKL_CONFIG(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), XKL_TYPE_CONFIG, XklConfig))
+#define XKL_CONFIG_CLASS(obj)       (G_TYPE_CHECK_CLASS_CAST ((obj), XKL_CONFIG,  XklConfigClass))
+#define XKL_IS_CONFIG(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), XKL_TYPE_CONFIG))
+#define XKL_IS_CONFIG_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE ((obj), XKL_TYPE_CONFIG))
+#define XKL_CONFIG_GET_CLASS        (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_CONFIG, XklConfigClass))
 
 #define XKL_TYPE_CONFIG_ITEM             (xkl_config_item_get_type ())
 #define XKL_CONFIG_ITEM(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), XKL_TYPE_CONFIG_ITEM, XklConfigItem))
@@ -53,6 +65,41 @@ extern "C" {
 #define XKL_CONFIG_REC_GET_CLASS        (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_CONFIG_REC, XklConfigRecClass))
 
 #endif				// DOXYGEN_SHOULD_SKIP_THIS
+
+/**
+ * The configuration manager. Corresponds to XML element "configItem".
+ */
+	struct _XklConfig {
+/**
+ * The superclass object
+ */
+		GObject parent;
+
+		XklConfigPrivate *priv;
+	};
+
+/**
+ * The XklConfig class, derived from GObject
+ */
+	struct _XklConfigClass {
+    /**
+     * The superclass
+     */
+		GObjectClass parent_class;
+	};
+/**
+ * Get type info for XConfigRec
+ * @return GType for XConfigRec
+ */
+	extern GType xkl_config_get_type(void);
+
+/**
+ * Create new XklConfigRec
+ * @return new instance
+ */
+	extern XklConfig *xkl_config_get_instance(XklEngine * engine);
+
+
 
 /**
  * The configuration item. Corresponds to XML element "configItem".
@@ -153,33 +200,25 @@ extern "C" {
  */
 
 /**
- * Initializes XML configuration-related structures
- */
-	extern void xkl_config_init(XklEngine * engine);
-
-/**
- * Cleans XML configuration-related structures
- */
-	extern void xkl_config_term(void);
-
-/**
  * Loads XML configuration registry
  * @param file_name file name to load
  * @return true on success
  */
-	extern gboolean xkl_config_registry_load_from_file(const gchar *
+	extern gboolean xkl_config_load_registry_from_file(XklConfig *
+							   config,
+							   const gchar *
 							   file_name);
 
 /**
  * Loads XML configuration registry
  * @return true on success
  */
-	extern gboolean xkl_config_registry_load(void);
+	extern gboolean xkl_config_load_registry(XklConfig * config);
 
 /**
  * Frees XML configuration registry
  */
-	extern void xkl_config_registry_free(void);
+	extern void xkl_config_free_registry(XklConfig * config);
 /** @} */
 
 /**
@@ -210,7 +249,8 @@ extern "C" {
  * @param func is a callback to call for every model
  * @param data is anything which can be stored into the pointer
  */
-	extern void xkl_config_enum_models(ConfigItemProcessFunc func,
+	extern void xkl_config_enum_models(XklConfig * config,
+					   ConfigItemProcessFunc func,
 					   gpointer data);
 
 /**
@@ -218,7 +258,8 @@ extern "C" {
  * @param func is a callback to call for every layout
  * @param data is anything which can be stored into the pointer
  */
-	extern void xkl_config_enum_layouts(ConfigItemProcessFunc func,
+	extern void xkl_config_enum_layouts(XklConfig * config,
+					    ConfigItemProcessFunc func,
 					    gpointer data);
 
 /**
@@ -227,7 +268,8 @@ extern "C" {
  * @param func is a callback to call for every layout variant
  * @param data is anything which can be stored into the pointer
  */
-	extern void xkl_config_enum_layout_variants(const gchar *
+	extern void xkl_config_enum_layout_variants(XklConfig * config,
+						    const gchar *
 						    layout_name,
 						    ConfigItemProcessFunc
 						    func, gpointer data);
@@ -237,7 +279,8 @@ extern "C" {
  * @param func is a callback to call for every option group
  * @param data is anything which can be stored into the pointer
  */
-	extern void xkl_config_enum_option_groups(GroupProcessFunc func,
+	extern void xkl_config_enum_option_groups(XklConfig * config,
+						  GroupProcessFunc func,
 						  gpointer data);
 
 /**
@@ -247,7 +290,8 @@ extern "C" {
  * @param func is a callback to call for every option
  * @param data is anything which can be stored into the pointer
  */
-	extern void xkl_config_enum_options(const gchar *
+	extern void xkl_config_enum_options(XklConfig * config,
+					    const gchar *
 					    option_group_name,
 					    ConfigItemProcessFunc func,
 					    gpointer data);
@@ -265,7 +309,8 @@ extern "C" {
  * keyboard model. On successfull return, the descriptions are filled.
  * @return TRUE if appropriate element was found and loaded
  */
-	extern gboolean xkl_config_find_model(XklConfigItem * item);
+	extern gboolean xkl_config_find_model(XklConfig * config,
+					      XklConfigItem * item);
 
 /**
  * Loads a keyboard layout information from the XML configuration registry.
@@ -273,7 +318,8 @@ extern "C" {
  * keyboard layout. On successfull return, the descriptions are filled.
  * @return TRUE if appropriate element was found and loaded
  */
-	extern gboolean xkl_config_find_layout(XklConfigItem * item);
+	extern gboolean xkl_config_find_layout(XklConfig * config,
+					       XklConfigItem * item);
 
 /**
  * Loads a keyboard layout variant information from the XML configuration 
@@ -283,7 +329,8 @@ extern "C" {
  * keyboard layout variant. On successfull return, the descriptions are filled.
  * @return TRUE if appropriate element was found and loaded
  */
-	extern gboolean xkl_config_find_variant(const char *layout_name,
+	extern gboolean xkl_config_find_variant(XklConfig * config,
+						const char *layout_name,
 						XklConfigItem * item);
 
 /**
@@ -295,7 +342,8 @@ extern "C" {
  * the corresponding attribute of XML element "group".
  * @return TRUE if appropriate element was found and loaded
  */
-	extern gboolean xkl_config_find_option_group(XklConfigItem * item,
+	extern gboolean xkl_config_find_option_group(XklConfig * config,
+						     XklConfigItem * item,
 						     gboolean *
 						     allow_multiple_selection);
 
@@ -307,7 +355,8 @@ extern "C" {
  * keyboard option. On successfull return, the descriptions are filled.
  * @return TRUE if appropriate element was found and loaded
  */
-	extern gboolean xkl_config_find_option(const gchar *
+	extern gboolean xkl_config_find_option(XklConfig * config,
+					       const gchar *
 					       option_group_name,
 					       XklConfigItem * item);
 /** @} */
@@ -325,14 +374,16 @@ extern "C" {
  * @see XklSetKeyAsSwitcher
  * At the moment, accepts only _ONE_ layout. Later probably I'll improve this..
  */
-	extern gboolean xkl_config_activate(const XklConfigRec * data);
+	extern gboolean xkl_config_activate(XklConfig * config,
+					    const XklConfigRec * data);
 
 /**
  * Loads the current XKB configuration (from X server)
  * @param data is a buffer for XKB configuration
  * @return TRUE on success
  */
-	extern gboolean xkl_config_get_from_server(XklConfigRec * data);
+	extern gboolean xkl_config_get_from_server(XklConfig * config,
+						   XklConfigRec * data);
 
 /**
  * Loads the current XKB configuration (from backup)
@@ -340,7 +391,8 @@ extern "C" {
  * @return TRUE on success
  * @see XklBackupNamesProp
  */
-	extern gboolean xkl_config_get_from_backup(XklConfigRec * data);
+	extern gboolean xkl_config_get_from_backup(XklConfig * config,
+						   XklConfigRec * data);
 
 /**
  * Writes some XKB configuration into XKM/XKB file
@@ -350,7 +402,8 @@ extern "C" {
  * @param binary is a flag indicating whether the output file should be binary
  * @return TRUE on success
  */
-	extern gboolean xkl_config_write_file(const gchar * file_name,
+	extern gboolean xkl_config_write_file(XklConfig * config,
+					      const gchar * file_name,
 					      const XklConfigRec * data,
 					      const gboolean binary);
 
