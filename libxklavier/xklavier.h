@@ -280,7 +280,8 @@ extern "C" {
  * @return the window title of some window or NULL. 
  * If not NULL, it should be freed with XFree
  */
-	extern gchar *xkl_get_window_title(Window w);
+	extern gchar *xkl_engine_get_window_title(XklEngine * engine,
+						  Window w);
 
 /** 
  * Finds the state for a given window (for its "App window").

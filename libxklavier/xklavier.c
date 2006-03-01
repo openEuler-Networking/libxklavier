@@ -60,7 +60,7 @@ xkl_engine_set_switch_to_secondary_group(XklEngine * engine, gboolean val)
 }
 
 void
-xkl_engine_group_allow_one_switch_to_secondary(XklEngine * engine)
+xkl_engine_allow_one_switch_to_secondary_group(XklEngine * engine)
 {
 	xkl_debug(150,
 		  "Setting allow_one_switch_to_secondary_group flag\n");
@@ -255,7 +255,7 @@ xkl_term(XklEngine * engine)
 }
 
 gboolean
-xkl_engine_key_grab(XklEngine * engine, gint keycode, guint modifiers)
+xkl_engine_grab_key(XklEngine * engine, gint keycode, guint modifiers)
 {
 	gboolean ret_code;
 	gchar *keyname;
@@ -291,7 +291,7 @@ xkl_engine_key_grab(XklEngine * engine, gint keycode, guint modifiers)
 }
 
 gboolean
-xkl_engine_key_ungrab(XklEngine * engine, gint keycode, guint modifiers)
+xkl_engine_ungrab_key(XklEngine * engine, gint keycode, guint modifiers)
 {
 	if (0 == keycode)
 		return FALSE;
@@ -330,7 +330,7 @@ xkl_engine_get_current_window_group(XklEngine * engine)
 			  "Unbelievable: current client " WINID_FORMAT
 			  ", '%s' has no group\n",
 			  engine->priv->curr_toplvl_win,
-			  xkl_get_debug_window_title(engine->priv->
+			  xkl_get_debug_window_title(engine, engine->priv->
 						     curr_toplvl_win));
 	return 0;
 }
@@ -384,7 +384,7 @@ xkl_engine_load_window_tree(XklEngine * engine)
 	XGetInputFocus(xkl_engine_get_display(engine), &focused, &revert);
 
 	xkl_debug(160, "initially focused: " WINID_FORMAT ", '%s'\n",
-		  focused, xkl_get_debug_window_title(focused));
+		  focused, xkl_get_debug_window_title(engine, focused));
 
 	have_toplevel_win =
 	    xkl_engine_find_toplevel_window(engine, focused,
@@ -402,7 +402,7 @@ xkl_engine_load_window_tree(XklEngine * engine)
 			  "initial toplevel: " WINID_FORMAT
 			  ", '%s' %s state %d/%X\n",
 			  engine->priv->curr_toplvl_win,
-			  xkl_get_debug_window_title(engine->priv->
+			  xkl_get_debug_window_title(engine, engine->priv->
 						     curr_toplvl_win),
 			  (have_state ? "with" : "without"),
 			  (have_state ? engine->priv->curr_state.

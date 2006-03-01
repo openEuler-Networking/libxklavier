@@ -342,7 +342,7 @@ xkl_config_term(void)
 }
 
 gboolean
-xkl_config_registry_load_from_file(XklConfig * config,
+xkl_config_load_registry_from_file(XklConfig * config,
 				   const gchar * file_name)
 {
 	config->priv->doc = xmlParseFile(file_name);

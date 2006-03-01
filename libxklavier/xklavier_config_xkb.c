@@ -71,7 +71,7 @@ xkl_rules_set_free(void)
 #endif
 
 void
-xkl_xkb_config_init(void)
+xkl_xkb_init_config(XklConfig * config)
 {
 #ifdef XKB_HEADERS_PRESENT
 	XkbInitAtoms(NULL);
@@ -390,7 +390,7 @@ _XklXkbConfigCleanupNative(gpointer componentNamesPtr)
 
 /* check only client side support */
 gboolean
-xkl_xkb_config_multiple_layouts_supported(XklConfig * config)
+xkl_xkb_multiple_layouts_supported(XklEngine * engine)
 {
 	enum { NON_SUPPORTED, SUPPORTED, UNCHECKED };
 
@@ -413,7 +413,6 @@ xkl_xkb_config_multiple_layouts_supported(XklConfig * config)
 		xkl_debug(100, "!!! Checking multiple layouts support\n");
 		support_state = NON_SUPPORTED;
 #ifdef XKB_HEADERS_PRESENT
-		XklEngine *engine = xkl_config_get_engine(config);
 		if (xkl_xkb_config_native_prepare
 		    (engine, &data, &component_names)) {
 			xkl_debug(100,

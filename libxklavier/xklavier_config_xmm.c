@@ -20,7 +20,7 @@
 #include <X11/keysymdef.h>
 
 void
-xkl_xmm_config_init(void)
+xkl_xmm_init_config(XklConfig * config)
 {
 }
 

@@ -313,7 +313,8 @@ xkl_xkb_get_server_state(XklEngine * engine, XklState * current_state_out)
  * Actually taken from mxkbledpanel, valueChangedProc
  */
 gboolean
-xkl_set_indicator(XklEngine * engine, gint indicator_num, gboolean set)
+xkl_engine_set_indicator(XklEngine * engine, gint indicator_num,
+			 gboolean set)
 {
 	XkbIndicatorMapPtr map;
 	Display *display = xkl_engine_get_display(engine);

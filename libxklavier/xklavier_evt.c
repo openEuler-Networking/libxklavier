@@ -94,14 +94,15 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 	}
 
 	xkl_debug(150, "Window " WINID_FORMAT ", '%s' has got focus\n",
-		  win, xkl_get_debug_window_title(win));
+		  win, xkl_get_debug_window_title(engine, win));
 
 	if (!xkl_engine_find_toplevel_window(engine, win, &toplevel_win)) {
 		return;
 	}
 
 	xkl_debug(150, "Appwin " WINID_FORMAT ", '%s' has got focus\n",
-		  toplevel_win, xkl_get_debug_window_title(toplevel_win));
+		  toplevel_win, xkl_get_debug_window_title(engine,
+							   toplevel_win));
 
 	if (xkl_engine_get_toplevel_window_state
 	    (engine, toplevel_win, &selected_window_state)) {
@@ -141,7 +142,8 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 				  "CurClient:changed to " WINID_FORMAT
 				  ", '%s'\n",
 				  engine->priv->curr_toplvl_win,
-				  xkl_get_debug_window_title(engine->priv->
+				  xkl_get_debug_window_title(engine,
+							     engine->priv->
 							     curr_toplvl_win));
 
 			new_win_transparent =
@@ -246,7 +248,8 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 				  "CurClient:changed to " WINID_FORMAT
 				  ", '%s'\n",
 				  engine->priv->curr_toplvl_win,
-				  xkl_get_debug_window_title(engine->priv->
+				  xkl_get_debug_window_title(engine,
+							     engine->priv->
 							     curr_toplvl_win));
 			xkl_engine_add_toplevel_window(engine,
 						       engine->priv->
@@ -280,7 +283,8 @@ xkl_engine_process_focus_out_evt(XklEngine * engine,
 	}
 
 	xkl_debug(160, "Window " WINID_FORMAT ", '%s' has lost focus\n",
-		  fev->window, xkl_get_debug_window_title(fev->window));
+		  fev->window, xkl_get_debug_window_title(engine,
+							  fev->window));
 
 	if (xkl_engine_is_window_transparent(engine, fev->window)) {
 		xkl_debug(150, "Leaving transparent window!\n");
@@ -382,8 +386,8 @@ xkl_engine_process_create_window_evt(XklEngine * engine,
 	xkl_debug(200,
 		  "Under-root window " WINID_FORMAT
 		  "/%s (%d,%d,%d x %d) is created\n", cev->window,
-		  xkl_get_debug_window_title(cev->window), cev->x, cev->y,
-		  cev->width, cev->height);
+		  xkl_get_debug_window_title(engine, cev->window), cev->x,
+		  cev->y, cev->width, cev->height);
 
 	if (!cev->override_redirect) {
 /* ICCCM 4.1.6: override-redirect is NOT private to
@@ -470,11 +474,11 @@ xkl_engine_process_state_modification(XklEngine * engine,
 
 	xkl_debug(150, "Focused window: " WINID_FORMAT ", '%s'\n",
 		  focused_toplevel,
-		  xkl_get_debug_window_title(focused_toplevel));
+		  xkl_get_debug_window_title(engine, focused_toplevel));
 	if (engine->priv->listener_type & XKLL_MANAGE_WINDOW_STATES) {
 		xkl_debug(150, "CurClient: " WINID_FORMAT ", '%s'\n",
 			  engine->priv->curr_toplvl_win,
-			  xkl_get_debug_window_title(engine->priv->
+			  xkl_get_debug_window_title(engine, engine->priv->
 						     curr_toplvl_win));
 
 		if (focused_toplevel != engine->priv->curr_toplvl_win) {
@@ -506,7 +510,8 @@ xkl_engine_process_state_modification(XklEngine * engine,
 				  "CurClient:changed to " WINID_FORMAT
 				  ", '%s'\n",
 				  engine->priv->curr_toplvl_win,
-				  xkl_get_debug_window_title(engine->priv->
+				  xkl_get_debug_window_title(engine,
+							     engine->priv->
 							     curr_toplvl_win));
 		}
 		/* If the window already has this this state - we are just restoring it!

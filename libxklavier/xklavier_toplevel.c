@@ -56,7 +56,7 @@ xkl_engine_add_toplevel_window(XklEngine * engine, Window toplevel_win,
 	xkl_debug(150,
 		  "Trying to add window " WINID_FORMAT
 		  "/%s with group %d\n", toplevel_win,
-		  xkl_get_debug_window_title(toplevel_win),
+		  xkl_get_debug_window_title(engine, toplevel_win),
 		  init_state->group);
 
 	if (!ignore_existing_state) {
@@ -105,7 +105,8 @@ xkl_engine_add_toplevel_window(XklEngine * engine, Window toplevel_win,
 	}
 
 	if (parent == (Window) NULL)
-		parent = xkl_get_registered_parent(toplevel_win);
+		parent =
+		    xkl_engine_get_registered_parent(engine, toplevel_win);
 
 	xkl_debug(150, "done\n");
 }
@@ -221,7 +222,8 @@ xkl_engine_find_toplevel_window(XklEngine * engine, Window win,
 	if (!rv)
 		xkl_debug(200,
 			  "Could not get the app window for " WINID_FORMAT
-			  "/%s\n", win, xkl_get_debug_window_title(win));
+			  "/%s\n", win, xkl_get_debug_window_title(engine,
+								   win));
 
 	return rv;
 }
@@ -271,13 +273,14 @@ xkl_engine_get_toplevel_window_state(XklEngine * engine,
 			  "Appwin " WINID_FORMAT
 			  ", '%s' has the group %d, indicators %X\n",
 			  toplevel_win,
-			  xkl_get_debug_window_title(toplevel_win), grp,
-			  inds);
+			  xkl_get_debug_window_title(engine, toplevel_win),
+			  grp, inds);
 	else
 		xkl_debug(150,
 			  "Appwin " WINID_FORMAT
 			  ", '%s' does not have state\n", toplevel_win,
-			  xkl_get_debug_window_title(toplevel_win));
+			  xkl_get_debug_window_title(engine,
+						     toplevel_win));
 
 	return ret;
 }

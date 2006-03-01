@@ -234,7 +234,8 @@ extern void xkl_engine_process_state_modification(XklEngine * engine,
 						  unsigned inds,
 						  gboolean set_indicators);
 
-extern Window xkl_get_registered_parent(Window win);
+extern Window xkl_engine_get_registered_parent(XklEngine * engine,
+					       Window win);
 extern gboolean xkl_engine_load_all_info(XklEngine * engine);
 extern void xkl_engine_free_all_info(XklEngine * engine);
 extern void xkl_engine_reset_all_info(XklEngine * engine,
@@ -288,7 +289,7 @@ extern void xkl_engine_save_toplevel_window_state(XklEngine * engine,
 extern void xkl_engine_select_input_merging(XklEngine * engine, Window win,
 					    gulong mask);
 
-extern gchar *xkl_get_debug_window_title(Window win);
+extern gchar *xkl_get_debug_window_title(XklEngine * engine, Window win);
 
 extern Status xkl_engine_query_tree(XklEngine * engine,
 				    Window w,

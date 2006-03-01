@@ -216,7 +216,7 @@ xkl_xmm_get_server_state(XklEngine * engine, XklState * state)
 }
 
 void
-xkl_xmm_group_actualize(XklEngine * engine, gint group)
+xkl_xmm_actualize_group(XklEngine * engine, gint group)
 {
 	char cmd[1024];
 	int res;

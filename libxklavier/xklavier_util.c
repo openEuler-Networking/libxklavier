@@ -88,13 +88,13 @@ xkl_engine_save_state(XklEngine * engine, Window win, XklState * state)
  *  Prepares the name of window suitable for debugging (32characters long).
  */
 gchar *
-xkl_get_debug_window_title(Window win)
+xkl_get_debug_window_title(XklEngine * engine, Window win)
 {
 	static gchar sname[33];
 	gchar *name;
 	strcpy(sname, "NULL");
 	if (win != (Window) NULL) {
-		name = xkl_get_window_title(win);
+		name = xkl_engine_get_window_title(engine, win);
 		if (name != NULL) {
 			snprintf(sname, sizeof(sname), "%.32s", name);
 			g_free(name);
@@ -138,7 +138,8 @@ xkl_engine_load_subtree(XklEngine * engine, Window window, gint level,
 				  "Window " WINID_FORMAT
 				  " '%s' has WM_STATE so we'll add it\n",
 				  *child,
-				  xkl_get_debug_window_title(*child));
+				  xkl_get_debug_window_title(engine,
+							     *child));
 			xkl_engine_add_toplevel_window(engine, *child,
 						       window, TRUE,
 						       init_state);
@@ -147,7 +148,8 @@ xkl_engine_load_subtree(XklEngine * engine, Window window, gint level,
 				  "Window " WINID_FORMAT
 				  " '%s' does not have have WM_STATE so we'll not add it\n",
 				  *child,
-				  xkl_get_debug_window_title(*child));
+				  xkl_get_debug_window_title(engine,
+							     *child));
 
 			if (level == 0) {
 				xkl_debug(200,
