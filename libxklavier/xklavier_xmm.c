@@ -176,8 +176,9 @@ xkl_xmm_if_cached_info_equals_actual(XklEngine * engine)
 gboolean
 xkl_xmm_load_all_info(XklEngine * engine)
 {
-	return xkl_config_get_full_from_server(&current_xmm_rules,
-					       &current_xmm_config);
+	return xkl_config_rec_get_full_from_server(&current_xmm_rules,
+						   &current_xmm_config,
+						   engine);
 }
 
 void

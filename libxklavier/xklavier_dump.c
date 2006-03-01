@@ -177,10 +177,13 @@ xkb_server_map_dump(FILE * fs, gint level, XkbServerMapPtr server,
 }
 
 static void
-xkb_key_type_dump(FILE * fs, gint level, XkbKeyTypePtr type)
+xkb_key_type_dump(FILE * fs, gint level, XkbKeyTypePtr type,
+		  XklEngine * engine)
 {
-	gchar *z = type->name == None ? NULL : XGetAtomName(xkl_display,
-							    type->name);
+	gchar *z =
+	    type->name ==
+	    None ? NULL : XGetAtomName(xkl_engine_get_display(engine),
+				       type->name);
 	fprintf(fs, "%*sname: 0x%X(%s)\n", level, "", (gint) type->name,
 		z);
 	if (z != NULL)
@@ -202,7 +205,7 @@ xkb_sym_map_dump(FILE * fs, gint level, XkbSymMapPtr ksm)
 
 static void
 xkb_client_map_dump(FILE * fs, gint level, XkbClientMapPtr map,
-		    XkbDescPtr kbd)
+		    XkbDescPtr kbd, XklEngine * engine)
 {
 	gint i;
 	fprintf(fs, "%*ssize_types: %d\n", level, "", map->size_types);
@@ -211,7 +214,7 @@ xkb_client_map_dump(FILE * fs, gint level, XkbClientMapPtr map,
 		XkbKeyTypePtr type = map->types;
 		for (i = 0; i < map->num_types; i++) {
 			fprintf(fs, "%*stypes[%d]:\n", level, "", i);
-			xkb_key_type_dump(fs, level + 2, type++);
+			xkb_key_type_dump(fs, level + 2, type++, engine);
 		}
 	} else
 		fprintf(fs, "%*sNO types\n", level, "");
@@ -236,7 +239,7 @@ xkb_client_map_dump(FILE * fs, gint level, XkbClientMapPtr map,
 }
 
 static void
-xkb_desc_dump(FILE * fs, gint level, XkbDescPtr kbd)
+xkb_desc_dump(FILE * fs, gint level, XkbDescPtr kbd, XklEngine * engine)
 {
 	fprintf(fs, "%*sflags: 0x%X\n", level, "", kbd->flags);
 	fprintf(fs, "%*sdevice_spec: %d\n", level, "", kbd->device_spec);
@@ -257,18 +260,20 @@ xkb_desc_dump(FILE * fs, gint level, XkbDescPtr kbd)
 
 	if (kbd->map != NULL) {
 		fprintf(fs, "%*smap:\n", level, "");
-		xkb_client_map_dump(fs, level + 2, kbd->map, kbd);
+		xkb_client_map_dump(fs, level + 2, kbd->map, kbd, engine);
 	} else
 		fprintf(fs, "%*sNO map\n", level, "");
 	fprintf(fs, "XKB libraries not present\n");
 }
 
 void
-xkl_dump_xkb_desc(const gchar * file_name, XkbDescPtr kbd)
+xkl_engine_dump_xkb_desc(XklEngine * engine, const gchar * file_name,
+			 XkbDescPtr kbd)
 {
 	FILE *fs = fopen(file_name, "w+");
 	if (fs != NULL) {
-		xkb_desc_dump(fs, 0, kbd == NULL ? xkl_xkb_desc : kbd);
+		xkb_desc_dump(fs, 0, kbd == NULL ? xkl_xkb_desc : kbd,
+			      engine);
 		fclose(fs);
 	}
 

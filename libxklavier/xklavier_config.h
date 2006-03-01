@@ -374,16 +374,16 @@ extern "C" {
  * @see XklSetKeyAsSwitcher
  * At the moment, accepts only _ONE_ layout. Later probably I'll improve this..
  */
-	extern gboolean xkl_config_activate(XklConfig * config,
-					    const XklConfigRec * data);
+	extern gboolean xkl_config_rec_activate(const XklConfigRec * data,
+						XklEngine * engine);
 
 /**
  * Loads the current XKB configuration (from X server)
  * @param data is a buffer for XKB configuration
  * @return TRUE on success
  */
-	extern gboolean xkl_config_get_from_server(XklConfig * config,
-						   XklConfigRec * data);
+	extern gboolean xkl_config_rec_get_from_server(XklConfigRec * data,
+						       XklEngine * engine);
 
 /**
  * Loads the current XKB configuration (from backup)
@@ -391,8 +391,8 @@ extern "C" {
  * @return TRUE on success
  * @see XklBackupNamesProp
  */
-	extern gboolean xkl_config_get_from_backup(XklConfig * config,
-						   XklConfigRec * data);
+	extern gboolean xkl_config_rec_get_from_backup(XklConfigRec * data,
+						       XklEngine * engine);
 
 /**
  * Writes some XKB configuration into XKM/XKB file
@@ -402,10 +402,11 @@ extern "C" {
  * @param binary is a flag indicating whether the output file should be binary
  * @return TRUE on success
  */
-	extern gboolean xkl_config_write_file(XklConfig * config,
-					      const gchar * file_name,
-					      const XklConfigRec * data,
-					      const gboolean binary);
+	extern gboolean xkl_config_rec_write_file(XklEngine * engine,
+						  const gchar * file_name,
+						  const XklConfigRec *
+						  data,
+						  const gboolean binary);
 
 /** @} */
 
@@ -423,9 +424,11 @@ extern "C" {
  *   all records are allocated using standard malloc 
  * @return TRUE on success
  */
-	extern gboolean xkl_get_names_prop(Atom rules_atom_name,
-					   gchar ** rules_file_out,
-					   XklConfigRec * config_out);
+	extern gboolean xkl_engine_get_names_prop(XklEngine * engine,
+						  Atom rules_atom_name,
+						  gchar ** rules_file_out,
+						  XklConfigRec *
+						  config_out);
 
 /**
  * Saves the XKB configuration into any root window property
@@ -434,23 +437,25 @@ extern "C" {
  * @param config is a configuration to save 
  * @return TRUE on success
  */
-	extern gboolean xkl_set_names_prop(Atom rules_atom_name,
-					   gchar * rules_file,
-					   const XklConfigRec * config);
+	extern gboolean xkl_engine_set_names_prop(XklEngine * engine,
+						  Atom rules_atom_name,
+						  gchar * rules_file,
+						  const XklConfigRec *
+						  config);
 
 /**
  * Backups current XKB configuration into some property - 
  * if this property is not defined yet.
  * @return TRUE on success
  */
-	extern gboolean xkl_backup_names_prop();
+	extern gboolean xkl_backup_names_prop(XklEngine * engine);
 
 /**
  * Restores XKB from the property saved by xkl_backup_names_prop
  * @return TRUE on success
  * @see xkl_backup_names_prop
  */
-	extern gboolean xkl_restore_names_prop();
+	extern gboolean xkl_restore_names_prop(XklEngine * engine);
 
 /** @} */
 

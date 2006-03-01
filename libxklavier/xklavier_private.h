@@ -313,8 +313,10 @@ extern gint xkl_get_language_priority(const gchar * language);
 extern gchar *xkl_engine_get_ruleset_name(XklEngine * engine,
 					  const gchar default_ruleset[]);
 
-extern gboolean xkl_config_get_full_from_server(gchar ** rules_file_out,
-						XklConfigRec * data);
+extern gboolean xkl_config_rec_get_full_from_server(gchar **
+						    rules_file_out,
+						    XklConfigRec * data,
+						    XklEngine * engine);
 
 extern gchar *xkl_strings_concat_comma_separated(gchar ** array);
 

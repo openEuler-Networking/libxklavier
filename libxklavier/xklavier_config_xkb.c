@@ -465,8 +465,8 @@ xkl_xkb_activate_config(XklConfig * config, const XklConfigRec * data)
 		    xkl_config_get_keyboard(config, &component_names,
 					    TRUE);
 		if (xkb != NULL) {
-			if (xkl_set_names_prop
-			    (engine->priv->base_config_atom,
+			if (xkl_engine_set_names_prop
+			    (engine, engine->priv->base_config_atom,
 			     xkl_engine_get_ruleset_name(engine,
 							 XKB_DEFAULT_RULESET),
 			     data))

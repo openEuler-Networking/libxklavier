@@ -18,7 +18,9 @@ extern XkbDescPtr xkl_xkb_desc;
 
 extern gchar *xkl_xkb_indicator_names[];
 
-extern void xkl_dump_xkb_desc(const char *file_name, XkbDescPtr kbd);
+extern void xkl_engine_dump_xkb_desc(XklEngine * engine,
+				     const char *file_name,
+				     XkbDescPtr kbd);
 
 extern gboolean xkl_xkb_multiple_layouts_supported(XklEngine * engine);
 
