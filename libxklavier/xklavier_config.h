@@ -402,11 +402,13 @@ extern "C" {
  * @param binary is a flag indicating whether the output file should be binary
  * @return TRUE on success
  */
-	extern gboolean xkl_config_rec_write_file(XklEngine * engine,
-						  const gchar * file_name,
-						  const XklConfigRec *
-						  data,
-						  const gboolean binary);
+	extern gboolean xkl_config_rec_write_to_file(XklEngine * engine,
+						     const gchar *
+						     file_name,
+						     const XklConfigRec *
+						     data,
+						     const gboolean
+						     binary);
 
 /** @} */
 

@@ -357,7 +357,7 @@ xkl_config_registry_load_from_file(XklConfig * config,
 }
 
 void
-xkl_config_registry_free(XklConfig * config)
+xkl_config_free_registry(XklConfig * config)
 {
 	if (xkl_config_registry_is_initialized(config)) {
 		xmlXPathFreeContext(config->priv->xpath_context);
@@ -519,15 +519,14 @@ xkl_config_find_option(XklConfig * config, const char *option_group_name,
  * Calling through vtable
  */
 gboolean
-xkl_config_activate(XklConfig * config, const XklConfigRec * data)
+xkl_config_rec_activate(const XklConfigRec * data, XklEngine * engine)
 {
-	XklEngine *engine = xkl_config_get_engine(config);
 	xkl_engine_ensure_vtable_inited(engine);
-	return xkl_engine_vcall(engine, activate_config) (config, data);
+	return xkl_engine_vcall(engine, activate_config) (engine, data);
 }
 
 gboolean
-xkl_config_registry_load(XklConfig * config)
+xkl_config_load_registry(XklConfig * config)
 {
 	XklEngine *engine = xkl_config_get_engine(config);
 	xkl_engine_ensure_vtable_inited(engine);
@@ -535,10 +534,10 @@ xkl_config_registry_load(XklConfig * config)
 }
 
 gboolean
-xkl_config_write_file(XklConfig * config, const gchar * file_name,
-		      const XklConfigRec * data, const gboolean binary)
+xkl_config_rec_write_to_file(XklEngine * engine, const gchar * file_name,
+			     const XklConfigRec * data,
+			     const gboolean binary)
 {
-	XklEngine *engine = xkl_config_get_engine(config);
 	if ((!binary &&
 	     !(engine->priv->features & XKLF_CAN_OUTPUT_CONFIG_AS_ASCII))
 	    || (binary
@@ -549,7 +548,7 @@ xkl_config_write_file(XklConfig * config, const gchar * file_name,
 		return FALSE;
 	}
 	xkl_engine_ensure_vtable_inited(engine);
-	return xkl_engine_vcall(engine, write_config_to_file) (config,
+	return xkl_engine_vcall(engine, write_config_to_file) (engine,
 							       file_name,
 							       data,
 							       binary);

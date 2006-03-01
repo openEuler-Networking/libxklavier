@@ -47,10 +47,9 @@ xkl_xmm_load_config_registry(XklConfig * config)
 }
 
 gboolean
-xkl_xmm_activate_config(XklConfig * config, const XklConfigRec * data)
+xkl_xmm_activate_config(XklEngine * engine, const XklConfigRec * data)
 {
 	gboolean rv;
-	XklEngine *engine = xkl_config_get_engine(config);
 	rv = xkl_engine_set_names_prop(engine,
 				       engine->priv->base_config_atom,
 				       current_xmm_rules, data);

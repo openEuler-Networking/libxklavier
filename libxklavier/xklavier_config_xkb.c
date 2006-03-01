@@ -103,7 +103,7 @@ xkl_xkb_load_config_registry(XklConfig * config)
 
 #ifdef XKB_HEADERS_PRESENT
 gboolean
-xkl_xkb_config_native_prepare(XklConfig * config,
+xkl_xkb_config_native_prepare(XklEngine * engine,
 			      const XklConfigRec * data,
 			      XkbComponentNamesPtr component_names_ptr)
 {
@@ -112,7 +112,6 @@ xkl_xkb_config_native_prepare(XklConfig * config,
 
 	memset(&xkl_var_defs, 0, sizeof(xkl_var_defs));
 
-	XklEngine *engine = xkl_config_get_engine(config);
 	xkl_rules = xkl_rules_set_load(engine);
 	if (!xkl_rules) {
 		return FALSE;
@@ -141,7 +140,7 @@ xkl_xkb_config_native_prepare(XklConfig * config,
 		engine->priv->last_error_message =
 		    "Could not translate rules into components";
 		/* Just cleanup the stuff in case of failure */
-		xkl_xkb_config_native_cleanup(config, component_names_ptr);
+		xkl_xkb_config_native_cleanup(engine, component_names_ptr);
 
 		return FALSE;
 	}
@@ -163,7 +162,7 @@ xkl_xkb_config_native_prepare(XklConfig * config,
 }
 
 void
-xkl_xkb_config_native_cleanup(XklConfig * config,
+xkl_xkb_config_native_cleanup(XklEngine * engine,
 			      XkbComponentNamesPtr component_names_ptr)
 {
 	xkl_rules_set_free();
@@ -177,7 +176,7 @@ xkl_xkb_config_native_cleanup(XklConfig * config,
 }
 
 static XkbDescPtr
-xkl_config_get_keyboard(XklConfig * config,
+xkl_config_get_keyboard(XklEngine * engine,
 			XkbComponentNamesPtr component_names_ptr,
 			gboolean activate)
 {
@@ -197,7 +196,6 @@ xkl_config_get_keyboard(XklConfig * config,
 	XkbFileInfo result;
 	int xkmloadres;
 
-	XklEngine *engine = xkl_config_get_engine(config);
 	Display *display = xkl_engine_get_display(engine);
 
 	if (tmpnam(xkm_fn) != NULL && tmpnam(xkb_fn) != NULL) {
@@ -415,12 +413,13 @@ xkl_xkb_config_multiple_layouts_supported(XklConfig * config)
 		xkl_debug(100, "!!! Checking multiple layouts support\n");
 		support_state = NON_SUPPORTED;
 #ifdef XKB_HEADERS_PRESENT
+		XklEngine *engine = xkl_config_get_engine(config);
 		if (xkl_xkb_config_native_prepare
-		    (config, &data, &component_names)) {
+		    (engine, &data, &component_names)) {
 			xkl_debug(100,
 				  "!!! Multiple layouts ARE supported\n");
 			support_state = SUPPORTED;
-			xkl_xkb_config_native_cleanup(config,
+			xkl_xkb_config_native_cleanup(engine,
 						      &component_names);
 		} else {
 			xkl_debug(100,
@@ -432,7 +431,7 @@ xkl_xkb_config_multiple_layouts_supported(XklConfig * config)
 }
 
 gboolean
-xkl_xkb_activate_config(XklConfig * config, const XklConfigRec * data)
+xkl_xkb_activate_config(XklEngine * engine, const XklConfigRec * data)
 {
 	gboolean rv = FALSE;
 #if 0
@@ -457,12 +456,11 @@ xkl_xkb_activate_config(XklConfig * config, const XklConfigRec * data)
 #ifdef XKB_HEADERS_PRESENT
 	XkbComponentNamesRec component_names;
 	memset(&component_names, 0, sizeof(component_names));
-	XklEngine *engine = xkl_config_get_engine(config);
 
-	if (xkl_xkb_config_native_prepare(config, data, &component_names)) {
+	if (xkl_xkb_config_native_prepare(engine, data, &component_names)) {
 		XkbDescPtr xkb;
 		xkb =
-		    xkl_config_get_keyboard(config, &component_names,
+		    xkl_config_get_keyboard(engine, &component_names,
 					    TRUE);
 		if (xkb != NULL) {
 			if (xkl_engine_set_names_prop
@@ -481,19 +479,18 @@ xkl_xkb_activate_config(XklConfig * config, const XklConfigRec * data)
 			engine->priv->last_error_message =
 			    "Could not load keyboard description";
 		}
-		xkl_xkb_config_native_cleanup(config, &component_names);
+		xkl_xkb_config_native_cleanup(engine, &component_names);
 	}
 #endif
 	return rv;
 }
 
 gboolean
-xkl_xkb_write_config_to_file(XklConfig * config, const char *file_name,
+xkl_xkb_write_config_to_file(XklEngine * engine, const char *file_name,
 			     const XklConfigRec * data,
 			     const gboolean binary)
 {
 	gboolean rv = FALSE;
-	XklEngine *engine = xkl_config_get_engine(config);
 
 #ifdef XKB_HEADERS_PRESENT
 	XkbComponentNamesRec component_names;
@@ -508,10 +505,10 @@ xkl_xkb_write_config_to_file(XklConfig * config, const char *file_name,
 
 	memset(&component_names, 0, sizeof(component_names));
 
-	if (xkl_xkb_config_native_prepare(config, data, &component_names)) {
+	if (xkl_xkb_config_native_prepare(engine, data, &component_names)) {
 		XkbDescPtr xkb;
 		xkb =
-		    xkl_config_get_keyboard(config, &component_names,
+		    xkl_config_get_keyboard(engine, &component_names,
 					    FALSE);
 		if (xkb != NULL) {
 			dump_info.defined = 0;
@@ -528,7 +525,7 @@ xkl_xkb_write_config_to_file(XklConfig * config, const char *file_name,
 		} else
 			engine->priv->last_error_message =
 			    "Could not load keyboard description";
-		xkl_xkb_config_native_cleanup(config, &component_names);
+		xkl_xkb_config_native_cleanup(engine, &component_names);
 	}
 	fclose(output);
 #endif

@@ -94,22 +94,23 @@ main(int argc, char *const argv[])
 		exit(1);
 	}
 	printf("opened display: %p\n", dpy);
-	if (!xkl_init(dpy)) {
+	XklEngine * engine = xkl_engine_get_instance(dpy);
+	if (engine == NULL) {
 		XklConfigRec *current_config, *r2;
 		if (debug_level != -1)
 			xkl_set_debug_level(debug_level);
 		xkl_debug(0, "Xklavier initialized\n");
-		xkl_config_init();
-		xkl_config_registry_load();
+		XklConfig * config = xkl_config_get_instance(engine);
+		xkl_config_load_registry(config);
 		xkl_debug(0, "Xklavier registry loaded\n");
-		xkl_debug(0, "Backend: [%s]\n", xkl_backend_get_name());
+		xkl_debug(0, "Backend: [%s]\n", xkl_engine_get_backend_name(engine));
 		xkl_debug(0, "Supported features: 0x0%X\n",
-			  xkl_backend_get_features());
+			  xkl_engine_get_features(engine));
 		xkl_debug(0, "Max number of groups: %d\n",
-			  xkl_groups_get_max_num());
+			  xkl_engine_get_max_num_groups(engine));
 
 		current_config = xkl_config_rec_new();
-		xkl_config_get_from_server(current_config);
+		xkl_config_rec_get_from_server(current_config,engine);
 
 		switch (action) {
 		case ACTION_GET:
@@ -118,27 +119,27 @@ main(int argc, char *const argv[])
 
 			r2 = xkl_config_rec_new();
 
-			if (xkl_config_get_from_backup(r2)) {
+			if (xkl_config_rec_get_from_backup(r2,engine)) {
 				xkl_debug(0,
 					  "Got config from the backup\n");
 				xkl_config_dump(stdout, r2);
 			}
 
-			if (xkl_config_activate(r2)) {
+			if (xkl_config_rec_activate(r2,engine)) {
 				xkl_debug(0,
 					  "The backup configuration restored\n");
-				if (xkl_config_activate(current_config)) {
+				if (xkl_config_rec_activate(current_config,engine)) {
 					xkl_debug(0,
 						  "Reverting the configuration change\n");
 				} else {
 					xkl_debug(0,
 						  "The configuration could not be reverted: %s\n",
-						  xkl_get_last_error());
+						  xkl_engine_get_last_error(engine));
 				}
 			} else {
 				xkl_debug(0,
 					  "The backup configuration could not be restored: %s\n",
-					  xkl_get_last_error());
+					  xkl_engine_get_last_error(engine));
 			}
 
 			g_object_unref(G_OBJECT(r2));
@@ -176,15 +177,15 @@ main(int argc, char *const argv[])
 
 			xkl_debug(0, "New config:\n");
 			xkl_config_dump(stdout, current_config);
-			if (xkl_config_activate(current_config))
+			if (xkl_config_rec_activate(current_config,engine))
 				xkl_debug(0, "Set the config\n");
 			else
 				xkl_debug(0,
 					  "Could not set the config: %s\n",
-					  xkl_get_last_error());
+					  xkl_engine_get_last_error(engine));
 			break;
 		case ACTION_WRITE:
-			xkl_config_write_file(binary ? (PACKAGE ".xkm")
+			xkl_config_rec_write_to_file(engine,binary ? (PACKAGE ".xkm")
 					      : (PACKAGE ".xkb"),
 					      current_config, binary);
 			xkl_debug(0, "The file " PACKAGE "%s is written\n",
@@ -194,14 +195,13 @@ main(int argc, char *const argv[])
 
 		g_object_unref(G_OBJECT(current_config));
 
-		xkl_config_registry_free();
-		xkl_config_term();
+		xkl_config_free_registry(config);
+		g_object_unref(G_OBJECT(config));
 		xkl_debug(0, "Xklavier registry freed\n");
 		xkl_debug(0, "Xklavier terminating\n");
-		xkl_term();
+		g_object_unref(G_OBJECT(engine));
 	} else {
-		fprintf(stderr, "Could not init _xklavier: %s\n",
-			xkl_get_last_error());
+		fprintf(stderr, "Could not init _xklavier\n");
 		exit(2);
 	}
 	printf("closing display: %p\n", dpy);

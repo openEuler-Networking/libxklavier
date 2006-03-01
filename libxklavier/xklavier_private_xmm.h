@@ -48,7 +48,7 @@ const XmmSwitchOption *xkl_xmm_find_switch_option(XklEngine * engine,
 
 /* Start VTable methods */
 
-extern gboolean xkl_xmm_activate_config(XklConfig * config,
+extern gboolean xkl_xmm_activate_config(XklEngine * engine,
 					const XklConfigRec * data);
 
 extern void xkl_xmm_init_config(XklConfig * config);

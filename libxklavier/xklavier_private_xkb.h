@@ -26,25 +26,25 @@ extern gboolean xkl_xkb_multiple_layouts_supported(XklEngine * engine);
 
 extern const gchar *xkl_xkb_event_get_name(gint xkb_type);
 
-extern gboolean xkl_xkb_config_native_prepare(XklConfig * config,
+extern gboolean xkl_xkb_config_native_prepare(XklEngine * engine,
 					      const XklConfigRec * data,
 					      XkbComponentNamesPtr
 					      component_names);
 
-extern void xkl_xkb_config_native_cleanup(XklConfig * config,
+extern void xkl_xkb_config_native_cleanup(XklEngine * engine,
 					  XkbComponentNamesPtr
 					  component_names);
 
 /* Start VTable methods */
 
-extern gboolean xkl_xkb_activate_config(XklConfig * config,
+extern gboolean xkl_xkb_activate_config(XklEngine * engine,
 					const XklConfigRec * data);
 
 extern void xkl_xkb_init_config(XklConfig * config);
 
 extern gboolean xkl_xkb_load_config_registry(XklConfig * config);
 
-extern gboolean xkl_xkb_write_config_to_file(XklConfig * config,
+extern gboolean xkl_xkb_write_config_to_file(XklEngine * engine,
 					     const char *file_name,
 					     const XklConfigRec * data,
 					     const gboolean binary);

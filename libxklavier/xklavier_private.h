@@ -62,7 +62,7 @@ struct _XklEnginePrivate {
    * xkb: create proper the XkbDescRec and send it to the server
    * xmodmap: save the property, init layout #1
    */
-	 gboolean(*activate_config) (XklConfig * config,
+	 gboolean(*activate_config) (XklEngine * engine,
 				     const XklConfigRec * data);
 
   /**
@@ -86,7 +86,7 @@ struct _XklEnginePrivate {
    * xmodmap: if text requested, just dump XklConfigRec to the 
    * file - not really useful. If binary - fail (not supported)
    */
-	 gboolean(*write_config_to_file) (XklConfig * config,
+	 gboolean(*write_config_to_file) (XklEngine * engine,
 					  const gchar * file_name,
 					  const XklConfigRec * data,
 					  const gboolean binary);
