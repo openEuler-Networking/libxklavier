@@ -8,6 +8,8 @@
 
 #include "xklavier_private.h"
 
+static GObjectClass *g_object_class = NULL;
+
 static XklConfig *the_config = NULL;
 
 static xmlXPathCompExprPtr models_xpath;
@@ -340,23 +342,6 @@ xkl_config_get_instance(XklEngine * engine)
 	return the_config;
 }
 
-void
-xkl_config_term(void)
-{
-	if (models_xpath != NULL) {
-		xmlXPathFreeCompExpr(models_xpath);
-		models_xpath = NULL;
-	}
-	if (layouts_xpath != NULL) {
-		xmlXPathFreeCompExpr(layouts_xpath);
-		layouts_xpath = NULL;
-	}
-	if (option_groups_xpath != NULL) {
-		xmlXPathFreeCompExpr(option_groups_xpath);
-		option_groups_xpath = NULL;
-	}
-}
-
 gboolean
 xkl_config_load_registry_from_file(XklConfig * config,
 				   const gchar * file_name)
@@ -589,4 +574,45 @@ xkl_config_dump(FILE * file, XklConfigRec * data)
 	OUTPUT_ARRZ(variants);
 	OUTPUT_ARRZ(options);
 
+}
+
+G_DEFINE_TYPE(XklConfig, xkl_config, G_TYPE_OBJECT)
+
+static void
+xkl_config_init(XklConfig * config)
+{
+	config->priv = g_new0(XklConfigPrivate, 1);
+}
+
+static void
+xkl_config_finalize(GObject * obj)
+{
+	XklConfig *config = (XklConfig *) obj;
+
+	if (models_xpath != NULL) {
+		xmlXPathFreeCompExpr(models_xpath);
+		models_xpath = NULL;
+	}
+	if (layouts_xpath != NULL) {
+		xmlXPathFreeCompExpr(layouts_xpath);
+		layouts_xpath = NULL;
+	}
+	if (option_groups_xpath != NULL) {
+		xmlXPathFreeCompExpr(option_groups_xpath);
+		option_groups_xpath = NULL;
+	}
+
+	g_free(config->priv);
+
+	G_OBJECT_CLASS(g_object_class)->finalize(obj);
+}
+
+static void
+xkl_config_class_init(XklConfigClass * klass)
+{
+	GObjectClass *object_class;
+
+	object_class = (GObjectClass *) klass;
+	g_object_class = g_type_class_peek_parent(object_class);
+	object_class->finalize = xkl_config_finalize;
 }
