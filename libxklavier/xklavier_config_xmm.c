@@ -50,9 +50,11 @@ gboolean
 xkl_xmm_activate_config(XklEngine * engine, const XklConfigRec * data)
 {
 	gboolean rv;
-	rv = xkl_engine_set_names_prop(engine,
-				       engine->priv->base_config_atom,
-				       current_xmm_rules, data);
+	rv = xkl_config_rec_set_to_root_window_property(data,
+							engine->priv->
+							base_config_atom,
+							current_xmm_rules,
+							engine);
 	if (rv)
 		xkl_xmm_lock_group(engine, 0);
 	return rv;

@@ -295,8 +295,8 @@ xkl_engine_get_ruleset_name(XklEngine * engine,
 	if (!rules_set_name[0]) {
 		/* first call */
 		gchar *rf = NULL;
-		if (!xkl_engine_get_names_prop
-		    (engine, engine->priv->base_config_atom, &rf, NULL)
+		if (!xkl_config_rec_get_from_root_window_property
+		    (NULL, engine->priv->base_config_atom, &rf, engine)
 		    || (rf == NULL)) {
 			g_strlcpy(rules_set_name, default_ruleset,
 				  sizeof rules_set_name);

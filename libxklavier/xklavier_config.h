@@ -426,11 +426,15 @@ extern "C" {
  *   all records are allocated using standard malloc 
  * @return TRUE on success
  */
-	extern gboolean xkl_engine_get_names_prop(XklEngine * engine,
-						  Atom rules_atom_name,
-						  gchar ** rules_file_out,
-						  XklConfigRec *
-						  config_out);
+	extern gboolean
+	    xkl_config_rec_get_from_root_window_property(XklConfigRec *
+							 config_out,
+							 Atom
+							 rules_atom_name,
+							 gchar **
+							 rules_file_out,
+							 XklEngine *
+							 engine);
 
 /**
  * Saves the XKB configuration into any root window property
@@ -439,11 +443,17 @@ extern "C" {
  * @param config is a configuration to save 
  * @return TRUE on success
  */
-	extern gboolean xkl_engine_set_names_prop(XklEngine * engine,
-						  Atom rules_atom_name,
-						  gchar * rules_file,
-						  const XklConfigRec *
-						  config);
+	extern gboolean xkl_config_rec_set_to_root_window_property(const
+								   XklConfigRec
+								   *
+								   config,
+								   Atom
+								   rules_atom_name,
+								   gchar *
+								   rules_file,
+								   XklEngine
+								   *
+								   engine);
 
 /**
  * Backups current XKB configuration into some property - 

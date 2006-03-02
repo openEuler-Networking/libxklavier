@@ -113,10 +113,12 @@ xkl_config_rec_get_full_from_server(char **rules_file_out,
 				    XklConfigRec * data,
 				    XklEngine * engine)
 {
-	gboolean rv =
-	    xkl_engine_get_names_prop(engine,
-				      engine->priv->base_config_atom,
-				      rules_file_out, data);
+	gboolean rv = xkl_config_rec_get_from_root_window_property(data,
+								   engine->
+								   priv->
+								   base_config_atom,
+								   rules_file_out,
+								   engine);
 
 	if (!rv)
 		rv = xkl_engine_get_default_names_prop(engine,
@@ -176,9 +178,10 @@ xkl_config_rec_get_from_server(XklConfigRec * data, XklEngine * engine)
 gboolean
 xkl_config_rec_get_from_backup(XklConfigRec * data, XklEngine * engine)
 {
-	return xkl_engine_get_names_prop(engine,
-					 engine->priv->backup_config_atom,
-					 NULL, data);
+	return xkl_config_rec_get_from_root_window_property(data,
+							    engine->priv->
+							    backup_config_atom,
+							    NULL, engine);
 }
 
 gboolean
@@ -190,8 +193,8 @@ xkl_backup_names_prop(XklEngine * engine)
 	gboolean cgp = FALSE;
 
 	xkl_config_rec_init(&data);
-	if (xkl_engine_get_names_prop
-	    (engine, engine->priv->backup_config_atom, NULL, &data)) {
+	if (xkl_config_rec_get_from_root_window_property
+	    (&data, engine->priv->backup_config_atom, NULL, engine)) {
 		xkl_config_rec_destroy(&data);
 		return TRUE;
 	}
@@ -200,9 +203,9 @@ xkl_backup_names_prop(XklEngine * engine)
 	cgp = xkl_config_rec_get_full_from_server(&rf, &data, engine);
 
 	if (cgp) {
-		if (!xkl_engine_set_names_prop
-		    (engine, engine->priv->backup_config_atom, rf,
-		     &data)) {
+		if (!xkl_config_rec_set_to_root_window_property
+		    (&data, engine->priv->backup_config_atom, rf,
+		     engine)) {
 			xkl_debug(150,
 				  "Could not backup the configuration");
 			rv = FALSE;
@@ -226,14 +229,14 @@ xkl_restore_names_prop(XklEngine * engine)
 	XklConfigRec data;
 
 	xkl_config_rec_init(&data);
-	if (!xkl_engine_get_names_prop
-	    (engine, engine->priv->backup_config_atom, NULL, &data)) {
+	if (!xkl_config_rec_get_from_root_window_property
+	    (&data, engine->priv->backup_config_atom, NULL, engine)) {
 		xkl_config_rec_destroy(&data);
 		return FALSE;
 	}
 
-	if (!xkl_engine_set_names_prop
-	    (engine, engine->priv->base_config_atom, rf, &data)) {
+	if (!xkl_config_rec_set_to_root_window_property
+	    (&data, engine->priv->base_config_atom, rf, engine)) {
 		xkl_debug(150, "Could not backup the configuration");
 		rv = FALSE;
 	}
@@ -242,8 +245,10 @@ xkl_restore_names_prop(XklEngine * engine)
 }
 
 gboolean
-xkl_engine_get_names_prop(XklEngine * engine, Atom rules_atom,
-			  gchar ** rules_file_out, XklConfigRec * data)
+xkl_config_rec_get_from_root_window_property(XklConfigRec * data,
+					     Atom rules_atom,
+					     gchar ** rules_file_out,
+					     XklEngine * engine)
 {
 	Atom real_prop_type;
 	int fmt;
@@ -373,8 +378,10 @@ xkl_engine_get_names_prop(XklEngine * engine, Atom rules_atom,
 
 /* taken from XFree86 maprules.c */
 gboolean
-xkl_engine_set_names_prop(XklEngine * engine, Atom rules_atom,
-			  gchar * rules_file, const XklConfigRec * data)
+xkl_config_rec_set_to_root_window_property(const XklConfigRec * data,
+					   Atom rules_atom,
+					   gchar * rules_file,
+					   XklEngine * engine)
 {
 	gint len, rv;
 	gchar *pval;

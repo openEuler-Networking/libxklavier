@@ -462,11 +462,11 @@ xkl_xkb_activate_config(XklEngine * engine, const XklConfigRec * data)
 		    xkl_config_get_keyboard(engine, &component_names,
 					    TRUE);
 		if (xkb != NULL) {
-			if (xkl_engine_set_names_prop
-			    (engine, engine->priv->base_config_atom,
+			if (xkl_config_rec_set_to_root_window_property
+			    (data, engine->priv->base_config_atom,
 			     xkl_engine_get_ruleset_name(engine,
 							 XKB_DEFAULT_RULESET),
-			     data))
+			     engine))
 				/* We do not need to check the result of _XklGetRulesSetName - 
 				   because PrepareBeforeKbd did it for us */
 				rv = TRUE;
