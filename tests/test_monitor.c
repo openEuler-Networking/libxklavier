@@ -79,8 +79,9 @@ main(int argc, char *argv[])
 		if (debug_level != -1)
 			xkl_set_debug_level(debug_level);
 		xkl_debug(0, "Xklavier initialized\n");
-		XklConfig *config = xkl_config_get_instance(engine);
-		xkl_config_load_registry(config);
+		XklConfigRegistry *config =
+		    xkl_config_registry_get_instance(engine);
+		xkl_config_registry_load(config);
 		xkl_debug(0, "Xklavier registry loaded\n");
 
 		current_config = xkl_config_rec_new();
@@ -100,7 +101,7 @@ main(int argc, char *argv[])
 
 		g_object_unref(G_OBJECT(current_config));
 
-		xkl_config_free_registry(config);
+		xkl_config_registry_free(config);
 		g_object_unref(G_OBJECT(config));
 		xkl_debug(0, "Xklavier registry freed\n");
 		xkl_debug(0, "Xklavier terminating\n");

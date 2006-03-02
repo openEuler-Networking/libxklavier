@@ -262,10 +262,10 @@ xkl_xmm_init(XklEngine * engine)
 	engine->priv->backend_id = "xmodmap";
 	engine->priv->features = XKLF_MULTIPLE_LAYOUTS_SUPPORTED |
 	    XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT;
-	engine->priv->activate_config = xkl_xmm_activate_config;
-	engine->priv->init_config = xkl_xmm_init_config;
+	engine->priv->activate_config_rec = xkl_xmm_activate_config_rec;
+	engine->priv->init_config_registry = xkl_xmm_init_config_registry;
 	engine->priv->load_config_registry = xkl_xmm_load_config_registry;
-	engine->priv->write_config_to_file = NULL;
+	engine->priv->write_config_rec_to_file = NULL;
 
 	engine->priv->get_groups_names = xkl_xmm_get_groups_names;
 	engine->priv->get_max_num_groups = xkl_xmm_get_max_num_groups;

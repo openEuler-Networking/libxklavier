@@ -20,16 +20,16 @@
 #include <X11/keysymdef.h>
 
 void
-xkl_xmm_init_config(XklConfig * config)
+xkl_xmm_init_config_registry(XklConfigRegistry * config)
 {
 }
 
 gboolean
-xkl_xmm_load_config_registry(XklConfig * config)
+xkl_xmm_load_config_registry(XklConfigRegistry * config)
 {
 	struct stat stat_buf;
 	gchar file_name[MAXPATHLEN] = "";
-	XklEngine *engine = xkl_config_get_engine(config);
+	XklEngine *engine = xkl_config_registry_get_engine(config);
 	gchar *rf = xkl_engine_get_ruleset_name(engine, "");
 
 	if (rf == NULL || rf[0] == '\0')
@@ -43,11 +43,11 @@ xkl_xmm_load_config_registry(XklConfig * config)
 		return FALSE;
 	}
 
-	return xkl_config_load_registry_from_file(config, file_name);
+	return xkl_config_registry_load_from_file(config, file_name);
 }
 
 gboolean
-xkl_xmm_activate_config(XklEngine * engine, const XklConfigRec * data)
+xkl_xmm_activate_config_rec(XklEngine * engine, const XklConfigRec * data)
 {
 	gboolean rv;
 	rv = xkl_config_rec_set_to_root_window_property(data,

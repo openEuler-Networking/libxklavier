@@ -10,7 +10,7 @@
 
 static GObjectClass *g_object_class = NULL;
 
-static XklConfig *the_config = NULL;
+static XklConfigRegistry *the_config = NULL;
 
 static xmlXPathCompExprPtr models_xpath;
 static xmlXPathCompExprPtr layouts_xpath;
@@ -151,8 +151,10 @@ xkl_read_config_item(xmlNodePtr iptr, XklConfigItem * item)
 }
 
 static void
-xkl_config_enum_from_node_set(XklConfig * config, xmlNodeSetPtr nodes,
-			      ConfigItemProcessFunc func, gpointer data)
+xkl_config_registry_enum_from_node_set(XklConfigRegistry * config,
+				       xmlNodeSetPtr nodes,
+				       ConfigItemProcessFunc func,
+				       gpointer data)
 {
 	gint i;
 	if (nodes != NULL) {
@@ -168,9 +170,9 @@ xkl_config_enum_from_node_set(XklConfig * config, xmlNodeSetPtr nodes,
 }
 
 static void
-xkl_config_enum_simple(XklConfig * config,
-		       xmlXPathCompExprPtr xpath_comp_expr,
-		       ConfigItemProcessFunc func, gpointer data)
+xkl_config_registry_enum_simple(XklConfigRegistry * config,
+				xmlXPathCompExprPtr xpath_comp_expr,
+				ConfigItemProcessFunc func, gpointer data)
 {
 	xmlXPathObjectPtr xpath_obj;
 
@@ -179,17 +181,18 @@ xkl_config_enum_simple(XklConfig * config,
 	xpath_obj = xmlXPathCompiledEval(xpath_comp_expr,
 					 config->priv->xpath_context);
 	if (xpath_obj != NULL) {
-		xkl_config_enum_from_node_set(config,
-					      xpath_obj->nodesetval, func,
-					      data);
+		xkl_config_registry_enum_from_node_set(config,
+						       xpath_obj->
+						       nodesetval, func,
+						       data);
 		xmlXPathFreeObject(xpath_obj);
 	}
 }
 
 static void
-xkl_config_enum_direct(XklConfig * config, const gchar * format,
-		       const gchar * value,
-		       ConfigItemProcessFunc func, gpointer data)
+xkl_config_registry_enum_direct(XklConfigRegistry * config,
+				const gchar * format, const gchar * value,
+				ConfigItemProcessFunc func, gpointer data)
 {
 	char xpath_expr[1024];
 	xmlXPathObjectPtr xpath_obj;
@@ -200,18 +203,19 @@ xkl_config_enum_direct(XklConfig * config, const gchar * format,
 	xpath_obj = xmlXPathEval((unsigned char *) xpath_expr,
 				 config->priv->xpath_context);
 	if (xpath_obj != NULL) {
-		xkl_config_enum_from_node_set(config,
-					      xpath_obj->nodesetval, func,
-					      data);
+		xkl_config_registry_enum_from_node_set(config,
+						       xpath_obj->
+						       nodesetval, func,
+						       data);
 		xmlXPathFreeObject(xpath_obj);
 	}
 }
 
 static gboolean
-xkl_config_find_object(XklConfig * config, const gchar * format,
-		       const gchar * arg1,
-		       XklConfigItem * pitem /* in/out */ ,
-		       xmlNodePtr * pnode /* out */ )
+xkl_config_registry_find_object(XklConfigRegistry * config,
+				const gchar * format, const gchar * arg1,
+				XklConfigItem * pitem /* in/out */ ,
+				xmlNodePtr * pnode /* out */ )
 {
 	xmlXPathObjectPtr xpath_obj;
 	xmlNodeSetPtr nodes;
@@ -311,8 +315,8 @@ xkl_engine_get_ruleset_name(XklEngine * engine,
 	return rules_set_name;
 }
 
-XklConfig *
-xkl_config_get_instance(XklEngine * engine)
+XklConfigRegistry *
+xkl_config_registry_get_instance(XklEngine * engine)
 {
 	if (the_config != NULL) {
 		g_object_ref(G_OBJECT(the_config));
@@ -321,11 +325,13 @@ xkl_config_get_instance(XklEngine * engine)
 
 	if (!engine) {
 		xkl_debug(10,
-			  "xkl_config_get_instance : engine is NULL ?\n");
+			  "xkl_config_registry_get_instance : engine is NULL ?\n");
 		return NULL;
 	}
 
-	the_config = XKL_CONFIG(g_object_new(xkl_config_get_type(), NULL));
+	the_config =
+	    XKL_CONFIG_REGISTRY(g_object_new
+				(xkl_config_registry_get_type(), NULL));
 
 	the_config->priv->engine = engine;
 
@@ -339,19 +345,20 @@ xkl_config_get_instance(XklEngine * engine)
 	xkl_i18n_init();
 
 	xkl_engine_ensure_vtable_inited(engine);
-	xkl_engine_vcall(engine, init_config) (the_config);
+	xkl_engine_vcall(engine, init_config_registry) (the_config);
 
 	return the_config;
 }
 
 gboolean
-xkl_config_load_registry_from_file(XklConfig * config,
+xkl_config_registry_load_from_file(XklConfigRegistry * config,
 				   const gchar * file_name)
 {
 	config->priv->doc = xmlParseFile(file_name);
 	if (config->priv->doc == NULL) {
 		config->priv->xpath_context = NULL;
-		xkl_config_get_engine(config)->priv->last_error_message =
+		xkl_config_registry_get_engine(config)->priv->
+		    last_error_message =
 		    "Could not parse XKB configuration registry";
 	} else
 		config->priv->xpath_context =
@@ -360,7 +367,7 @@ xkl_config_load_registry_from_file(XklConfig * config,
 }
 
 void
-xkl_config_free_registry(XklConfig * config)
+xkl_config_registry_free(XklConfigRegistry * config)
 {
 	if (xkl_config_registry_is_initialized(config)) {
 		xmlXPathFreeContext(config->priv->xpath_context);
@@ -371,33 +378,35 @@ xkl_config_free_registry(XklConfig * config)
 }
 
 void
-xkl_config_enum_models(XklConfig * config, ConfigItemProcessFunc func,
-		       gpointer data)
-{
-	xkl_config_enum_simple(config, models_xpath, func, data);
-}
-
-void
-xkl_config_enum_layouts(XklConfig * config, ConfigItemProcessFunc func,
-			gpointer data)
-{
-	xkl_config_enum_simple(config, layouts_xpath, func, data);
-}
-
-void
-xkl_config_enum_layout_variants(XklConfig * config,
-				const gchar * layout_name,
+xkl_config_registry_enum_models(XklConfigRegistry * config,
 				ConfigItemProcessFunc func, gpointer data)
 {
-	xkl_config_enum_direct
+	xkl_config_registry_enum_simple(config, models_xpath, func, data);
+}
+
+void
+xkl_config_registry_enum_layouts(XklConfigRegistry * config,
+				 ConfigItemProcessFunc func, gpointer data)
+{
+	xkl_config_registry_enum_simple(config, layouts_xpath, func, data);
+}
+
+void
+xkl_config_registry_enum_layout_variants(XklConfigRegistry * config,
+					 const gchar * layout_name,
+					 ConfigItemProcessFunc func,
+					 gpointer data)
+{
+	xkl_config_registry_enum_direct
 	    (config,
 	     "/xkbConfigRegistry/layoutList/layout/variantList/variant[../../configItem/name = '%s']",
 	     layout_name, func, data);
 }
 
 void
-xkl_config_enum_option_groups(XklConfig * config, GroupProcessFunc func,
-			      gpointer data)
+xkl_config_registry_enum_option_groups(XklConfigRegistry * config,
+				       GroupProcessFunc func,
+				       gpointer data)
 {
 	xmlXPathObjectPtr xpath_obj;
 	gint i;
@@ -437,44 +446,45 @@ xkl_config_enum_option_groups(XklConfig * config, GroupProcessFunc func,
 }
 
 void
-xkl_config_enum_options(XklConfig * config,
-			const gchar * option_group_name,
-			ConfigItemProcessFunc func, gpointer data)
+xkl_config_registry_enum_options(XklConfigRegistry * config,
+				 const gchar * option_group_name,
+				 ConfigItemProcessFunc func, gpointer data)
 {
-	xkl_config_enum_direct
+	xkl_config_registry_enum_direct
 	    (config,
 	     "/xkbConfigRegistry/optionList/group/option[../configItem/name = '%s']",
 	     option_group_name, func, data);
 }
 
 gboolean
-xkl_config_find_model(XklConfig * config,
-		      XklConfigItem * pitem /* in/out */ )
+xkl_config_registry_find_model(XklConfigRegistry * config,
+			       XklConfigItem * pitem /* in/out */ )
 {
 	return
-	    xkl_config_find_object
+	    xkl_config_registry_find_object
 	    (config,
 	     "/xkbConfigRegistry/modelList/model[configItem/name = '%s%s']",
 	     "", pitem, NULL);
 }
 
 gboolean
-xkl_config_find_layout(XklConfig * config,
-		       XklConfigItem * pitem /* in/out */ )
+xkl_config_registry_find_layout(XklConfigRegistry * config,
+				XklConfigItem * pitem /* in/out */ )
 {
 	return
-	    xkl_config_find_object
+	    xkl_config_registry_find_object
 	    (config,
 	     "/xkbConfigRegistry/layoutList/layout[configItem/name = '%s%s']",
 	     "", pitem, NULL);
 }
 
 gboolean
-xkl_config_find_variant(XklConfig * config, const char *layout_name,
-			XklConfigItem * pitem /* in/out */ )
+xkl_config_registry_find_variant(XklConfigRegistry * config,
+				 const char *layout_name,
+				 XklConfigItem * pitem /* in/out */ )
 {
 	return
-	    xkl_config_find_object
+	    xkl_config_registry_find_object
 	    (config,
 	     "/xkbConfigRegistry/layoutList/layout/variantList/variant"
 	     "[../../configItem/name = '%s' and configItem/name = '%s']",
@@ -482,16 +492,16 @@ xkl_config_find_variant(XklConfig * config, const char *layout_name,
 }
 
 gboolean
-_xkl_config_find_option_group(XklConfig * config,
-			      XklConfigItem * pitem /* in/out */ ,
-			      gboolean *
-			      allow_multiple_selection /* out */ )
+xkl_config_registry_find_option_group(XklConfigRegistry * config,
+				      XklConfigItem * pitem /* in/out */ ,
+				      gboolean *
+				      allow_multiple_selection /* out */ )
 {
 	xmlNodePtr node;
-	gboolean rv = xkl_config_find_object(config,
-					     "/xkbConfigRegistry/optionList/group[configItem/name = '%s%s']",
-					     "",
-					     pitem, &node);
+	gboolean rv = xkl_config_registry_find_object(config,
+						      "/xkbConfigRegistry/optionList/group[configItem/name = '%s%s']",
+						      "",
+						      pitem, &node);
 
 	if (rv && allow_multiple_selection != NULL) {
 		xmlChar *val = xmlGetProp(node,
@@ -508,11 +518,12 @@ _xkl_config_find_option_group(XklConfig * config,
 }
 
 gboolean
-xkl_config_find_option(XklConfig * config, const char *option_group_name,
-		       XklConfigItem * pitem /* in/out */ )
+xkl_config_registry_find_option(XklConfigRegistry * config,
+				const char *option_group_name,
+				XklConfigItem * pitem /* in/out */ )
 {
 	return
-	    xkl_config_find_object
+	    xkl_config_registry_find_object
 	    (config, "/xkbConfigRegistry/optionList/group/option"
 	     "[../configItem/name = '%s' and configItem/name = '%s']",
 	     option_group_name, pitem, NULL);
@@ -525,13 +536,14 @@ gboolean
 xkl_config_rec_activate(const XklConfigRec * data, XklEngine * engine)
 {
 	xkl_engine_ensure_vtable_inited(engine);
-	return xkl_engine_vcall(engine, activate_config) (engine, data);
+	return xkl_engine_vcall(engine, activate_config_rec) (engine,
+							      data);
 }
 
 gboolean
-xkl_config_load_registry(XklConfig * config)
+xkl_config_registry_load(XklConfigRegistry * config)
 {
-	XklEngine *engine = xkl_config_get_engine(config);
+	XklEngine *engine = xkl_config_registry_get_engine(config);
 	xkl_engine_ensure_vtable_inited(engine);
 	return xkl_engine_vcall(engine, load_config_registry) (config);
 }
@@ -551,14 +563,14 @@ xkl_config_rec_write_to_file(XklEngine * engine, const gchar * file_name,
 		return FALSE;
 	}
 	xkl_engine_ensure_vtable_inited(engine);
-	return xkl_engine_vcall(engine, write_config_to_file) (engine,
-							       file_name,
-							       data,
-							       binary);
+	return xkl_engine_vcall(engine, write_config_rec_to_file) (engine,
+								   file_name,
+								   data,
+								   binary);
 }
 
 void
-xkl_config_dump(FILE * file, XklConfigRec * data)
+xkl_config_rec_dump(FILE * file, XklConfigRec * data)
 {
 	int j;
 	fprintf(file, "  model: [%s]\n", data->model);
@@ -578,18 +590,18 @@ xkl_config_dump(FILE * file, XklConfigRec * data)
 
 }
 
-G_DEFINE_TYPE(XklConfig, xkl_config, G_TYPE_OBJECT)
+G_DEFINE_TYPE(XklConfigRegistry, xkl_config_registry, G_TYPE_OBJECT)
 
 static void
-xkl_config_init(XklConfig * config)
+xkl_config_registry_init(XklConfigRegistry * config)
 {
-	config->priv = g_new0(XklConfigPrivate, 1);
+	config->priv = g_new0(XklConfigRegistryPrivate, 1);
 }
 
 static void
-xkl_config_finalize(GObject * obj)
+xkl_config_registry_finalize(GObject * obj)
 {
-	XklConfig *config = (XklConfig *) obj;
+	XklConfigRegistry *config = (XklConfigRegistry *) obj;
 
 	if (models_xpath != NULL) {
 		xmlXPathFreeCompExpr(models_xpath);
@@ -610,11 +622,11 @@ xkl_config_finalize(GObject * obj)
 }
 
 static void
-xkl_config_class_init(XklConfigClass * klass)
+xkl_config_registry_class_init(XklConfigRegistryClass * klass)
 {
 	GObjectClass *object_class;
 
 	object_class = (GObjectClass *) klass;
 	g_object_class = g_type_class_peek_parent(object_class);
-	object_class->finalize = xkl_config_finalize;
+	object_class->finalize = xkl_config_registry_finalize;
 }

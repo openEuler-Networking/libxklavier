@@ -8,7 +8,7 @@
 #include <libxklavier/xklavier.h>
 #include <libxklavier/xklavier_config.h>
 
-extern void xkl_config_dump(FILE * file, XklConfigRec * data);
+extern void xkl_config_rec_dump(FILE * file, XklConfigRec * data);
 
 enum { ACTION_NONE, ACTION_GET, ACTION_SET, ACTION_WRITE };
 
@@ -101,8 +101,8 @@ main(int argc, char *const argv[])
 		if (debug_level != -1)
 			xkl_set_debug_level(debug_level);
 		xkl_debug(0, "Xklavier initialized\n");
-		XklConfig *config = xkl_config_get_instance(engine);
-		xkl_config_load_registry(config);
+		XklConfigRegistry *config = xkl_config_registry_get_instance(engine);
+		xkl_config_registry_load(config);
 		xkl_debug(0, "Xklavier registry loaded\n");
 		xkl_debug(0, "Backend: [%s]\n",
 			  xkl_engine_get_backend_name(engine));
@@ -117,14 +117,14 @@ main(int argc, char *const argv[])
 		switch (action) {
 		case ACTION_GET:
 			xkl_debug(0, "Got config from the server\n");
-			xkl_config_dump(stdout, current_config);
+			xkl_config_rec_dump(stdout, current_config);
 
 			r2 = xkl_config_rec_new();
 
 			if (xkl_config_rec_get_from_backup(r2, engine)) {
 				xkl_debug(0,
 					  "Got config from the backup\n");
-				xkl_config_dump(stdout, r2);
+				xkl_config_rec_dump(stdout, r2);
 			}
 
 			if (xkl_config_rec_activate(r2, engine)) {
@@ -185,7 +185,7 @@ main(int argc, char *const argv[])
 			}
 
 			xkl_debug(0, "New config:\n");
-			xkl_config_dump(stdout, current_config);
+			xkl_config_rec_dump(stdout, current_config);
 			if (xkl_config_rec_activate
 			    (current_config, engine))
 				xkl_debug(0, "Set the config\n");
@@ -209,7 +209,7 @@ main(int argc, char *const argv[])
 
 		g_object_unref(G_OBJECT(current_config));
 
-		xkl_config_free_registry(config);
+		xkl_config_registry_free(config);
 		g_object_unref(G_OBJECT(config));
 		xkl_debug(0, "Xklavier registry freed\n");
 		xkl_debug(0, "Xklavier terminating\n");

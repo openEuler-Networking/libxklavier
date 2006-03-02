@@ -485,10 +485,11 @@ xkl_xkb_init(XklEngine * engine)
 	engine->priv->features = XKLF_CAN_TOGGLE_INDICATORS |
 	    XKLF_CAN_OUTPUT_CONFIG_AS_ASCII |
 	    XKLF_CAN_OUTPUT_CONFIG_AS_BINARY;
-	engine->priv->activate_config = xkl_xkb_activate_config;
-	engine->priv->init_config = xkl_xkb_init_config;
+	engine->priv->activate_config_rec = xkl_xkb_activate_config_rec;
+	engine->priv->init_config_registry = xkl_xkb_init_config_registry;
 	engine->priv->load_config_registry = xkl_xkb_load_config_registry;
-	engine->priv->write_config_to_file = xkl_xkb_write_config_to_file;
+	engine->priv->write_config_rec_to_file =
+	    xkl_xkb_write_config_rec_to_file;
 	engine->priv->get_groups_names = xkl_xkb_get_groups_names;
 	engine->priv->get_max_num_groups = xkl_xkb_get_max_num_groups;
 	engine->priv->get_num_groups = xkl_xkb_get_num_groups;

@@ -33,9 +33,9 @@ extern "C" {
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-	typedef struct _XklConfig XklConfig;
-	typedef struct _XklConfigPrivate XklConfigPrivate;
-	typedef struct _XklConfigClass XklConfigClass;
+	typedef struct _XklConfigRegistry XklConfigRegistry;
+	typedef struct _XklConfigRegistryPrivate XklConfigRegistryPrivate;
+	typedef struct _XklConfigRegistryClass XklConfigRegistryClass;
 
 	typedef struct _XklConfigItem XklConfigItem;
 	typedef struct _XklConfigItemClass XklConfigItemClass;
@@ -43,12 +43,12 @@ extern "C" {
 	typedef struct _XklConfigRec XklConfigRec;
 	typedef struct _XklConfigRecClass XklConfigRecClass;
 
-#define XKL_TYPE_CONFIG             (xkl_config_get_type ())
-#define XKL_CONFIG(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), XKL_TYPE_CONFIG, XklConfig))
-#define XKL_CONFIG_CLASS(obj)       (G_TYPE_CHECK_CLASS_CAST ((obj), XKL_CONFIG,  XklConfigClass))
-#define XKL_IS_CONFIG(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), XKL_TYPE_CONFIG))
-#define XKL_IS_CONFIG_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE ((obj), XKL_TYPE_CONFIG))
-#define XKL_CONFIG_GET_CLASS        (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_CONFIG, XklConfigClass))
+#define XKL_TYPE_CONFIG_REGISTRY             (xkl_config_registry_get_type ())
+#define XKL_CONFIG_REGISTRY(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), XKL_TYPE_CONFIG_REGISTRY, XklConfigRegistry))
+#define XKL_CONFIG_REGISTRY_CLASS(obj)       (G_TYPE_CHECK_CLASS_CAST ((obj), XKL_CONFIG_REGISTRY,  XklConfigRegistryClass))
+#define XKL_IS_CONFIG_REGISTRY(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), XKL_TYPE_CONFIG_REGISTRY))
+#define XKL_IS_CONFIG_REGISTRY_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE ((obj), XKL_TYPE_CONFIG_REGISTRY))
+#define XKL_CONFIG_REGISTRY_GET_CLASS        (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_CONFIG_REGISTRY, XklConfigRegistryClass))
 
 #define XKL_TYPE_CONFIG_ITEM             (xkl_config_item_get_type ())
 #define XKL_CONFIG_ITEM(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), XKL_TYPE_CONFIG_ITEM, XklConfigItem))
@@ -69,35 +69,36 @@ extern "C" {
 /**
  * The configuration manager. Corresponds to XML element "configItem".
  */
-	struct _XklConfig {
+	struct _XklConfigRegistry {
 /**
  * The superclass object
  */
 		GObject parent;
 
-		XklConfigPrivate *priv;
+		XklConfigRegistryPrivate *priv;
 	};
 
 /**
- * The XklConfig class, derived from GObject
+ * The XklConfigRegistry class, derived from GObject
  */
-	struct _XklConfigClass {
+	struct _XklConfigRegistryClass {
     /**
      * The superclass
      */
 		GObjectClass parent_class;
 	};
 /**
- * Get type info for XConfigRec
- * @return GType for XConfigRec
+ * Get type info for XConfig
+ * @return GType for XConfig
  */
-	extern GType xkl_config_get_type(void);
+	extern GType xkl_config_registry_get_type(void);
 
 /**
- * Create new XklConfigRec
+ * Create new XklConfig
  * @return new instance
  */
-	extern XklConfig *xkl_config_get_instance(XklEngine * engine);
+	extern XklConfigRegistry
+	    * xkl_config_registry_get_instance(XklEngine * engine);
 
 
 
@@ -204,21 +205,21 @@ extern "C" {
  * @param file_name file name to load
  * @return true on success
  */
-	extern gboolean xkl_config_load_registry_from_file(XklConfig *
-							   config,
-							   const gchar *
-							   file_name);
+	extern gboolean
+	    xkl_config_registry_load_from_file(XklConfigRegistry * config,
+					       const gchar * file_name);
 
 /**
  * Loads XML configuration registry
  * @return true on success
  */
-	extern gboolean xkl_config_load_registry(XklConfig * config);
+	extern gboolean xkl_config_registry_load(XklConfigRegistry *
+						 config);
 
 /**
  * Frees XML configuration registry
  */
-	extern void xkl_config_free_registry(XklConfig * config);
+	extern void xkl_config_registry_free(XklConfigRegistry * config);
 /** @} */
 
 /**
@@ -249,18 +250,20 @@ extern "C" {
  * @param func is a callback to call for every model
  * @param data is anything which can be stored into the pointer
  */
-	extern void xkl_config_enum_models(XklConfig * config,
-					   ConfigItemProcessFunc func,
-					   gpointer data);
+	extern void xkl_config_registry_enum_models(XklConfigRegistry *
+						    config,
+						    ConfigItemProcessFunc
+						    func, gpointer data);
 
 /**
  * Enumerates keyboard layouts from the XML configuration registry
  * @param func is a callback to call for every layout
  * @param data is anything which can be stored into the pointer
  */
-	extern void xkl_config_enum_layouts(XklConfig * config,
-					    ConfigItemProcessFunc func,
-					    gpointer data);
+	extern void xkl_config_registry_enum_layouts(XklConfigRegistry *
+						     config,
+						     ConfigItemProcessFunc
+						     func, gpointer data);
 
 /**
  * Enumerates keyboard layout variants from the XML configuration registry
@@ -268,20 +271,24 @@ extern "C" {
  * @param func is a callback to call for every layout variant
  * @param data is anything which can be stored into the pointer
  */
-	extern void xkl_config_enum_layout_variants(XklConfig * config,
-						    const gchar *
-						    layout_name,
-						    ConfigItemProcessFunc
-						    func, gpointer data);
+	extern void
+	 xkl_config_registry_enum_layout_variants(XklConfigRegistry *
+						  config,
+						  const gchar *
+						  layout_name,
+						  ConfigItemProcessFunc
+						  func, gpointer data);
 
 /**
  * Enumerates keyboard option groups from the XML configuration registry
  * @param func is a callback to call for every option group
  * @param data is anything which can be stored into the pointer
  */
-	extern void xkl_config_enum_option_groups(XklConfig * config,
-						  GroupProcessFunc func,
-						  gpointer data);
+	extern void
+	 xkl_config_registry_enum_option_groups(XklConfigRegistry *
+						config,
+						GroupProcessFunc func,
+						gpointer data);
 
 /**
  * Enumerates keyboard options from the XML configuration registry
@@ -290,11 +297,12 @@ extern "C" {
  * @param func is a callback to call for every option
  * @param data is anything which can be stored into the pointer
  */
-	extern void xkl_config_enum_options(XklConfig * config,
-					    const gchar *
-					    option_group_name,
-					    ConfigItemProcessFunc func,
-					    gpointer data);
+	extern void xkl_config_registry_enum_options(XklConfigRegistry *
+						     config,
+						     const gchar *
+						     option_group_name,
+						     ConfigItemProcessFunc
+						     func, gpointer data);
 
 /** @} */
 
@@ -309,8 +317,10 @@ extern "C" {
  * keyboard model. On successfull return, the descriptions are filled.
  * @return TRUE if appropriate element was found and loaded
  */
-	extern gboolean xkl_config_find_model(XklConfig * config,
-					      XklConfigItem * item);
+	extern gboolean xkl_config_registry_find_model(XklConfigRegistry *
+						       config,
+						       XklConfigItem *
+						       item);
 
 /**
  * Loads a keyboard layout information from the XML configuration registry.
@@ -318,8 +328,10 @@ extern "C" {
  * keyboard layout. On successfull return, the descriptions are filled.
  * @return TRUE if appropriate element was found and loaded
  */
-	extern gboolean xkl_config_find_layout(XklConfig * config,
-					       XklConfigItem * item);
+	extern gboolean xkl_config_registry_find_layout(XklConfigRegistry *
+							config,
+							XklConfigItem *
+							item);
 
 /**
  * Loads a keyboard layout variant information from the XML configuration 
@@ -329,9 +341,12 @@ extern "C" {
  * keyboard layout variant. On successfull return, the descriptions are filled.
  * @return TRUE if appropriate element was found and loaded
  */
-	extern gboolean xkl_config_find_variant(XklConfig * config,
-						const char *layout_name,
-						XklConfigItem * item);
+	extern gboolean xkl_config_registry_find_variant(XklConfigRegistry
+							 * config,
+							 const char
+							 *layout_name,
+							 XklConfigItem *
+							 item);
 
 /**
  * Loads a keyboard option group information from the XML configuration 
@@ -342,10 +357,12 @@ extern "C" {
  * the corresponding attribute of XML element "group".
  * @return TRUE if appropriate element was found and loaded
  */
-	extern gboolean xkl_config_find_option_group(XklConfig * config,
-						     XklConfigItem * item,
-						     gboolean *
-						     allow_multiple_selection);
+	extern gboolean
+	    xkl_config_registry_find_option_group(XklConfigRegistry *
+						  config,
+						  XklConfigItem * item,
+						  gboolean *
+						  allow_multiple_selection);
 
 /**
  * Loads a keyboard option information from the XML configuration 
@@ -355,10 +372,12 @@ extern "C" {
  * keyboard option. On successfull return, the descriptions are filled.
  * @return TRUE if appropriate element was found and loaded
  */
-	extern gboolean xkl_config_find_option(XklConfig * config,
-					       const gchar *
-					       option_group_name,
-					       XklConfigItem * item);
+	extern gboolean xkl_config_registry_find_option(XklConfigRegistry *
+							config,
+							const gchar *
+							option_group_name,
+							XklConfigItem *
+							item);
 /** @} */
 
 /**

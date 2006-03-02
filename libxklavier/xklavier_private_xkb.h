@@ -37,14 +37,14 @@ extern void xkl_xkb_config_native_cleanup(XklEngine * engine,
 
 /* Start VTable methods */
 
-extern gboolean xkl_xkb_activate_config(XklEngine * engine,
+extern gboolean xkl_xkb_activate_config_rec(XklEngine * engine,
 					const XklConfigRec * data);
 
-extern void xkl_xkb_init_config(XklConfig * config);
+extern void xkl_xkb_init_config_registry(XklConfigRegistry * config);
 
-extern gboolean xkl_xkb_load_config_registry(XklConfig * config);
+extern gboolean xkl_xkb_load_config_registry(XklConfigRegistry * config);
 
-extern gboolean xkl_xkb_write_config_to_file(XklEngine * engine,
+extern gboolean xkl_xkb_write_config_rec_to_file(XklEngine * engine,
 					     const char *file_name,
 					     const XklConfigRec * data,
 					     const gboolean binary);

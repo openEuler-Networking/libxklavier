@@ -71,7 +71,7 @@ xkl_rules_set_free(void)
 #endif
 
 void
-xkl_xkb_init_config(XklConfig * config)
+xkl_xkb_init_config_registry(XklConfigRegistry * config)
 {
 #ifdef XKB_HEADERS_PRESENT
 	XkbInitAtoms(NULL);
@@ -79,12 +79,13 @@ xkl_xkb_init_config(XklConfig * config)
 }
 
 gboolean
-xkl_xkb_load_config_registry(XklConfig * config)
+xkl_xkb_load_config_registry(XklConfigRegistry * config)
 {
 	struct stat stat_buf;
 	char file_name[MAXPATHLEN] = "";
 	char *rf =
-	    xkl_engine_get_ruleset_name(xkl_config_get_engine(config),
+	    xkl_engine_get_ruleset_name(xkl_config_registry_get_engine
+					(config),
 					XKB_DEFAULT_RULESET);
 
 	if (rf == NULL)
@@ -98,7 +99,7 @@ xkl_xkb_load_config_registry(XklConfig * config)
 			  sizeof file_name);
 	}
 
-	return xkl_config_load_registry_from_file(config, file_name);
+	return xkl_config_registry_load_from_file(config, file_name);
 }
 
 #ifdef XKB_HEADERS_PRESENT
@@ -430,7 +431,7 @@ xkl_xkb_multiple_layouts_supported(XklEngine * engine)
 }
 
 gboolean
-xkl_xkb_activate_config(XklEngine * engine, const XklConfigRec * data)
+xkl_xkb_activate_config_rec(XklEngine * engine, const XklConfigRec * data)
 {
 	gboolean rv = FALSE;
 #if 0
@@ -485,9 +486,9 @@ xkl_xkb_activate_config(XklEngine * engine, const XklConfigRec * data)
 }
 
 gboolean
-xkl_xkb_write_config_to_file(XklEngine * engine, const char *file_name,
-			     const XklConfigRec * data,
-			     const gboolean binary)
+xkl_xkb_write_config_rec_to_file(XklEngine * engine, const char *file_name,
+				 const XklConfigRec * data,
+				 const gboolean binary)
 {
 	gboolean rv = FALSE;
 

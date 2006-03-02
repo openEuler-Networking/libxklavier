@@ -62,15 +62,15 @@ struct _XklEnginePrivate {
    * xkb: create proper the XkbDescRec and send it to the server
    * xmodmap: save the property, init layout #1
    */
-	 gboolean(*activate_config) (XklEngine * engine,
-				     const XklConfigRec * data);
+	 gboolean(*activate_config_rec) (XklEngine * engine,
+					 const XklConfigRec * data);
 
   /**
    * Background-specific initialization.
    * xkb: XkbInitAtoms - init internal xkb atoms table
    * xmodmap: void.
    */
-	void (*init_config) (XklConfig * config);
+	void (*init_config_registry) (XklConfigRegistry * config);
 
   /**
    * Loads the registry tree into DOM (using whatever path(s))
@@ -78,7 +78,7 @@ struct _XklEnginePrivate {
    * xkb: loads xml from XKB_BASE+"/rules/"+ruleset+".xml"
    * xmodmap: loads xml from XMODMAP_BASE+"/"+ruleset+".xml"
    */
-	 gboolean(*load_config_registry) (XklConfig * config);
+	 gboolean(*load_config_registry) (XklConfigRegistry * config);
 
   /**
    * Write the configuration into the file (binary/textual)
@@ -86,10 +86,10 @@ struct _XklEnginePrivate {
    * xmodmap: if text requested, just dump XklConfigRec to the 
    * file - not really useful. If binary - fail (not supported)
    */
-	 gboolean(*write_config_to_file) (XklEngine * engine,
-					  const gchar * file_name,
-					  const XklConfigRec * data,
-					  const gboolean binary);
+	 gboolean(*write_config_rec_to_file) (XklEngine * engine,
+					      const gchar * file_name,
+					      const XklConfigRec * data,
+					      const gboolean binary);
 
   /**
    * Get the list of the group names
@@ -207,7 +207,7 @@ struct _XklEnginePrivate {
 
 extern XklEngine *xkl_get_the_engine(void);
 
-struct _XklConfigPrivate {
+struct _XklConfigRegistryPrivate {
 	XklEngine *engine;
 
 	xmlDocPtr doc;
@@ -343,7 +343,7 @@ extern void xkl_config_rec_split_options(XklConfigRec * data,
 					 const gchar * merged);
 /***/
 
-extern void xkl_config_dump(FILE * file, XklConfigRec * data);
+extern void xkl_config_rec_dump(FILE * file, XklConfigRec * data);
 
 extern const gchar *xkl_event_get_name(gint type);
 
@@ -370,7 +370,7 @@ extern void xkl_engine_one_switch_to_secondary_group_performed(XklEngine *
 
 #define xkl_engine_get_display(engine) ((engine)->priv->display)
 #define xkl_engine_vcall(engine,func)  (*(engine)->priv->func)
-#define xkl_config_get_engine(config) ((config)->priv->engine)
+#define xkl_config_registry_get_engine(config) ((config)->priv->engine)
 
 extern gint xkl_debug_level;
 

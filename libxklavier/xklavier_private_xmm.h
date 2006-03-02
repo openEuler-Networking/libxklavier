@@ -48,12 +48,12 @@ const XmmSwitchOption *xkl_xmm_find_switch_option(XklEngine * engine,
 
 /* Start VTable methods */
 
-extern gboolean xkl_xmm_activate_config(XklEngine * engine,
-					const XklConfigRec * data);
+extern gboolean xkl_xmm_activate_config_rec(XklEngine * engine,
+					    const XklConfigRec * data);
 
-extern void xkl_xmm_init_config(XklConfig * config);
+extern void xkl_xmm_init_config_registry(XklConfigRegistry * config);
 
-extern gboolean xkl_xmm_load_config_registry(XklConfig * config);
+extern gboolean xkl_xmm_load_config_registry(XklConfigRegistry * config);
 
 extern gint xkl_xmm_process_x_event(XklEngine * engine, XEvent * kev);
 
