@@ -241,7 +241,7 @@ extern "C" {
  * @return 0 if the event it processed - 1 otherwise
  * @see xkl_StartListen
  */
-	extern gint xkl_engine_events_filter(XklEngine * engine,
+	extern gint xkl_engine_filter_events(XklEngine * engine,
 					     XEvent * evt);
 
 /**

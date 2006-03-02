@@ -8,7 +8,7 @@
 #include "xklavier_private.h"
 
 gint
-xkl_engine_events_filter(XklEngine * engine, XEvent * xev)
+xkl_engine_filter_events(XklEngine * engine, XEvent * xev)
 {
 	XAnyEvent *pe = (XAnyEvent *) xev;
 	xkl_debug(400,

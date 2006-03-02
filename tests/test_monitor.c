@@ -36,7 +36,8 @@ main(int argc, char *argv[])
 		XKLL_TRACK_KEYBOARD_STATE
 	};
 
-        g_type_init_with_debug_flags(G_TYPE_DEBUG_OBJECTS | G_TYPE_DEBUG_SIGNALS);
+	g_type_init_with_debug_flags(G_TYPE_DEBUG_OBJECTS |
+				     G_TYPE_DEBUG_SIGNALS);
 
 	while (1) {
 		c = getopt(argc, argv, "hd:l:");
@@ -72,40 +73,40 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 	printf("opened display: %p\n", dpy);
-	if (!xkl_init(dpy)) {
+	XklEngine *engine = xkl_engine_get_instance(dpy);
+	if (engine != NULL) {
 		XklConfigRec *current_config;
 		if (debug_level != -1)
 			xkl_set_debug_level(debug_level);
 		xkl_debug(0, "Xklavier initialized\n");
-		xkl_config_init();
-		xkl_config_registry_load();
+		XklConfig *config = xkl_config_get_instance(engine);
+		xkl_config_load_registry(config);
 		xkl_debug(0, "Xklavier registry loaded\n");
 
 		current_config = xkl_config_rec_new();
-		xkl_config_get_from_server(current_config);
+		xkl_config_rec_get_from_server(current_config, engine);
 
 		xkl_debug(0, "Now, listening...\n");
-		xkl_listen_start(listener_type);
+		xkl_engine_start_listen(engine, listener_type);
 
 		while (1) {
 			XNextEvent(dpy, &ev.core);
-			if (xkl_events_filter(&ev.core))
+			if (xkl_engine_filter_events(engine, &ev.core))
 				xkl_debug(200, "Unknown event %d\n",
 					  ev.type);
 		}
 
-		xkl_listen_stop();
+		xkl_engine_stop_listen(engine);
 
 		g_object_unref(G_OBJECT(current_config));
 
-		xkl_config_registry_free();
-		xkl_config_term();
+		xkl_config_free_registry(config);
+		g_object_unref(G_OBJECT(config));
 		xkl_debug(0, "Xklavier registry freed\n");
 		xkl_debug(0, "Xklavier terminating\n");
-		xkl_term();
+		g_object_unref(G_OBJECT(engine));
 	} else {
-		fprintf(stderr, "Could not init Xklavier: %s\n",
-			xkl_get_last_error());
+		fprintf(stderr, "Could not init Xklavier\n");
 		exit(2);
 	}
 	printf("closing display: %p\n", dpy);
