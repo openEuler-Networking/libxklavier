@@ -180,6 +180,33 @@ xkl_engine_get_instance(Display * display)
 
 	the_engine->priv->display = display;
 
+	int scr;
+
+	the_engine->priv->default_error_handler =
+	    XSetErrorHandler((XErrorHandler) xkl_process_error);
+
+	Display *dpy = xkl_engine_get_display(the_engine);
+	scr = DefaultScreen(dpy);
+	the_engine->priv->root_window = RootWindow(dpy, scr);
+
+	the_engine->priv->skip_one_restore = FALSE;
+	the_engine->priv->default_group = -1;
+	the_engine->priv->secondary_groups_mask = 0L;
+	the_engine->priv->prev_toplvl_win = 0;
+
+	the_engine->priv->atoms[WM_NAME] =
+	    XInternAtom(dpy, "WM_NAME", False);
+	the_engine->priv->atoms[WM_STATE] =
+	    XInternAtom(dpy, "WM_STATE", False);
+	the_engine->priv->atoms[XKLAVIER_STATE] =
+	    XInternAtom(dpy, "XKLAVIER_STATE", False);
+	the_engine->priv->atoms[XKLAVIER_TRANSPARENT] =
+	    XInternAtom(dpy, "XKLAVIER_TRANSPARENT", False);
+	the_engine->priv->atoms[XKLAVIER_ALLOW_SECONDARY] =
+	    XInternAtom(dpy, "XKLAVIER_ALLOW_SECONDARY", False);
+
+	xkl_engine_one_switch_to_secondary_group_performed(the_engine);
+
 	const gchar *sdl = g_getenv("XKL_DEBUG");
 
 	if (sdl != NULL) {
@@ -208,33 +235,6 @@ xkl_engine_get_instance(Display * display)
 		the_engine = NULL;
 		return NULL;
 	}
-
-	int scr;
-
-	the_engine->priv->default_error_handler =
-	    XSetErrorHandler((XErrorHandler) xkl_process_error);
-
-	Display *dpy = xkl_engine_get_display(the_engine);
-	scr = DefaultScreen(dpy);
-	the_engine->priv->root_window = RootWindow(dpy, scr);
-
-	the_engine->priv->skip_one_restore = FALSE;
-	the_engine->priv->default_group = -1;
-	the_engine->priv->secondary_groups_mask = 0L;
-	the_engine->priv->prev_toplvl_win = 0;
-
-	the_engine->priv->atoms[WM_NAME] =
-	    XInternAtom(dpy, "WM_NAME", False);
-	the_engine->priv->atoms[WM_STATE] =
-	    XInternAtom(dpy, "WM_STATE", False);
-	the_engine->priv->atoms[XKLAVIER_STATE] =
-	    XInternAtom(dpy, "XKLAVIER_STATE", False);
-	the_engine->priv->atoms[XKLAVIER_TRANSPARENT] =
-	    XInternAtom(dpy, "XKLAVIER_TRANSPARENT", False);
-	the_engine->priv->atoms[XKLAVIER_ALLOW_SECONDARY] =
-	    XInternAtom(dpy, "XKLAVIER_ALLOW_SECONDARY", False);
-
-	xkl_engine_one_switch_to_secondary_group_performed(the_engine);
 
 	if (!xkl_engine_load_all_info(the_engine)) {
 		g_object_unref(G_OBJECT(the_engine));

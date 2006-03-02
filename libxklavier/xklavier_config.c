@@ -327,6 +327,8 @@ xkl_config_get_instance(XklEngine * engine)
 
 	the_config = XKL_CONFIG(g_object_new(xkl_config_get_type(), NULL));
 
+	the_config->priv->engine = engine;
+
 	xmlXPathInit();
 	models_xpath = xmlXPathCompile((unsigned char *)
 				       "/xkbConfigRegistry/modelList/model");
