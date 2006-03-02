@@ -7,6 +7,8 @@
 
 #include "xklavier_private.h"
 
+static GObjectClass *g_object_class = NULL;
+
 static XklEngine *the_engine = NULL;
 
 gint xkl_debug_level = 0;
@@ -176,7 +178,6 @@ xkl_engine_get_instance(Display * display)
 
 	the_engine = XKL_ENGINE(g_object_new(xkl_engine_get_type(), NULL));
 
-
 	the_engine->priv->display = display;
 
 	const gchar *sdl = g_getenv("XKL_DEBUG");
@@ -241,17 +242,6 @@ xkl_engine_get_instance(Display * display)
 	}
 
 	return the_engine;
-}
-
-gint
-xkl_term(XklEngine * engine)
-{
-	XSetErrorHandler((XErrorHandler) engine->priv->
-			 default_error_handler);
-
-	xkl_engine_free_all_info(engine);
-
-	return 0;
 }
 
 gboolean
@@ -628,4 +618,37 @@ XklEngine *
 xkl_get_the_engine()
 {
 	return the_engine;
+}
+
+G_DEFINE_TYPE(XklEngine, xkl_engine, G_TYPE_OBJECT)
+
+static void
+xkl_engine_init(XklEngine * engine)
+{
+	engine->priv = g_new0(XklEnginePrivate, 1);
+}
+
+static void
+xkl_engine_finalize(GObject * obj)
+{
+	XklEngine *engine = (XklEngine *) obj;
+
+	XSetErrorHandler((XErrorHandler) engine->priv->
+			 default_error_handler);
+
+	xkl_engine_free_all_info(engine);
+
+	g_free(engine->priv);
+
+	G_OBJECT_CLASS(g_object_class)->finalize(obj);
+}
+
+static void
+xkl_engine_class_init(XklEngineClass * klass)
+{
+	GObjectClass *object_class;
+
+	object_class = (GObjectClass *) klass;
+	g_object_class = g_type_class_peek_parent(object_class);
+	object_class->finalize = xkl_engine_finalize;
 }

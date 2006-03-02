@@ -8,6 +8,8 @@
 
 #include "xklavier_private.h"
 
+static XklConfig *the_config = NULL;
+
 static xmlXPathCompExprPtr models_xpath;
 static xmlXPathCompExprPtr layouts_xpath;
 static xmlXPathCompExprPtr option_groups_xpath;
@@ -307,9 +309,22 @@ xkl_engine_get_ruleset_name(XklEngine * engine,
 	return rules_set_name;
 }
 
-void
-xkl_config_init(XklConfig * config)
+XklConfig *
+xkl_config_get_instance(XklEngine * engine)
 {
+	if (the_config != NULL) {
+		g_object_ref(G_OBJECT(the_config));
+		return the_config;
+	}
+
+	if (!engine) {
+		xkl_debug(10,
+			  "xkl_config_get_instance : engine is NULL ?\n");
+		return NULL;
+	}
+
+	the_config = XKL_CONFIG(g_object_new(xkl_config_get_type(), NULL));
+
 	xmlXPathInit();
 	models_xpath = xmlXPathCompile((unsigned char *)
 				       "/xkbConfigRegistry/modelList/model");
@@ -319,9 +334,10 @@ xkl_config_init(XklConfig * config)
 					      "/xkbConfigRegistry/optionList/group");
 	xkl_i18n_init();
 
-	XklEngine *engine = xkl_config_get_engine(config);
 	xkl_engine_ensure_vtable_inited(engine);
-	xkl_engine_vcall(engine, init_config) (config);
+	xkl_engine_vcall(engine, init_config) (the_config);
+
+	return the_config;
 }
 
 void
