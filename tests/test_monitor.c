@@ -6,7 +6,6 @@
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
 #include <libxklavier/xklavier.h>
-#include <libxklavier/xklavier_config.h>
 
 extern void xkl_config_dump(FILE * file, XklConfigRec * data);
 

@@ -6,7 +6,6 @@
 #include <string.h>
 #include <X11/Xlib.h>
 #include <libxklavier/xklavier.h>
-#include <libxklavier/xklavier_config.h>
 
 extern void xkl_config_rec_dump(FILE * file, XklConfigRec * data);
 
@@ -101,7 +100,8 @@ main(int argc, char *const argv[])
 		if (debug_level != -1)
 			xkl_set_debug_level(debug_level);
 		xkl_debug(0, "Xklavier initialized\n");
-		XklConfigRegistry *config = xkl_config_registry_get_instance(engine);
+		XklConfigRegistry *config =
+		    xkl_config_registry_get_instance(engine);
 		xkl_config_registry_load(config);
 		xkl_debug(0, "Xklavier registry loaded\n");
 		xkl_debug(0, "Backend: [%s]\n",
@@ -137,14 +137,12 @@ main(int argc, char *const argv[])
 				} else {
 					xkl_debug(0,
 						  "The configuration could not be reverted: %s\n",
-						  xkl_engine_get_last_error
-						  (engine));
+						  xkl_get_last_error());
 				}
 			} else {
 				xkl_debug(0,
 					  "The backup configuration could not be restored: %s\n",
-					  xkl_engine_get_last_error
-					  (engine));
+					  xkl_get_last_error());
 			}
 
 			g_object_unref(G_OBJECT(r2));
@@ -192,8 +190,7 @@ main(int argc, char *const argv[])
 			else
 				xkl_debug(0,
 					  "Could not set the config: %s\n",
-					  xkl_engine_get_last_error
-					  (engine));
+					  xkl_get_last_error());
 			break;
 		case ACTION_WRITE:
 			xkl_config_rec_write_to_file(engine,

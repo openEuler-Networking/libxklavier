@@ -9,8 +9,6 @@
 
 #include "config.h"
 
-#include "xklavier.h"
-#include "xklavier_config.h"
 #include "xklavier_private.h"
 
 static GObjectClass *g_object_class = NULL;
@@ -98,10 +96,11 @@ xkl_engine_get_default_names_prop(XklEngine * engine,
 {
 	if (rules_file_out != NULL)
 		*rules_file_out = g_strdup(XKB_DEFAULT_RULESET);
-	data->model = g_strdup(engine->priv->default_model);
+	data->model = g_strdup(xkl_engine_priv(engine, default_model));
 /* keeping Nvariants = Nlayouts */
 	data->layouts = g_new0(char *, 2);
-	data->layouts[0] = g_strdup(engine->priv->default_layout);
+	data->layouts[0] =
+	    g_strdup(xkl_engine_priv(engine, default_layout));
 	data->variants = g_new0(char *, 2);
 	data->variants[0] = g_strdup("");
 	data->options = NULL;
@@ -114,9 +113,9 @@ xkl_config_rec_get_full_from_server(char **rules_file_out,
 				    XklEngine * engine)
 {
 	gboolean rv = xkl_config_rec_get_from_root_window_property(data,
-								   engine->
-								   priv->
-								   base_config_atom,
+								   xkl_engine_priv
+								   (engine,
+								    base_config_atom),
 								   rules_file_out,
 								   engine);
 
@@ -179,8 +178,9 @@ gboolean
 xkl_config_rec_get_from_backup(XklConfigRec * data, XklEngine * engine)
 {
 	return xkl_config_rec_get_from_root_window_property(data,
-							    engine->priv->
-							    backup_config_atom,
+							    xkl_engine_priv
+							    (engine,
+							     backup_config_atom),
 							    NULL, engine);
 }
 
@@ -194,7 +194,8 @@ xkl_backup_names_prop(XklEngine * engine)
 
 	xkl_config_rec_init(&data);
 	if (xkl_config_rec_get_from_root_window_property
-	    (&data, engine->priv->backup_config_atom, NULL, engine)) {
+	    (&data, xkl_engine_priv(engine, backup_config_atom), NULL,
+	     engine)) {
 		xkl_config_rec_destroy(&data);
 		return TRUE;
 	}
@@ -204,8 +205,8 @@ xkl_backup_names_prop(XklEngine * engine)
 
 	if (cgp) {
 		if (!xkl_config_rec_set_to_root_window_property
-		    (&data, engine->priv->backup_config_atom, rf,
-		     engine)) {
+		    (&data, xkl_engine_priv(engine, backup_config_atom),
+		     rf, engine)) {
 			xkl_debug(150,
 				  "Could not backup the configuration");
 			rv = FALSE;
@@ -230,13 +231,15 @@ xkl_restore_names_prop(XklEngine * engine)
 
 	xkl_config_rec_init(&data);
 	if (!xkl_config_rec_get_from_root_window_property
-	    (&data, engine->priv->backup_config_atom, NULL, engine)) {
+	    (&data, xkl_engine_priv(engine, backup_config_atom), NULL,
+	     engine)) {
 		xkl_config_rec_destroy(&data);
 		return FALSE;
 	}
 
 	if (!xkl_config_rec_set_to_root_window_property
-	    (&data, engine->priv->base_config_atom, rf, engine)) {
+	    (&data, xkl_engine_priv(engine, base_config_atom), rf,
+	     engine)) {
 		xkl_debug(150, "Could not backup the configuration");
 		rv = FALSE;
 	}
@@ -258,22 +261,20 @@ xkl_config_rec_get_from_root_window_property(XklConfigRec * data,
 
 	/* no such atom! */
 	if (rules_atom == None) {	/* property cannot exist */
-		engine->priv->last_error_message =
-		    "Could not find the atom";
+		xkl_last_error_message = "Could not find the atom";
 		return FALSE;
 	}
 
 	rtrn =
 	    XGetWindowProperty(xkl_engine_get_display(engine),
-			       engine->priv->root_window, rules_atom, 0L,
-			       XKB_RF_NAMES_PROP_MAXLEN, False, XA_STRING,
-			       &real_prop_type, &fmt, &nitems,
-			       &extra_bytes,
+			       xkl_engine_priv(engine, root_window),
+			       rules_atom, 0L, XKB_RF_NAMES_PROP_MAXLEN,
+			       False, XA_STRING, &real_prop_type, &fmt,
+			       &nitems, &extra_bytes,
 			       (unsigned char **) (void *) &prop_data);
 	/* property not found! */
 	if (rtrn != Success) {
-		engine->priv->last_error_message =
-		    "Could not get the property";
+		xkl_last_error_message = "Could not get the property";
 		return FALSE;
 	}
 	/* set rules file to "" */
@@ -285,13 +286,12 @@ xkl_config_rec_get_from_root_window_property(XklConfigRec * data,
 	    || (fmt != 8)) {
 		if (prop_data)
 			XFree(prop_data);
-		engine->priv->last_error_message = "Wrong property format";
+		xkl_last_error_message = "Wrong property format";
 		return FALSE;
 	}
 
 	if (!prop_data) {
-		engine->priv->last_error_message =
-		    "No properties returned";
+		xkl_last_error_message = "No properties returned";
 		return FALSE;
 	}
 
@@ -402,8 +402,7 @@ xkl_config_rec_set_to_root_window_property(const XklConfigRec * data,
 
 	pval = next = g_new(char, len + 1);
 	if (!pval) {
-		engine->priv->last_error_message =
-		    "Could not allocate buffer";
+		xkl_last_error_message = "Could not allocate buffer";
 		if (all_layouts != NULL)
 			g_free(all_layouts);
 		if (all_variants != NULL)
@@ -447,13 +446,12 @@ xkl_config_rec_set_to_root_window_property(const XklConfigRec * data,
 		if (all_options != NULL)
 			g_free(all_options);
 		g_free(pval);
-		engine->priv->last_error_message =
-		    "Internal property parsing error";
+		xkl_last_error_message = "Internal property parsing error";
 		return FALSE;
 	}
 
 	Display *display = xkl_engine_get_display(engine);
-	rv = XChangeProperty(display, engine->priv->root_window,
+	rv = XChangeProperty(display, xkl_engine_priv(engine, root_window),
 			     rules_atom, XA_STRING, 8, PropModeReplace,
 			     (unsigned char *) pval, len);
 	XSync(display, False);

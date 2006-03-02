@@ -39,7 +39,7 @@ xkl_xmm_load_config_registry(XklConfigRegistry * config)
 		   rf);
 
 	if (stat(file_name, &stat_buf) != 0) {
-		engine->priv->last_error_message = "No rules file found";
+		xkl_last_error_message = "No rules file found";
 		return FALSE;
 	}
 
@@ -51,8 +51,9 @@ xkl_xmm_activate_config_rec(XklEngine * engine, const XklConfigRec * data)
 {
 	gboolean rv;
 	rv = xkl_config_rec_set_to_root_window_property(data,
-							engine->priv->
-							base_config_atom,
+							xkl_engine_priv
+							(engine,
+							 base_config_atom),
 							current_xmm_rules,
 							engine);
 	if (rv)

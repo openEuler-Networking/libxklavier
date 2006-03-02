@@ -127,7 +127,7 @@ xkl_xmm_find_switch_option(XklEngine * engine, gint keycode,
 gint
 xkl_xmm_resume_listen(XklEngine * engine)
 {
-	if (engine->priv->listener_type & XKLL_MANAGE_LAYOUTS)
+	if (xkl_engine_priv(engine, listener_type) & XKLL_MANAGE_LAYOUTS)
 		xkl_xmm_shortcuts_grab(engine);
 	return 0;
 }
@@ -135,7 +135,7 @@ xkl_xmm_resume_listen(XklEngine * engine)
 gint
 xkl_xmm_pause_listen(XklEngine * engine)
 {
-	if (engine->priv->listener_type & XKLL_MANAGE_LAYOUTS)
+	if (xkl_engine_priv(engine, listener_type) & XKLL_MANAGE_LAYOUTS)
 		xkl_xmm_shortcuts_ungrab(engine);
 	return 0;
 }
@@ -195,9 +195,9 @@ xkl_xmm_get_server_state(XklEngine * engine, XklState * state)
 
 	result =
 	    XGetWindowProperty(xkl_engine_get_display(engine),
-			       engine->priv->root_window, xmm_state_atom,
-			       0L, 1L, False, XA_INTEGER, &actual_type,
-			       &actual_format, &actual_items,
+			       xkl_engine_priv(engine, root_window),
+			       xmm_state_atom, 0L, 1L, False, XA_INTEGER,
+			       &actual_type, &actual_format, &actual_items,
 			       &bytes_remaining, &propval);
 
 	if (Success == result) {
@@ -250,8 +250,8 @@ xkl_xmm_lock_group(XklEngine * engine, gint group)
 	/* updating the status property */
 	propval = group;
 	Display *display = xkl_engine_get_display(engine);
-	XChangeProperty(display, engine->priv->root_window, xmm_state_atom,
-			XA_INTEGER, 32, PropModeReplace,
+	XChangeProperty(display, xkl_engine_priv(engine, root_window),
+			xmm_state_atom, XA_INTEGER, 32, PropModeReplace,
 			(unsigned char *) &propval, 1);
 	XSync(display, False);
 }
@@ -259,42 +259,49 @@ xkl_xmm_lock_group(XklEngine * engine, gint group)
 gint
 xkl_xmm_init(XklEngine * engine)
 {
-	engine->priv->backend_id = "xmodmap";
-	engine->priv->features = XKLF_MULTIPLE_LAYOUTS_SUPPORTED |
+	xkl_engine_priv(engine, backend_id) = "xmodmap";
+	xkl_engine_priv(engine, features) =
+	    XKLF_MULTIPLE_LAYOUTS_SUPPORTED |
 	    XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT;
-	engine->priv->activate_config_rec = xkl_xmm_activate_config_rec;
-	engine->priv->init_config_registry = xkl_xmm_init_config_registry;
-	engine->priv->load_config_registry = xkl_xmm_load_config_registry;
-	engine->priv->write_config_rec_to_file = NULL;
+	xkl_engine_priv(engine, activate_config_rec) =
+	    xkl_xmm_activate_config_rec;
+	xkl_engine_priv(engine, init_config_registry) =
+	    xkl_xmm_init_config_registry;
+	xkl_engine_priv(engine, load_config_registry) =
+	    xkl_xmm_load_config_registry;
+	xkl_engine_priv(engine, write_config_rec_to_file) = NULL;
 
-	engine->priv->get_groups_names = xkl_xmm_get_groups_names;
-	engine->priv->get_max_num_groups = xkl_xmm_get_max_num_groups;
-	engine->priv->get_num_groups = xkl_xmm_get_num_groups;
-	engine->priv->lock_group = xkl_xmm_lock_group;
+	xkl_engine_priv(engine, get_groups_names) =
+	    xkl_xmm_get_groups_names;
+	xkl_engine_priv(engine, get_max_num_groups) =
+	    xkl_xmm_get_max_num_groups;
+	xkl_engine_priv(engine, get_num_groups) = xkl_xmm_get_num_groups;
+	xkl_engine_priv(engine, lock_group) = xkl_xmm_lock_group;
 
-	engine->priv->process_x_event = xkl_xmm_process_x_event;
-	engine->priv->free_all_info = xkl_xmm_free_all_info;
-	engine->priv->if_cached_info_equals_actual =
+	xkl_engine_priv(engine, process_x_event) = xkl_xmm_process_x_event;
+	xkl_engine_priv(engine, free_all_info) = xkl_xmm_free_all_info;
+	xkl_engine_priv(engine, if_cached_info_equals_actual) =
 	    xkl_xmm_if_cached_info_equals_actual;
-	engine->priv->load_all_info = xkl_xmm_load_all_info;
-	engine->priv->get_server_state = xkl_xmm_get_server_state;
-	engine->priv->pause_listen = xkl_xmm_pause_listen;
-	engine->priv->resume_listen = xkl_xmm_resume_listen;
-	engine->priv->set_indicators = NULL;
+	xkl_engine_priv(engine, load_all_info) = xkl_xmm_load_all_info;
+	xkl_engine_priv(engine, get_server_state) =
+	    xkl_xmm_get_server_state;
+	xkl_engine_priv(engine, pause_listen) = xkl_xmm_pause_listen;
+	xkl_engine_priv(engine, resume_listen) = xkl_xmm_resume_listen;
+	xkl_engine_priv(engine, set_indicators) = NULL;
 
 	if (getenv("XKL_XMODMAP_DISABLE") != NULL)
 		return -1;
 
 	Display *display = xkl_engine_get_display(engine);
-	engine->priv->base_config_atom =
+	xkl_engine_priv(engine, base_config_atom) =
 	    XInternAtom(display, "_XMM_NAMES", False);
-	engine->priv->backup_config_atom =
+	xkl_engine_priv(engine, backup_config_atom) =
 	    XInternAtom(display, "_XMM_NAMES_BACKUP", False);
 
 	xmm_state_atom = XInternAtom(display, "_XMM_STATE", False);
 
-	engine->priv->default_model = "generic";
-	engine->priv->default_layout = "us";
+	xkl_engine_priv(engine, default_model) = "generic";
+	xkl_engine_priv(engine, default_layout) = "us";
 
 	return 0;
 }

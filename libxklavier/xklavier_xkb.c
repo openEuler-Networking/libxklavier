@@ -81,8 +81,9 @@ xkl_xkb_resume_listen(XklEngine * engine)
 guint
 xkl_xkb_get_max_num_groups(XklEngine * engine)
 {
-	return engine->priv->features & XKLF_MULTIPLE_LAYOUTS_SUPPORTED ?
-	    XkbNumKbdGroups : 1;
+	return xkl_engine_priv(engine,
+			       features) & XKLF_MULTIPLE_LAYOUTS_SUPPORTED
+	    ? XkbNumKbdGroups : 1;
 }
 
 guint
@@ -147,11 +148,10 @@ xkl_xkb_load_precached_xkb(XklEngine * engine)
 							    XkbAllIndicatorsMask,
 							    precached_xkb));
 		if (!rv) {
-			engine->priv->last_error_message =
+			xkl_last_error_message =
 			    "Could not load controls/names/indicators";
 			xkl_debug(0, "%s: %d\n",
-				  engine->priv->last_error_message,
-				  status);
+				  xkl_last_error_message, status);
 			XkbFreeKeyboard(precached_xkb,
 					XkbAllComponentsMask, True);
 		}
@@ -219,8 +219,7 @@ xkl_xkb_load_all_info(XklEngine * engine)
 
 	if (precached_xkb == NULL)
 		if (!xkl_xkb_load_precached_xkb(engine)) {
-			engine->priv->last_error_message =
-			    "Could not load keyboard";
+			xkl_last_error_message = "Could not load keyboard";
 			return FALSE;
 		}
 
@@ -245,13 +244,12 @@ xkl_xkb_load_all_info(XklEngine * engine)
 		xkl_debug(200, "Group %d has name [%s]\n", i, *group_name);
 	}
 
-	engine->priv->last_error_code =
+	xkl_engine_priv(engine, last_error_code) =
 	    XkbGetIndicatorMap(display, XkbAllIndicatorsMask,
 			       xkl_xkb_desc);
 
-	if (engine->priv->last_error_code != Success) {
-		engine->priv->last_error_message =
-		    "Could not load indicator map";
+	if (xkl_engine_priv(engine, last_error_code) != Success) {
+		xkl_last_error_message = "Could not load indicator map";
 		return FALSE;
 	}
 
@@ -481,28 +479,34 @@ xkl_xkb_init(XklEngine * engine)
 	gint opcode;
 	gboolean xkl_xkb_ext_present;
 
-	engine->priv->backend_id = "XKB";
-	engine->priv->features = XKLF_CAN_TOGGLE_INDICATORS |
+	xkl_engine_priv(engine, backend_id) = "XKB";
+	xkl_engine_priv(engine, features) = XKLF_CAN_TOGGLE_INDICATORS |
 	    XKLF_CAN_OUTPUT_CONFIG_AS_ASCII |
 	    XKLF_CAN_OUTPUT_CONFIG_AS_BINARY;
-	engine->priv->activate_config_rec = xkl_xkb_activate_config_rec;
-	engine->priv->init_config_registry = xkl_xkb_init_config_registry;
-	engine->priv->load_config_registry = xkl_xkb_load_config_registry;
-	engine->priv->write_config_rec_to_file =
+	xkl_engine_priv(engine, activate_config_rec) =
+	    xkl_xkb_activate_config_rec;
+	xkl_engine_priv(engine, init_config_registry) =
+	    xkl_xkb_init_config_registry;
+	xkl_engine_priv(engine, load_config_registry) =
+	    xkl_xkb_load_config_registry;
+	xkl_engine_priv(engine, write_config_rec_to_file) =
 	    xkl_xkb_write_config_rec_to_file;
-	engine->priv->get_groups_names = xkl_xkb_get_groups_names;
-	engine->priv->get_max_num_groups = xkl_xkb_get_max_num_groups;
-	engine->priv->get_num_groups = xkl_xkb_get_num_groups;
-	engine->priv->lock_group = xkl_xkb_lock_group;
-	engine->priv->process_x_event = xkl_xkb_process_x_event;
-	engine->priv->free_all_info = xkl_xkb_free_all_info;
-	engine->priv->if_cached_info_equals_actual =
+	xkl_engine_priv(engine, get_groups_names) =
+	    xkl_xkb_get_groups_names;
+	xkl_engine_priv(engine, get_max_num_groups) =
+	    xkl_xkb_get_max_num_groups;
+	xkl_engine_priv(engine, get_num_groups) = xkl_xkb_get_num_groups;
+	xkl_engine_priv(engine, lock_group) = xkl_xkb_lock_group;
+	xkl_engine_priv(engine, process_x_event) = xkl_xkb_process_x_event;
+	xkl_engine_priv(engine, free_all_info) = xkl_xkb_free_all_info;
+	xkl_engine_priv(engine, if_cached_info_equals_actual) =
 	    xkl_xkb_if_cached_info_equals_actual;
-	engine->priv->load_all_info = xkl_xkb_load_all_info;
-	engine->priv->get_server_state = xkl_xkb_get_server_state;
-	engine->priv->pause_listen = xkl_xkb_pause_listen;
-	engine->priv->resume_listen = xkl_xkb_resume_listen;
-	engine->priv->set_indicators = xkl_xkb_set_indicators;
+	xkl_engine_priv(engine, load_all_info) = xkl_xkb_load_all_info;
+	xkl_engine_priv(engine, get_server_state) =
+	    xkl_xkb_get_server_state;
+	xkl_engine_priv(engine, pause_listen) = xkl_xkb_pause_listen;
+	xkl_engine_priv(engine, resume_listen) = xkl_xkb_resume_listen;
+	xkl_engine_priv(engine, set_indicators) = xkl_xkb_set_indicators;
 
 	if (getenv("XKL_XKB_DISABLE") != NULL)
 		return -1;
@@ -514,35 +518,38 @@ xkl_xkb_init(XklEngine * engine)
 						NULL);
 	if (!xkl_xkb_ext_present) {
 		XSetErrorHandler((XErrorHandler)
-				 engine->priv->default_error_handler);
+				 xkl_engine_priv(engine,
+						 default_error_handler));
 		return -1;
 	}
 
 	xkl_debug(160,
 		  "xkbEvenType: %X, xkbError: %X, display: %p, root: "
 		  WINID_FORMAT "\n", xkl_xkb_event_type,
-		  xkl_xkb_error_code, display, engine->priv->root_window);
+		  xkl_xkb_error_code, display, xkl_engine_priv(engine,
+							       root_window));
 
-	engine->priv->base_config_atom =
+	xkl_engine_priv(engine, base_config_atom) =
 	    XInternAtom(display, _XKB_RF_NAMES_PROP_ATOM, False);
-	engine->priv->backup_config_atom =
+	xkl_engine_priv(engine, backup_config_atom) =
 	    XInternAtom(display, "_XKB_RULES_NAMES_BACKUP", False);
 
-	engine->priv->default_model = "pc101";
-	engine->priv->default_layout = "us";
+	xkl_engine_priv(engine, default_model) = "pc101";
+	xkl_engine_priv(engine, default_layout) = "us";
 
 
 	/* First, we have to assign xkl_vtable - 
 	   because this function uses it */
 
 	if (xkl_xkb_multiple_layouts_supported(engine))
-		engine->priv->features |= XKLF_MULTIPLE_LAYOUTS_SUPPORTED;
+		xkl_engine_priv(engine, features) |=
+		    XKLF_MULTIPLE_LAYOUTS_SUPPORTED;
 
 	return 0;
 #else
 	xkl_debug(160,
 		  "NO XKB LIBS, display: %p, root: " WINID_FORMAT
-		  "\n", display, engine->priv->root_window);
+		  "\n", display, xkl_engine_priv(engine, root_window));
 	return -1;
 #endif
 }

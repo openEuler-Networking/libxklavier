@@ -10,13 +10,13 @@
 XklState *
 xkl_engine_get_current_state(XklEngine * engine)
 {
-	return &engine->priv->curr_state;
+	return &xkl_engine_priv(engine, curr_state);
 }
 
 const gchar *
-xkl_engine_get_last_error(XklEngine * engine)
+xkl_get_last_error()
 {
-	return engine->priv->last_error_message;
+	return xkl_last_error_message;
 }
 
 gchar *
@@ -29,9 +29,9 @@ xkl_engine_get_window_title(XklEngine * engine, Window w)
 
 	if (Success ==
 	    XGetWindowProperty(xkl_engine_get_display(engine), w,
-			       engine->priv->atoms[WM_NAME], 0L, -1L,
-			       False, XA_STRING, &type_ret, &format_ret,
-			       &nitems, &rest, &prop))
+			       xkl_engine_priv(engine, atoms)[WM_NAME], 0L,
+			       -1L, False, XA_STRING, &type_ret,
+			       &format_ret, &nitems, &rest, &prop))
 		return (gchar *) prop;
 	else
 		return NULL;
@@ -76,7 +76,9 @@ xkl_engine_save_state(XklEngine * engine, Window win, XklState * state)
 {
 	Window app_win;
 
-	if (!(engine->priv->listener_type & XKLL_MANAGE_WINDOW_STATES))
+	if (!
+	    (xkl_engine_priv(engine, listener_type) &
+	     XKLL_MANAGE_WINDOW_STATES))
 		return;
 
 	if (xkl_engine_find_toplevel_window(engine, win, &app_win))
@@ -106,7 +108,7 @@ xkl_get_debug_window_title(XklEngine * engine, Window win)
 Window
 xkl_engine_get_current_window(XklEngine * engine)
 {
-	return engine->priv->curr_toplvl_win;
+	return xkl_engine_priv(engine, curr_toplvl_win);
 }
 
 /**
@@ -123,11 +125,11 @@ xkl_engine_load_subtree(XklEngine * engine, Window window, gint level,
 	guint num = 0;
 	gboolean retval = True;
 
-	engine->priv->last_error_code =
+	xkl_engine_priv(engine, last_error_code) =
 	    xkl_engine_query_tree(engine, window, &rwin, &parent,
 				  &children, &num);
 
-	if (engine->priv->last_error_code != Success) {
+	if (xkl_engine_priv(engine, last_error_code) != Success) {
 		return FALSE;
 	}
 
@@ -192,9 +194,9 @@ xkl_engine_if_window_has_wm_state(XklEngine * engine, Window win)
 	unsigned char *data = NULL;	/* Helps in the case of BadWindow error */
 
 	XGetWindowProperty(xkl_engine_get_display(engine), win,
-			   engine->priv->atoms[WM_STATE], 0, 0, False,
-			   engine->priv->atoms[WM_STATE], &type, &format,
-			   &nitems, &after, &data);
+			   xkl_engine_priv(engine, atoms)[WM_STATE], 0, 0,
+			   False, xkl_engine_priv(engine, atoms)[WM_STATE],
+			   &type, &format, &nitems, &after, &data);
 	if (data != NULL)
 		XFree(data);	/* To avoid an one-byte memory leak because after successfull return
 				 * data array always contains at least one nul byte (NULL-equivalent) */
@@ -211,14 +213,14 @@ xkl_engine_get_registered_parent(XklEngine * engine, Window win)
 	    NULL;
 	guint nchildren = 0;
 
-	engine->priv->last_error_code =
+	xkl_engine_priv(engine, last_error_code) =
 	    xkl_engine_query_tree(engine, win, &rw, &parent, &children,
 				  &nchildren);
 
 	if (children != NULL)
 		XFree(children);
 
-	return engine->priv->last_error_code ==
+	return xkl_engine_priv(engine, last_error_code) ==
 	    Success ? parent : (Window) NULL;
 }
 
@@ -244,8 +246,7 @@ xkl_engine_query_tree(XklEngine * engine, Window w,
 		xkl_debug(160,
 			  "Could not get tree info for window "
 			  WINID_FORMAT ": %d\n", w, result);
-		engine->priv->last_error_message =
-		    "Could not get the tree info";
+		xkl_last_error_message = "Could not get the tree info";
 	}
 
 	return result ? Success : FirstExtensionError;
@@ -303,6 +304,6 @@ xkl_engine_update_current_state(XklEngine * engine, int group,
 	xkl_debug(150,
 		  "Updating the current state with [g:%d/i:%u], reason: %s\n",
 		  group, indicators, reason);
-	engine->priv->curr_state.group = group;
-	engine->priv->curr_state.indicators = indicators;
+	xkl_engine_priv(engine, curr_state).group = group;
+	xkl_engine_priv(engine, curr_state).indicators = indicators;
 }

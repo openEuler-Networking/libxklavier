@@ -23,7 +23,7 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 	if (xev->type != xkl_xkb_event_type)
 		return 0;
 
-	if (!(engine->priv->listener_type &
+	if (!(xkl_engine_priv(engine, listener_type) &
 	      (XKLL_MANAGE_WINDOW_STATES | XKLL_TRACK_KEYBOARD_STATE)))
 		return 0;
 
@@ -53,11 +53,12 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 			xkl_debug(200,
 				  "This type of state notification is not regarding groups\n");
 			if (kev->state.locked_group !=
-			    engine->priv->curr_state.group)
+			    xkl_engine_priv(engine, curr_state).group)
 				xkl_debug(0,
 					  "ATTENTION! Currently cached group %d is not equal to the current group from the event: %d\n!",
-					  engine->priv->curr_state.group,
-					  kev->state.locked_group);
+					  xkl_engine_priv(engine,
+							  curr_state).
+					  group, kev->state.locked_group);
 		}
 
 		break;
@@ -69,7 +70,7 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 
 		xkl_debug(150, "XkbIndicatorStateNotify\n");
 
-		inds = engine->priv->curr_state.indicators;
+		inds = xkl_engine_priv(engine, curr_state).indicators;
 
 		ForPhysIndicators(i,
 				  bit) if (kev->indicators.changed & bit) {

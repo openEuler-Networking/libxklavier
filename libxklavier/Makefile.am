@@ -25,7 +25,8 @@ lib_LTLIBRARIES = libxklavier.la
 noinst_HEADERS = xklavier_private.h xklavier_private_xkb.h xklavier_private_xmm.h
 
 xklavierincdir = $(includedir)/libxklavier
-xklavierinc_HEADERS = xklavier.h xklavier_config.h
+xklavierinc_HEADERS = xklavier.h xkl_config_registry.h xkl_engine.h \
+                      xkl_config_rec.h xkl_config_item.h
 
 libxklavier_la_SOURCES = xklavier.c xklavier_evt.c xklavier_config.c \
 	xklavier_xkb.c xklavier_evt_xkb.c xklavier_config_xkb.c xklavier_toplevel.c \

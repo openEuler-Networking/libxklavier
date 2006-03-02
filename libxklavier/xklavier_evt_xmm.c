@@ -12,7 +12,7 @@
 static gint
 xkl_xmm_process_keypress_event(XklEngine * engine, XKeyPressedEvent * kpe)
 {
-	if (engine->priv->listener_type & XKLL_MANAGE_LAYOUTS) {
+	if (xkl_engine_priv(engine, listener_type) & XKLL_MANAGE_LAYOUTS) {
 		xkl_debug(200, "Processing the KeyPress event\n");
 		gint current_shortcut = 0;
 		const XmmSwitchOption *sop =
@@ -53,7 +53,8 @@ xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
 		XklState state;
 		xkl_xmm_get_server_state(engine, &state);
 
-		if (engine->priv->listener_type & XKLL_MANAGE_LAYOUTS) {
+		if (xkl_engine_priv(engine, listener_type) &
+		    XKLL_MANAGE_LAYOUTS) {
 			xkl_debug(150,
 				  "Current group from the root window property %d\n",
 				  state.group);
@@ -63,7 +64,7 @@ xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
 			return 1;
 		}
 
-		if (engine->priv->listener_type &
+		if (xkl_engine_priv(engine, listener_type) &
 		    (XKLL_MANAGE_WINDOW_STATES |
 		     XKLL_TRACK_KEYBOARD_STATE)) {
 			xkl_debug(150,
@@ -79,7 +80,7 @@ xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
   /**
    * Configuration is changed!
    */
-	if (kpe->atom == engine->priv->base_config_atom) {
+	if (kpe->atom == xkl_engine_priv(engine, base_config_atom)) {
 		xkl_engine_reset_all_info(engine,
 					  "base config atom changed");
 	}

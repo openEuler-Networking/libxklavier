@@ -42,7 +42,7 @@ xkl_rules_set_load(XklEngine * engine)
 	char *locale = NULL;
 
 	if (rf == NULL) {
-		engine->priv->last_error_message =
+		xkl_last_error_message =
 		    "Could not find the XKB rules set";
 		return NULL;
 	}
@@ -55,7 +55,7 @@ xkl_rules_set_load(XklEngine * engine)
 	rules_set = XkbRF_Load(file_name, locale, True, True);
 
 	if (rules_set == NULL) {
-		engine->priv->last_error_message = "Could not load rules";
+		xkl_last_error_message = "Could not load rules";
 		return NULL;
 	}
 	return rules_set;
@@ -138,7 +138,7 @@ xkl_xkb_config_native_prepare(XklEngine * engine,
 	g_free(xkl_var_defs.options);
 
 	if (!got_components) {
-		engine->priv->last_error_message =
+		xkl_last_error_message =
 		    "Could not translate rules into components";
 		/* Just cleanup the stuff in case of failure */
 		xkl_xkb_config_native_cleanup(engine, component_names_ptr);
@@ -464,7 +464,8 @@ xkl_xkb_activate_config_rec(XklEngine * engine, const XklConfigRec * data)
 					    TRUE);
 		if (xkb != NULL) {
 			if (xkl_config_rec_set_to_root_window_property
-			    (data, engine->priv->base_config_atom,
+			    (data,
+			     xkl_engine_priv(engine, base_config_atom),
 			     xkl_engine_get_ruleset_name(engine,
 							 XKB_DEFAULT_RULESET),
 			     engine))
@@ -472,11 +473,11 @@ xkl_xkb_activate_config_rec(XklEngine * engine, const XklConfigRec * data)
 				   because PrepareBeforeKbd did it for us */
 				rv = TRUE;
 			else
-				engine->priv->last_error_message =
+				xkl_last_error_message =
 				    "Could not set names property";
 			XkbFreeKeyboard(xkb, XkbAllComponentsMask, True);
 		} else {
-			engine->priv->last_error_message =
+			xkl_last_error_message =
 			    "Could not load keyboard description";
 		}
 		xkl_xkb_config_native_cleanup(engine, &component_names);
@@ -498,8 +499,7 @@ xkl_xkb_write_config_rec_to_file(XklEngine * engine, const char *file_name,
 	XkbFileInfo dump_info;
 
 	if (output == NULL) {
-		engine->priv->last_error_message =
-		    "Could not open the XKB file";
+		xkl_last_error_message = "Could not open the XKB file";
 		return FALSE;
 	}
 
@@ -523,7 +523,7 @@ xkl_xkb_write_config_rec_to_file(XklEngine * engine, const char *file_name,
 			XkbFreeKeyboard(xkb, XkbGBN_AllComponentsMask,
 					True);
 		} else
-			engine->priv->last_error_message =
+			xkl_last_error_message =
 			    "Could not load keyboard description";
 		xkl_xkb_config_native_cleanup(engine, &component_names);
 	}

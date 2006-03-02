@@ -17,7 +17,7 @@ static xmlXPathCompExprPtr layouts_xpath;
 static xmlXPathCompExprPtr option_groups_xpath;
 
 #define xkl_config_registry_is_initialized(config) \
-  ( (config)->priv->xpath_context != NULL )
+  ( xkl_config_priv(config,xpath_context) != NULL )
 
 static xmlChar *
 xkl_node_get_xml_lang_attr(xmlNodePtr nptr)
@@ -179,7 +179,8 @@ xkl_config_registry_enum_simple(XklConfigRegistry * config,
 	if (!xkl_config_registry_is_initialized(config))
 		return;
 	xpath_obj = xmlXPathCompiledEval(xpath_comp_expr,
-					 config->priv->xpath_context);
+					 xkl_config_priv(config,
+							 xpath_context));
 	if (xpath_obj != NULL) {
 		xkl_config_registry_enum_from_node_set(config,
 						       xpath_obj->
@@ -201,7 +202,7 @@ xkl_config_registry_enum_direct(XklConfigRegistry * config,
 		return;
 	snprintf(xpath_expr, sizeof xpath_expr, format, value);
 	xpath_obj = xmlXPathEval((unsigned char *) xpath_expr,
-				 config->priv->xpath_context);
+				 xkl_config_priv(config, xpath_context));
 	if (xpath_obj != NULL) {
 		xkl_config_registry_enum_from_node_set(config,
 						       xpath_obj->
@@ -227,7 +228,7 @@ xkl_config_registry_find_object(XklConfigRegistry * config,
 
 	snprintf(xpath_expr, sizeof xpath_expr, format, arg1, pitem->name);
 	xpath_obj = xmlXPathEval((unsigned char *) xpath_expr,
-				 config->priv->xpath_context);
+				 xkl_config_priv(config, xpath_context));
 	if (xpath_obj == NULL)
 		return FALSE;
 
@@ -300,7 +301,8 @@ xkl_engine_get_ruleset_name(XklEngine * engine,
 		/* first call */
 		gchar *rf = NULL;
 		if (!xkl_config_rec_get_from_root_window_property
-		    (NULL, engine->priv->base_config_atom, &rf, engine)
+		    (NULL, xkl_engine_priv(engine, base_config_atom), &rf,
+		     engine)
 		    || (rf == NULL)) {
 			g_strlcpy(rules_set_name, default_ruleset,
 				  sizeof rules_set_name);
@@ -333,7 +335,7 @@ xkl_config_registry_get_instance(XklEngine * engine)
 	    XKL_CONFIG_REGISTRY(g_object_new
 				(xkl_config_registry_get_type(), NULL));
 
-	the_config->priv->engine = engine;
+	xkl_config_priv(the_config, engine) = engine;
 
 	xmlXPathInit();
 	models_xpath = xmlXPathCompile((unsigned char *)
@@ -354,15 +356,14 @@ gboolean
 xkl_config_registry_load_from_file(XklConfigRegistry * config,
 				   const gchar * file_name)
 {
-	config->priv->doc = xmlParseFile(file_name);
-	if (config->priv->doc == NULL) {
-		config->priv->xpath_context = NULL;
-		xkl_config_registry_get_engine(config)->priv->
-		    last_error_message =
+	xkl_config_priv(config, doc) = xmlParseFile(file_name);
+	if (xkl_config_priv(config, doc) == NULL) {
+		xkl_config_priv(config, xpath_context) = NULL;
+		xkl_last_error_message =
 		    "Could not parse XKB configuration registry";
 	} else
-		config->priv->xpath_context =
-		    xmlXPathNewContext(config->priv->doc);
+		xkl_config_priv(config, xpath_context) =
+		    xmlXPathNewContext(xkl_config_priv(config, doc));
 	return xkl_config_registry_is_initialized(config);
 }
 
@@ -370,10 +371,11 @@ void
 xkl_config_registry_free(XklConfigRegistry * config)
 {
 	if (xkl_config_registry_is_initialized(config)) {
-		xmlXPathFreeContext(config->priv->xpath_context);
-		xmlFreeDoc(config->priv->doc);
-		config->priv->xpath_context = NULL;
-		config->priv->doc = NULL;
+		xmlXPathFreeContext(xkl_config_priv
+				    (config, xpath_context));
+		xmlFreeDoc(xkl_config_priv(config, doc));
+		xkl_config_priv(config, xpath_context) = NULL;
+		xkl_config_priv(config, doc) = NULL;
 	}
 }
 
@@ -415,7 +417,7 @@ xkl_config_registry_enum_option_groups(XklConfigRegistry * config,
 		return;
 	xpath_obj =
 	    xmlXPathCompiledEval(option_groups_xpath,
-				 config->priv->xpath_context);
+				 xkl_config_priv(config, xpath_context));
 	if (xpath_obj != NULL) {
 		xmlNodeSetPtr nodes = xpath_obj->nodesetval;
 		xmlNodePtr *pnode = nodes->nodeTab;
@@ -554,11 +556,12 @@ xkl_config_rec_write_to_file(XklEngine * engine, const gchar * file_name,
 			     const gboolean binary)
 {
 	if ((!binary &&
-	     !(engine->priv->features & XKLF_CAN_OUTPUT_CONFIG_AS_ASCII))
+	     !(xkl_engine_priv(engine, features) &
+	       XKLF_CAN_OUTPUT_CONFIG_AS_ASCII))
 	    || (binary
-		&& !(engine->priv->
-		     features & XKLF_CAN_OUTPUT_CONFIG_AS_BINARY))) {
-		engine->priv->last_error_message =
+		&& !(xkl_engine_priv(engine, features) &
+		     XKLF_CAN_OUTPUT_CONFIG_AS_BINARY))) {
+		xkl_last_error_message =
 		    "Function not supported at backend";
 		return FALSE;
 	}

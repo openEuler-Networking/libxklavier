@@ -5,7 +5,7 @@
 
 #include <libxml/xpath.h>
 
-#include <libxklavier/xklavier_config.h>
+#include <libxklavier/xklavier.h>
 
 enum { WM_NAME,
 	WM_STATE,
@@ -38,8 +38,6 @@ struct _XklEnginePrivate {
 	XErrorHandler default_error_handler;
 
 	Status last_error_code;
-
-	const gchar *last_error_message;
 
 	XklState curr_state;
 
@@ -368,10 +366,15 @@ extern void xkl_engine_one_switch_to_secondary_group_performed(XklEngine *
 
 #define WINID_FORMAT "%lx"
 
-#define xkl_engine_get_display(engine) ((engine)->priv->display)
+#define xkl_engine_priv(engine,member)  (engine)->priv->member
+#define xkl_engine_get_display(engine) (xkl_engine_priv(engine,display))
 #define xkl_engine_vcall(engine,func)  (*(engine)->priv->func)
+
+#define xkl_config_priv(config,member)  (config)->priv->member
 #define xkl_config_registry_get_engine(config) ((config)->priv->engine)
 
 extern gint xkl_debug_level;
+
+extern const gchar *xkl_last_error_message;
 
 #endif
