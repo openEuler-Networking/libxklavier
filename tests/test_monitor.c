@@ -86,7 +86,7 @@ main(int argc, char *argv[])
 		current_config = xkl_config_rec_new();
 		xkl_config_rec_get_from_server(current_config, engine);
 
-		xkl_debug(0, "Now, listening...\n");
+		xkl_debug(0, "Now, listening: %X...\n", listener_type);
 		xkl_engine_start_listen(engine, listener_type);
 
 		while (1) {
