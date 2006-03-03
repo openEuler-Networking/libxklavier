@@ -54,7 +54,9 @@ xkl_xmm_activate_config_rec(XklEngine * engine, const XklConfigRec * data)
 							xkl_engine_priv
 							(engine,
 							 base_config_atom),
-							current_xmm_rules,
+							xkl_engine_backend
+							(engine, XklXmm,
+							 current_rules),
 							engine);
 	if (rv)
 		xkl_xmm_lock_group(engine, 0);

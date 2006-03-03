@@ -28,7 +28,9 @@ xkl_xmm_process_keypress_event(XklEngine * engine, XKeyPressedEvent * kpe)
 				    (state.group +
 				     sop->
 				     shortcut_steps[current_shortcut]) %
-				    g_strv_length(current_xmm_config.
+				    g_strv_length(xkl_engine_backend
+						  (engine, XklXmm,
+						   current_config).
 						  layouts);
 				xkl_debug(150,
 					  "Setting new xmm group %d\n",
@@ -44,12 +46,13 @@ xkl_xmm_process_keypress_event(XklEngine * engine, XKeyPressedEvent * kpe)
 static gint
 xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
 {
+	Atom state_atom = xkl_engine_backend(engine, XklXmm, state_atom);
 	xkl_debug(200, "Processing the PropertyNotify event: %d/%d\n",
-		  kpe->atom, xmm_state_atom);
+		  kpe->atom, state_atom);
   /**
    * Group is changed!
    */
-	if (kpe->atom == xmm_state_atom) {
+	if (kpe->atom == state_atom) {
 		XklState state;
 		xkl_xmm_get_server_state(engine, &state);
 

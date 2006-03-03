@@ -15,23 +15,19 @@
 
 #define SHORTCUT_OPTION_PREFIX "grp:"
 
-gchar *current_xmm_rules = NULL;
-
-XklConfigRec current_xmm_config;
-
-Atom xmm_state_atom;
-
 const gchar **
 xkl_xmm_get_groups_names(XklEngine * engine)
 {
-	return (const gchar **) current_xmm_config.layouts;
+	return (const gchar **) xkl_engine_backend(engine, XklXmm,
+						   current_config).layouts;
 }
 
 void
 xkl_xmm_shortcuts_grab(XklEngine * engine)
 {
 	const XmmShortcut *shortcut;
-	const XmmSwitchOption *option = xkl_xmm_shortcut_get_current();
+	const XmmSwitchOption *option =
+	    xkl_xmm_shortcut_get_current(engine);
 
 	xkl_debug(150, "Found shortcut option: %p\n", option);
 	if (option == NULL)
@@ -52,7 +48,8 @@ void
 xkl_xmm_shortcuts_ungrab(XklEngine * engine)
 {
 	const XmmShortcut *shortcut;
-	const XmmSwitchOption *option = xkl_xmm_shortcut_get_current();
+	const XmmSwitchOption *option =
+	    xkl_xmm_shortcut_get_current(engine);
 
 	if (option == NULL)
 		return;
@@ -69,10 +66,10 @@ xkl_xmm_shortcuts_ungrab(XklEngine * engine)
 }
 
 XmmSwitchOption *
-xkl_xmm_shortcut_get_current(void)
+xkl_xmm_shortcut_get_current(XklEngine * engine)
 {
 	const gchar *option_name =
-	    xkl_xmm_shortcut_get_current_option_name();
+	    xkl_xmm_shortcut_get_current_option_name(engine);
 	XmmSwitchOption *switch_option = all_switch_options;
 	xkl_debug(150, "Configured switch option: [%s]\n", option_name);
 	if (option_name == NULL)
@@ -87,9 +84,10 @@ xkl_xmm_shortcut_get_current(void)
 }
 
 const gchar *
-xkl_xmm_shortcut_get_current_option_name(void)
+xkl_xmm_shortcut_get_current_option_name(XklEngine * engine)
 {
-	gchar **option = current_xmm_config.options;
+	gchar **option =
+	    xkl_engine_backend(engine, XklXmm, current_config).options;
 	if (option == NULL)
 		return NULL;
 
@@ -107,7 +105,7 @@ const XmmSwitchOption *
 xkl_xmm_find_switch_option(XklEngine * engine, gint keycode,
 			   guint state, gint * current_shortcut_rv)
 {
-	const XmmSwitchOption *rv = xkl_xmm_shortcut_get_current();
+	const XmmSwitchOption *rv = xkl_xmm_shortcut_get_current(engine);
 
 	if (rv != NULL) {
 		XmmShortcut *sc = rv->shortcuts;
@@ -150,7 +148,8 @@ guint
 xkl_xmm_get_num_groups(XklEngine * engine)
 {
 	gint rv = 0;
-	gchar **p = current_xmm_config.layouts;
+	gchar **p =
+	    xkl_engine_backend(engine, XklXmm, current_config).layouts;
 	if (p != NULL)
 		while (*p++ != NULL)
 			rv++;
@@ -160,11 +159,15 @@ xkl_xmm_get_num_groups(XklEngine * engine)
 void
 xkl_xmm_free_all_info(XklEngine * engine)
 {
-	if (current_xmm_rules != NULL) {
-		g_free(current_xmm_rules);
-		current_xmm_rules = NULL;
+	gchar *current_rules =
+	    xkl_engine_backend(engine, XklXmm, current_rules);
+	if (current_rules != NULL) {
+		g_free(current_rules);
+		current_rules = NULL;
+		xkl_engine_backend(engine, XklXmm, current_rules) = NULL;
 	}
-	xkl_config_rec_reset(&current_xmm_config);
+	xkl_config_rec_reset(&xkl_engine_backend
+			     (engine, XklXmm, current_config));
 }
 
 gboolean
@@ -176,9 +179,14 @@ xkl_xmm_if_cached_info_equals_actual(XklEngine * engine)
 gboolean
 xkl_xmm_load_all_info(XklEngine * engine)
 {
-	return xkl_config_rec_get_full_from_server(&current_xmm_rules,
-						   &current_xmm_config,
-						   engine);
+	return
+	    xkl_config_rec_get_full_from_server(&xkl_engine_backend
+						(engine, XklXmm,
+						 current_rules),
+						&xkl_engine_backend(engine,
+								    XklXmm,
+								    current_config),
+						engine);
 }
 
 void
@@ -196,8 +204,10 @@ xkl_xmm_get_server_state(XklEngine * engine, XklState * state)
 	result =
 	    XGetWindowProperty(xkl_engine_get_display(engine),
 			       xkl_engine_priv(engine, root_window),
-			       xmm_state_atom, 0L, 1L, False, XA_INTEGER,
-			       &actual_type, &actual_format, &actual_items,
+			       xkl_engine_backend(engine, XklXmm,
+						  state_atom), 0L, 1L,
+			       False, XA_INTEGER, &actual_type,
+			       &actual_format, &actual_items,
 			       &bytes_remaining, &propval);
 
 	if (Success == result) {
@@ -225,7 +235,9 @@ xkl_xmm_actualize_group(XklEngine * engine, gint group)
 	if (xkl_xmm_get_num_groups(engine) < group)
 		return;
 
-	layout_name = current_xmm_config.layouts[group];
+	layout_name =
+	    xkl_engine_backend(engine, XklXmm,
+			       current_config).layouts[group];
 
 	snprintf(cmd, sizeof cmd,
 		 "xmodmap %s/xmodmap.%s", XMODMAP_BASE, layout_name);
@@ -251,7 +263,8 @@ xkl_xmm_lock_group(XklEngine * engine, gint group)
 	propval = group;
 	Display *display = xkl_engine_get_display(engine);
 	XChangeProperty(display, xkl_engine_priv(engine, root_window),
-			xmm_state_atom, XA_INTEGER, 32, PropModeReplace,
+			xkl_engine_backend(engine, XklXmm, state_atom),
+			XA_INTEGER, 32, PropModeReplace,
 			(unsigned char *) &propval, 1);
 	XSync(display, False);
 }
@@ -298,10 +311,13 @@ xkl_xmm_init(XklEngine * engine)
 	xkl_engine_priv(engine, backup_config_atom) =
 	    XInternAtom(display, "_XMM_NAMES_BACKUP", False);
 
-	xmm_state_atom = XInternAtom(display, "_XMM_STATE", False);
+	xkl_engine_backend(engine, XklXmm, state_atom) =
+	    XInternAtom(display, "_XMM_STATE", False);
 
 	xkl_engine_priv(engine, default_model) = "generic";
 	xkl_engine_priv(engine, default_layout) = "us";
+
+	xkl_engine_priv(engine, backend) = g_new0(XklXmm, 1);
 
 	return 0;
 }

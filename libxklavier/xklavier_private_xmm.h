@@ -13,11 +13,13 @@ typedef struct _XmmSwitchOption {
 	gint shortcut_steps[MAX_SHORTCUTS_PER_OPTION + 1];
 } XmmSwitchOption;
 
-extern gchar *current_xmm_rules;
+typedef struct _XklXmm {
+	gchar *current_rules;
 
-extern XklConfigRec current_xmm_config;
+	XklConfigRec current_config;
 
-extern Atom xmm_state_atom;
+	Atom state_atom;
+} XklXmm;
 
 /* in the ideal world this should be a hashmap */
 extern XmmSwitchOption all_switch_options[];
@@ -34,9 +36,10 @@ extern void xkl_xmm_shortcuts_grab(XklEngine * engine);
 
 extern void xkl_xmm_shortcuts_ungrab(XklEngine * engine);
 
-extern const gchar *xkl_xmm_shortcut_get_current_option_name(void);
+extern const gchar *xkl_xmm_shortcut_get_current_option_name(XklEngine *
+							     engine);
 
-XmmSwitchOption *xkl_xmm_shortcut_get_current(void);
+XmmSwitchOption *xkl_xmm_shortcut_get_current(XklEngine * engine);
 
 extern void xkl_xmm_actualize_group(XklEngine * engine, gint group);
 
