@@ -8,15 +8,23 @@
 
 #define ForPhysIndicators( i, bit ) \
     for ( i=0, bit=1; i<XkbNumIndicators; i++, bit<<=1 ) \
-          if ( xkl_xkb_desc->indicators->phys_indicators & bit )
+          if ( xkl_engine_backend(engine,XklXkb,cached_desc)->indicators->phys_indicators & bit )
 
-extern gint xkl_xkb_event_type, xkl_xkb_error_code;
+typedef struct _XklXkb {
 
-extern XkbRF_VarDefsRec xkl_var_defs;
+	gint event_type;
 
-extern XkbDescPtr xkl_xkb_desc;
+	gint error_code;
 
-extern gchar *xkl_xkb_indicator_names[];
+	XkbDescPtr cached_desc;
+
+	gchar *indicator_names[XkbNumIndicators];
+
+	XkbDescPtr actual_desc;
+
+	gchar *group_names[XkbNumKbdGroups];
+
+} XklXkb;
 
 extern void xkl_engine_dump_xkb_desc(XklEngine * engine,
 				     const char *file_name,
@@ -89,7 +97,5 @@ extern gboolean xkl_xkb_config_prepare_native(const XklConfigRec * data,
 extern void xkl_xkb_config_cleanup_native(gpointer component_names);
 
 #endif
-
-extern gboolean xkl_xkb_ext_present;
 
 #endif

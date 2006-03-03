@@ -20,7 +20,7 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 	guint inds;
 	XkbEvent *kev = (XkbEvent *) xev;
 
-	if (xev->type != xkl_xkb_event_type)
+	if (xev->type != xkl_engine_backend(engine, XklXkb, event_type))
 		return 0;
 
 	if (!(xkl_engine_priv(engine, listener_type) &
@@ -127,16 +127,17 @@ xkl_xkb_set_indicators(XklEngine * engine, const XklState * window_state)
 	int i;
 	unsigned bit;
 
-	ForPhysIndicators(i,
-			  bit) if (xkl_xkb_desc->names->indicators[i] !=
-				   None) {
+	XkbDescPtr cached =
+	    xkl_engine_backend(engine, XklXkb, cached_desc);
+	ForPhysIndicators(i, bit) if (cached->names->indicators[i] != None) {
 		gboolean status;
 		status = xkl_engine_set_indicator(engine, i,
 						  (window_state->
 						   indicators & bit) != 0);
 		xkl_debug(150, "Set indicator \"%s\"/%d to %d: %d\n",
-			  xkl_xkb_indicator_names[i],
-			  xkl_xkb_desc->names->indicators[i],
+			  xkl_engine_backend(engine, XklXkb,
+					     indicator_names)[i],
+			  cached->names->indicators[i],
 			  window_state->indicators & bit, status);
 	}
 #endif

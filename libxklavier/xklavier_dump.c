@@ -272,8 +272,11 @@ xkl_engine_dump_xkb_desc(XklEngine * engine, const gchar * file_name,
 {
 	FILE *fs = fopen(file_name, "w+");
 	if (fs != NULL) {
-		xkb_desc_dump(fs, 0, kbd == NULL ? xkl_xkb_desc : kbd,
-			      engine);
+		xkb_desc_dump(fs, 0,
+			      kbd == NULL ? xkl_engine_backend(engine,
+							       XklXkb,
+							       cached_desc)
+			      : kbd, engine);
 		fclose(fs);
 	}
 

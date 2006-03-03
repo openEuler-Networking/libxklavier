@@ -201,6 +201,10 @@ struct _XklEnginePrivate {
    */
 	const gchar *default_layout;
 
+  /**
+   * Any stuff backend might need to put in here
+   */
+	gpointer backend;
 };
 
 extern XklEngine *xkl_get_the_engine(void);
@@ -367,6 +371,7 @@ extern void xkl_engine_one_switch_to_secondary_group_performed(XklEngine *
 #define WINID_FORMAT "%lx"
 
 #define xkl_engine_priv(engine,member)  (engine)->priv->member
+#define xkl_engine_backend(engine,type,member)  ((type*)((engine)->priv->backend))->member
 #define xkl_engine_get_display(engine) (xkl_engine_priv(engine,display))
 #define xkl_engine_vcall(engine,func)  (*(engine)->priv->func)
 

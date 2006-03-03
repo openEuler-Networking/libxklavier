@@ -654,6 +654,9 @@ xkl_engine_finalize(GObject * obj)
 
 	xkl_engine_free_all_info(engine);
 
+	gpointer backend = xkl_engine_priv(engine, backend);
+	if (backend != NULL)
+		g_free(backend);
 	g_free(engine->priv);
 
 	G_OBJECT_CLASS(g_object_class)->finalize(obj);

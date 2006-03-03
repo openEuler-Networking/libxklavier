@@ -10,20 +10,12 @@
 #include "xklavier_private_xkb.h"
 
 #ifdef XKB_HEADERS_PRESENT
-XkbDescPtr xkl_xkb_desc;
-
-static XkbDescPtr precached_xkb = NULL;
-
-gint xkl_xkb_event_type, xkl_xkb_error_code;
-
-gchar *xkl_xkb_indicator_names[XkbNumIndicators];
-
-static gchar *group_names[XkbNumKbdGroups];
 
 const gchar **
 xkl_xkb_get_groups_names(XklEngine * engine)
 {
-	return (const gchar **) group_names;
+	return (const gchar **) xkl_engine_backend(engine, XklXkb,
+						   group_names);
 }
 
 gint
@@ -89,7 +81,8 @@ xkl_xkb_get_max_num_groups(XklEngine * engine)
 guint
 xkl_xkb_get_num_groups(XklEngine * engine)
 {
-	return xkl_xkb_desc->ctrls->num_groups;
+	return xkl_engine_backend(engine, XklXkb,
+				  cached_desc)->ctrls->num_groups;
 }
 
 #define KBD_MASK \
@@ -103,57 +96,61 @@ void
 xkl_xkb_free_all_info(XklEngine * engine)
 {
 	gint i;
-	gchar **pi = xkl_xkb_indicator_names;
+	gchar **pi = xkl_engine_backend(engine, XklXkb, indicator_names);
 	for (i = 0; i < XkbNumIndicators; i++, pi++) {
 		/* only free non-empty ones */
 		if (*pi && **pi)
 			XFree(*pi);
 	}
-	if (xkl_xkb_desc != NULL) {
+	XkbDescPtr desc = xkl_engine_backend(engine, XklXkb, cached_desc);
+	if (desc != NULL) {
 		int i;
-		char **group_name = group_names;
-		for (i = xkl_xkb_desc->ctrls->num_groups; --i >= 0;
-		     group_name++)
+		char **group_name =
+		    xkl_engine_backend(engine, XklXkb, group_names);
+		for (i = desc->ctrls->num_groups; --i >= 0; group_name++)
 			if (*group_name) {
 				XFree(*group_name);
 				*group_name = NULL;
 			}
-		XkbFreeKeyboard(xkl_xkb_desc, XkbAllComponentsMask, True);
-		xkl_xkb_desc = NULL;
+		XkbFreeKeyboard(desc, XkbAllComponentsMask, True);
+		xkl_engine_backend(engine, XklXkb, cached_desc) = NULL;
 	}
 
 	/* just in case - never actually happens... */
-	if (precached_xkb != NULL) {
-		XkbFreeKeyboard(precached_xkb, XkbAllComponentsMask, True);
-		precached_xkb = NULL;
+	desc = xkl_engine_backend(engine, XklXkb, actual_desc);
+	if (desc != NULL) {
+		XkbFreeKeyboard(desc, XkbAllComponentsMask, True);
+		xkl_engine_backend(engine, XklXkb, actual_desc) = NULL;
 	}
 }
 
 static gboolean
-xkl_xkb_load_precached_xkb(XklEngine * engine)
+xkl_xkb_load_actual_desc(XklEngine * engine)
 {
 	gboolean rv = FALSE;
 	Status status;
 
 	Display *display = xkl_engine_get_display(engine);
-	precached_xkb = XkbGetMap(display, KBD_MASK, XkbUseCoreKbd);
-	if (precached_xkb != NULL) {
+	XkbDescPtr desc = XkbGetMap(display, KBD_MASK, XkbUseCoreKbd);
+	xkl_engine_backend(engine, XklXkb, actual_desc) = desc;
+	if (desc != NULL) {
 		rv = Success == (status = XkbGetControls(display,
 							 CTRLS_MASK,
-							 precached_xkb)) &&
+							 desc)) &&
 		    Success == (status = XkbGetNames(display,
 						     NAMES_MASK,
-						     precached_xkb)) &&
+						     desc)) &&
 		    Success == (status = XkbGetIndicatorMap(display,
 							    XkbAllIndicatorsMask,
-							    precached_xkb));
+							    desc));
 		if (!rv) {
 			xkl_last_error_message =
 			    "Could not load controls/names/indicators";
 			xkl_debug(0, "%s: %d\n",
 				  xkl_last_error_message, status);
-			XkbFreeKeyboard(precached_xkb,
-					XkbAllComponentsMask, True);
+			XkbFreeKeyboard(desc, XkbAllComponentsMask, True);
+			xkl_engine_backend(engine, XklXkb, actual_desc) =
+			    NULL;
 		}
 	}
 	return rv;
@@ -166,22 +163,26 @@ xkl_xkb_if_cached_info_equals_actual(XklEngine * engine)
 	Atom *pa1, *pa2;
 	gboolean rv = FALSE;
 
-	if (xkl_xkb_load_precached_xkb(engine)) {
+	if (xkl_xkb_load_actual_desc(engine)) {
 		/* First, compare the number of groups */
-		if (xkl_xkb_desc->ctrls->num_groups ==
-		    precached_xkb->ctrls->num_groups) {
+		XkbDescPtr cached =
+		    xkl_engine_backend(engine, XklXkb, cached_desc);
+		XkbDescPtr actual =
+		    xkl_engine_backend(engine, XklXkb, actual_desc);
+
+		if (cached->ctrls->num_groups == actual->ctrls->num_groups) {
 			/* Then, compare group names, just atoms */
-			pa1 = xkl_xkb_desc->names->groups;
-			pa2 = precached_xkb->names->groups;
-			for (i = xkl_xkb_desc->ctrls->num_groups; --i >= 0;
+			pa1 = cached->names->groups;
+			pa2 = actual->names->groups;
+			for (i = cached->ctrls->num_groups; --i >= 0;
 			     pa1++, pa2++)
 				if (*pa1 != *pa2)
 					break;
 
 			/* Then, compare indicator names, just atoms */
 			if (i < 0) {
-				pa1 = xkl_xkb_desc->names->indicators;
-				pa2 = precached_xkb->names->indicators;
+				pa1 = cached->names->indicators;
+				pa2 = actual->names->indicators;
 				for (i = XkbNumIndicators; --i >= 0;
 				     pa1++, pa2++)
 					if (*pa1 != *pa2)
@@ -194,9 +195,10 @@ xkl_xkb_if_cached_info_equals_actual(XklEngine * engine)
      * in case of success - free it
      */
 		if (rv) {
-			XkbFreeKeyboard(precached_xkb,
+			XkbFreeKeyboard(actual,
 					XkbAllComponentsMask, True);
-			precached_xkb = NULL;
+			xkl_engine_backend(engine, XklXkb, actual_desc) =
+			    NULL;
 		}
 	} else {
 		xkl_debug(0,
@@ -214,28 +216,31 @@ xkl_xkb_load_all_info(XklEngine * engine)
 	gint i;
 	Atom *pa;
 	gchar **group_name;
-	gchar **pi = xkl_xkb_indicator_names;
+	gchar **pi = xkl_engine_backend(engine, XklXkb, indicator_names);
 	Display *display = xkl_engine_get_display(engine);
+	XkbDescPtr actual =
+	    xkl_engine_backend(engine, XklXkb, actual_desc);
 
-	if (precached_xkb == NULL)
-		if (!xkl_xkb_load_precached_xkb(engine)) {
+	if (actual == NULL)
+		if (!xkl_xkb_load_actual_desc(engine)) {
 			xkl_last_error_message = "Could not load keyboard";
 			return FALSE;
 		}
 
 	/* take it from the cache (in most cases LoadAll is called from ResetAll which in turn ...) */
-	xkl_xkb_desc = precached_xkb;
-	precached_xkb = NULL;
+	XkbDescPtr cached = actual =
+	    xkl_engine_backend(engine, XklXkb, actual_desc);
+	xkl_engine_backend(engine, XklXkb, cached_desc) =
+	    xkl_engine_backend(engine, XklXkb, actual_desc);
+	xkl_engine_backend(engine, XklXkb, actual_desc) = NULL;
 
 	/* First, output the number of the groups */
-	xkl_debug(200, "found %d groups\n",
-		  xkl_xkb_desc->ctrls->num_groups);
+	xkl_debug(200, "found %d groups\n", cached->ctrls->num_groups);
 
 	/* Then, cache (and output) the names of the groups */
-	pa = xkl_xkb_desc->names->groups;
-	group_name = group_names;
-	for (i = xkl_xkb_desc->ctrls->num_groups; --i >= 0;
-	     pa++, group_name++) {
+	pa = cached->names->groups;
+	group_name = xkl_engine_backend(engine, XklXkb, group_names);
+	for (i = cached->ctrls->num_groups; --i >= 0; pa++, group_name++) {
 		*group_name =
 		    XGetAtomName(display,
 				 *pa == None ? XInternAtom(display,
@@ -245,8 +250,7 @@ xkl_xkb_load_all_info(XklEngine * engine)
 	}
 
 	xkl_engine_priv(engine, last_error_code) =
-	    XkbGetIndicatorMap(display, XkbAllIndicatorsMask,
-			       xkl_xkb_desc);
+	    XkbGetIndicatorMap(display, XkbAllIndicatorsMask, cached);
 
 	if (xkl_engine_priv(engine, last_error_code) != Success) {
 		xkl_last_error_message = "Could not load indicator map";
@@ -254,7 +258,7 @@ xkl_xkb_load_all_info(XklEngine * engine)
 	}
 
 	/* Then, cache (and output) the names of the indicators */
-	pa = xkl_xkb_desc->names->indicators;
+	pa = cached->names->indicators;
 	for (i = XkbNumIndicators; --i >= 0; pi++, pa++) {
 		Atom a = *pa;
 		if (a != None)
@@ -266,7 +270,7 @@ xkl_xkb_load_all_info(XklEngine * engine)
 	}
 
 	xkl_debug(200, "Real indicators are %X\n",
-		  xkl_xkb_desc->indicators->phys_indicators);
+		  cached->indicators->phys_indicators);
 // TODO
 #if 0
 	if (xkl_config_callback != NULL)
@@ -302,7 +306,9 @@ xkl_xkb_get_server_state(XklEngine * engine, XklState * current_state_out)
 	    XkbGetIndicatorState(display, XkbUseCoreKbd,
 				 &current_state_out->indicators))
 		current_state_out->indicators &=
-		    xkl_xkb_desc->indicators->phys_indicators;
+		    xkl_engine_backend(engine, XklXkb,
+				       cached_desc)->indicators->
+		    phys_indicators;
 	else
 		current_state_out->indicators = 0;
 }
@@ -316,8 +322,10 @@ xkl_engine_set_indicator(XklEngine * engine, gint indicator_num,
 {
 	XkbIndicatorMapPtr map;
 	Display *display = xkl_engine_get_display(engine);
+	XkbDescPtr cached =
+	    xkl_engine_backend(engine, XklXkb, cached_desc);
 
-	map = xkl_xkb_desc->indicators->maps + indicator_num;
+	map = cached->indicators->maps + indicator_num;
 
 	/* The 'flags' field tells whether this indicator is automatic
 	 * (XkbIM_NoExplicit - 0x80), explicit (XkbIM_NoAutomatic - 0x40),
@@ -343,11 +351,11 @@ xkl_engine_set_indicator(XklEngine * engine, gint indicator_num,
 
 	case XkbIM_NoAutomatic:
 		{
-			if (xkl_xkb_desc->names->
+			if (cached->names->
 			    indicators[indicator_num] != None)
 				XkbSetNamedIndicator(display,
 						     XkbUseCoreKbd,
-						     xkl_xkb_desc->names->
+						     cached->names->
 						     indicators
 						     [indicator_num], set,
 						     False, NULL);
@@ -380,13 +388,13 @@ xkl_engine_set_indicator(XklEngine * engine, gint indicator_num,
 	if (map->ctrls) {
 		gulong which = map->ctrls;
 
-		XkbGetControls(display, XkbAllControlsMask, xkl_xkb_desc);
+		XkbGetControls(display, XkbAllControlsMask, cached);
 		if (set)
-			xkl_xkb_desc->ctrls->enabled_ctrls |= which;
+			cached->ctrls->enabled_ctrls |= which;
 		else
-			xkl_xkb_desc->ctrls->enabled_ctrls &= ~which;
+			cached->ctrls->enabled_ctrls &= ~which;
 		XkbSetControls(display, which | XkbControlsEnabledMask,
-			       xkl_xkb_desc);
+			       cached);
 	}
 
 	/* The 'which_groups' field tells when this indicator turns on
@@ -513,9 +521,13 @@ xkl_xkb_init(XklEngine * engine)
 
 	xkl_xkb_ext_present = XkbQueryExtension(display,
 						&opcode,
-						&xkl_xkb_event_type,
-						&xkl_xkb_error_code, NULL,
-						NULL);
+						&xkl_engine_backend(engine,
+								    XklXkb,
+								    event_type),
+						&xkl_engine_backend(engine,
+								    XklXkb,
+								    error_code),
+						NULL, NULL);
 	if (!xkl_xkb_ext_present) {
 		XSetErrorHandler((XErrorHandler)
 				 xkl_engine_priv(engine,
@@ -525,9 +537,10 @@ xkl_xkb_init(XklEngine * engine)
 
 	xkl_debug(160,
 		  "xkbEvenType: %X, xkbError: %X, display: %p, root: "
-		  WINID_FORMAT "\n", xkl_xkb_event_type,
-		  xkl_xkb_error_code, display, xkl_engine_priv(engine,
-							       root_window));
+		  WINID_FORMAT "\n", xkl_engine_backend(engine, XklXkb,
+							event_type),
+		  xkl_engine_backend(engine, XklXkb, error_code), display,
+		  xkl_engine_priv(engine, root_window));
 
 	xkl_engine_priv(engine, base_config_atom) =
 	    XInternAtom(display, _XKB_RF_NAMES_PROP_ATOM, False);
@@ -537,6 +550,7 @@ xkl_xkb_init(XklEngine * engine)
 	xkl_engine_priv(engine, default_model) = "pc101";
 	xkl_engine_priv(engine, default_layout) = "us";
 
+	xkl_engine_priv(engine, backend) = g_new0(XklXkb, 1);
 
 	/* First, we have to assign xkl_vtable - 
 	   because this function uses it */
