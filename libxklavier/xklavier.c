@@ -751,7 +751,7 @@ xkl_engine_finalize(GObject * obj)
 static void
 xkl_engine_class_init(XklEngineClass * klass)
 {
-	GFlagsValue feature_flags[] = {
+	static GFlagsValue feature_flags[] = {
 		{0x01, "XKLF_CAN_TOGGLE_INDICATORS", NULL},
 		{0x02, "XKLF_CAN_OUTPUT_CONFIG_AS_ASCII", NULL},
 		{0x04, "XKLF_CAN_OUTPUT_CONFIG_AS_BINARY", NULL},
@@ -759,6 +759,12 @@ xkl_engine_class_init(XklEngineClass * klass)
 		{0x10, "XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT", NULL},
 		{0, NULL, NULL}
 	};
+	static GEnumValue state_change_values[] = {
+		{0, "GROUP_CHANGED", NULL},
+		{1, "INDICATORS_CHANGED", NULL},
+		{0, NULL, NULL}
+	};
+
 	GObjectClass *object_class;
 
 	object_class = (GObjectClass *) klass;
@@ -785,6 +791,10 @@ xkl_engine_class_init(XklEngineClass * klass)
 
 	GType features_type = g_flags_register_static("XklEngineFeatures",
 						      feature_flags);
+
+	GType state_change_type =
+	    g_enum_register_static("XklEngineStateChangeType",
+				   state_change_values);
 
 	GParamSpec *features_param_spec = g_param_spec_flags("features",
 							     "Features",
@@ -846,6 +856,25 @@ xkl_engine_class_init(XklEngineClass * klass)
 					PROP_INDICATORS_HANDLING,
 					indicators_handling_param_spec);
 
+
+	g_signal_new("X-config-changed", XKL_TYPE_ENGINE,
+		     G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET(XklEngineClass,
+							config_notify),
+		     NULL, NULL, NULL, G_TYPE_NONE, 0);
+
+	g_signal_new("new-toplevel-window", XKL_TYPE_ENGINE,
+		     G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET(XklEngineClass,
+							new_window_notify),
+		     NULL, NULL, NULL, G_TYPE_INT, 2, G_TYPE_LONG,
+		     G_TYPE_LONG);
+
+	g_signal_new("X-state-changed", XKL_TYPE_ENGINE,
+		     G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET(XklEngineClass,
+							state_notify),
+		     NULL, NULL, NULL, G_TYPE_NONE, 3, state_change_type,
+		     G_TYPE_INT, G_TYPE_BOOLEAN);
+
+	/* 2 Windows passed */
 	/* static stuff initialized */
 
 	const gchar *sdl = g_getenv("XKL_DEBUG");
