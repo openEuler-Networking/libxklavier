@@ -699,7 +699,8 @@ xkl_engine_get_property(GObject * object,
 				   xkl_engine_priv(engine, backend_id));
 		break;
 	case PROP_FEATURES:
-		g_value_set_uint(value, xkl_engine_priv(engine, features));
+		g_value_set_flags(value,
+				  xkl_engine_priv(engine, features));
 		break;
 	case PROP_MAX_NUM_GROUPS:
 		g_value_set_uint(value,
@@ -750,6 +751,14 @@ xkl_engine_finalize(GObject * obj)
 static void
 xkl_engine_class_init(XklEngineClass * klass)
 {
+	GFlagsValue feature_flags[] = {
+		{0x01, "XKLF_CAN_TOGGLE_INDICATORS", NULL},
+		{0x02, "XKLF_CAN_OUTPUT_CONFIG_AS_ASCII", NULL},
+		{0x04, "XKLF_CAN_OUTPUT_CONFIG_AS_BINARY", NULL},
+		{0x08, "XKLF_MULTIPLE_LAYOUTS_SUPPORTED", NULL},
+		{0x10, "XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT", NULL},
+		{0, NULL, NULL}
+	};
 	GObjectClass *object_class;
 
 	object_class = (GObjectClass *) klass;
@@ -773,11 +782,16 @@ xkl_engine_class_init(XklEngineClass * klass)
 				"Backend name",
 				NULL,
 				G_PARAM_READABLE);
-	GParamSpec *features_param_spec = g_param_spec_uint("features",
-							    "Features",
-							    "Backend features",
-							    0, 0x20, 0,
-							    G_PARAM_READABLE);
+
+	GType features_type = g_flags_register_static("XklEngineFeatures",
+						      feature_flags);
+
+	GParamSpec *features_param_spec = g_param_spec_flags("features",
+							     "Features",
+							     "Backend features",
+							     features_type,
+							     0,
+							     G_PARAM_READABLE);
 	GParamSpec *max_num_groups_param_spec =
 	    g_param_spec_uint("max-num-ngroups",
 			      "maxNumGroups",
