@@ -71,7 +71,6 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Could not open display\n");
 		exit(1);
 	}
-	printf("opened display: %p\n", dpy);
 	XklEngine *engine = xkl_engine_get_instance(dpy);
 	if (engine != NULL) {
 		XklConfigRec *current_config;
