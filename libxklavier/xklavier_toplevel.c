@@ -76,12 +76,8 @@ xkl_engine_add_toplevel_window(XklEngine * engine, Window toplevel_win,
 		}
 	}
 
-/* TODO
-	if (xkl_new_window_callback != NULL)
-		default_group_to_use =
-		    (*xkl_new_window_callback) (toplevel_win, parent,
-						xkl_new_window_callback_data);
-*/
+	g_signal_emit_by_name(engine, "new-toplevel_window", toplevel_win,
+			      parent, &default_group_to_use);
 
 	if (default_group_to_use == -1)
 		default_group_to_use =

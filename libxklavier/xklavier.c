@@ -457,15 +457,11 @@ xkl_engine_try_call_state_func(XklEngine * engine,
 		}
 		xkl_engine_one_switch_to_secondary_group_performed(engine);
 	}
-// TODO
-#if 0
-	if (xkl_state_callback != NULL) {
 
-		(*xkl_state_callback) (change_type,
-				       xkl_curr_state.group, restore,
-				       xkl_state_callback_data);
-	}
-#endif
+	g_signal_emit_by_name(engine, "X-state-changed", change_type,
+			      xkl_engine_priv(engine, curr_state).group,
+			      restore);
+
 }
 
 void

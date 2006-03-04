@@ -271,11 +271,9 @@ xkl_xkb_load_all_info(XklEngine * engine)
 
 	xkl_debug(200, "Real indicators are %X\n",
 		  cached->indicators->phys_indicators);
-// TODO
-#if 0
-	if (xkl_config_callback != NULL)
-		(*xkl_config_callback) (xkl_config_callback_data);
-#endif
+
+	g_signal_emit_by_name(engine, "X-config-changed");
+
 	return TRUE;
 }
 
