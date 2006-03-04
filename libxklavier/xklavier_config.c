@@ -16,8 +16,13 @@ static xmlXPathCompExprPtr models_xpath;
 static xmlXPathCompExprPtr layouts_xpath;
 static xmlXPathCompExprPtr option_groups_xpath;
 
+enum {
+	PROP_0,
+	PROP_ENGINE,
+};
+
 #define xkl_config_registry_is_initialized(config) \
-  ( xkl_config_priv(config,xpath_context) != NULL )
+  ( xkl_config_registry_priv(config,xpath_context) != NULL )
 
 static xmlChar *
 xkl_node_get_xml_lang_attr(xmlNodePtr nptr)
@@ -179,8 +184,8 @@ xkl_config_registry_enum_simple(XklConfigRegistry * config,
 	if (!xkl_config_registry_is_initialized(config))
 		return;
 	xpath_obj = xmlXPathCompiledEval(xpath_comp_expr,
-					 xkl_config_priv(config,
-							 xpath_context));
+					 xkl_config_registry_priv(config,
+								  xpath_context));
 	if (xpath_obj != NULL) {
 		xkl_config_registry_enum_from_node_set(config,
 						       xpath_obj->
@@ -202,7 +207,8 @@ xkl_config_registry_enum_direct(XklConfigRegistry * config,
 		return;
 	snprintf(xpath_expr, sizeof xpath_expr, format, value);
 	xpath_obj = xmlXPathEval((unsigned char *) xpath_expr,
-				 xkl_config_priv(config, xpath_context));
+				 xkl_config_registry_priv(config,
+							  xpath_context));
 	if (xpath_obj != NULL) {
 		xkl_config_registry_enum_from_node_set(config,
 						       xpath_obj->
@@ -228,7 +234,8 @@ xkl_config_registry_find_object(XklConfigRegistry * config,
 
 	snprintf(xpath_expr, sizeof xpath_expr, format, arg1, pitem->name);
 	xpath_obj = xmlXPathEval((unsigned char *) xpath_expr,
-				 xkl_config_priv(config, xpath_context));
+				 xkl_config_registry_priv(config,
+							  xpath_context));
 	if (xpath_obj == NULL)
 		return FALSE;
 
@@ -333,21 +340,8 @@ xkl_config_registry_get_instance(XklEngine * engine)
 
 	the_config =
 	    XKL_CONFIG_REGISTRY(g_object_new
-				(xkl_config_registry_get_type(), NULL));
-
-	xkl_config_priv(the_config, engine) = engine;
-
-	xmlXPathInit();
-	models_xpath = xmlXPathCompile((unsigned char *)
-				       "/xkbConfigRegistry/modelList/model");
-	layouts_xpath = xmlXPathCompile((unsigned char *)
-					"/xkbConfigRegistry/layoutList/layout");
-	option_groups_xpath = xmlXPathCompile((unsigned char *)
-					      "/xkbConfigRegistry/optionList/group");
-	xkl_i18n_init();
-
-	xkl_engine_ensure_vtable_inited(engine);
-	xkl_engine_vcall(engine, init_config_registry) (the_config);
+				(xkl_config_registry_get_type(), "engine",
+				 engine, NULL));
 
 	return the_config;
 }
@@ -356,14 +350,15 @@ gboolean
 xkl_config_registry_load_from_file(XklConfigRegistry * config,
 				   const gchar * file_name)
 {
-	xkl_config_priv(config, doc) = xmlParseFile(file_name);
-	if (xkl_config_priv(config, doc) == NULL) {
-		xkl_config_priv(config, xpath_context) = NULL;
+	xkl_config_registry_priv(config, doc) = xmlParseFile(file_name);
+	if (xkl_config_registry_priv(config, doc) == NULL) {
+		xkl_config_registry_priv(config, xpath_context) = NULL;
 		xkl_last_error_message =
 		    "Could not parse XKB configuration registry";
 	} else
-		xkl_config_priv(config, xpath_context) =
-		    xmlXPathNewContext(xkl_config_priv(config, doc));
+		xkl_config_registry_priv(config, xpath_context) =
+		    xmlXPathNewContext(xkl_config_registry_priv
+				       (config, doc));
 	return xkl_config_registry_is_initialized(config);
 }
 
@@ -371,11 +366,11 @@ void
 xkl_config_registry_free(XklConfigRegistry * config)
 {
 	if (xkl_config_registry_is_initialized(config)) {
-		xmlXPathFreeContext(xkl_config_priv
+		xmlXPathFreeContext(xkl_config_registry_priv
 				    (config, xpath_context));
-		xmlFreeDoc(xkl_config_priv(config, doc));
-		xkl_config_priv(config, xpath_context) = NULL;
-		xkl_config_priv(config, doc) = NULL;
+		xmlFreeDoc(xkl_config_registry_priv(config, doc));
+		xkl_config_registry_priv(config, xpath_context) = NULL;
+		xkl_config_registry_priv(config, doc) = NULL;
 	}
 }
 
@@ -417,7 +412,8 @@ xkl_config_registry_enum_option_groups(XklConfigRegistry * config,
 		return;
 	xpath_obj =
 	    xmlXPathCompiledEval(option_groups_xpath,
-				 xkl_config_priv(config, xpath_context));
+				 xkl_config_registry_priv(config,
+							  xpath_context));
 	if (xpath_obj != NULL) {
 		xmlNodeSetPtr nodes = xpath_obj->nodesetval;
 		xmlNodePtr *pnode = nodes->nodeTab;
@@ -595,10 +591,66 @@ xkl_config_rec_dump(FILE * file, XklConfigRec * data)
 
 G_DEFINE_TYPE(XklConfigRegistry, xkl_config_registry, G_TYPE_OBJECT)
 
+static GObject *
+xkl_config_registry_constructor(GType type,
+				guint n_construct_properties,
+				GObjectConstructParam *
+				construct_properties)
+{
+	GObject *obj;
+
+	{
+		/* Invoke parent constructor. */
+		XklConfigRegistryClass *klass;
+		klass =
+		    XKL_CONFIG_REGISTRY_CLASS(g_type_class_peek
+					      (XKL_TYPE_CONFIG_REGISTRY));
+		obj =
+		    parent_class->constructor(type, n_construct_properties,
+					      construct_properties);
+	}
+
+	XklConfigRegistry *config = XKL_CONFIG_REGISTRY(obj);
+
+	XklEngine *engine =
+	    XKL_ENGINE(g_value_peek_pointer(construct_properties[0].
+					    value));
+	xkl_config_registry_get_engine(config) = engine;
+
+	xkl_engine_ensure_vtable_inited(engine);
+	xkl_engine_vcall(engine, init_config_registry) (config);
+
+	return obj;
+}
+
 static void
 xkl_config_registry_init(XklConfigRegistry * config)
 {
 	config->priv = g_new0(XklConfigRegistryPrivate, 1);
+}
+
+static void
+xkl_config_registry_set_property(GObject * object,
+				 guint property_id,
+				 const GValue * value, GParamSpec * pspec)
+{
+}
+
+static void
+xkl_config_registry_get_property(GObject * object,
+				 guint property_id,
+				 GValue * value, GParamSpec * pspec)
+{
+	XklConfigRegistry *config = XKL_CONFIG_REGISTRY(object);
+
+	switch (property_id) {
+	case PROP_ENGINE:
+		g_value_set_pointer(value,
+				    xkl_config_registry_get_engine
+				    (config));
+		break;
+	}
+
 }
 
 static void
@@ -631,5 +683,30 @@ xkl_config_registry_class_init(XklConfigRegistryClass * klass)
 
 	object_class = (GObjectClass *) klass;
 	parent_class = g_type_class_peek_parent(object_class);
+	object_class->constructor = xkl_config_registry_constructor;
 	object_class->finalize = xkl_config_registry_finalize;
+	object_class->set_property = xkl_config_registry_set_property;
+	object_class->get_property = xkl_config_registry_get_property;
+
+	GParamSpec *engine_param_spec = g_param_spec_object("engine",
+							    "Engine",
+							    "XklEngine",
+							    XKL_TYPE_ENGINE,
+							    G_PARAM_CONSTRUCT_ONLY
+							    |
+							    G_PARAM_READWRITE);
+
+	g_object_class_install_property(object_class,
+					PROP_ENGINE, engine_param_spec);
+
+	/* static stuff initialized */
+
+	xmlXPathInit();
+	models_xpath = xmlXPathCompile((unsigned char *)
+				       "/xkbConfigRegistry/modelList/model");
+	layouts_xpath = xmlXPathCompile((unsigned char *)
+					"/xkbConfigRegistry/layoutList/layout");
+	option_groups_xpath = xmlXPathCompile((unsigned char *)
+					      "/xkbConfigRegistry/optionList/group");
+	xkl_i18n_init();
 }

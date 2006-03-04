@@ -375,7 +375,7 @@ extern void xkl_engine_one_switch_to_secondary_group_performed(XklEngine *
 #define xkl_engine_get_display(engine) (xkl_engine_priv(engine,display))
 #define xkl_engine_vcall(engine,func)  (*(engine)->priv->func)
 
-#define xkl_config_priv(config,member)  (config)->priv->member
+#define xkl_config_registry_priv(config,member)  (config)->priv->member
 #define xkl_config_registry_get_engine(config) ((config)->priv->engine)
 
 extern gint xkl_debug_level;

@@ -21,7 +21,7 @@ extern "C" {
 
 #define XKL_TYPE_CONFIG_REGISTRY             (xkl_config_registry_get_type ())
 #define XKL_CONFIG_REGISTRY(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), XKL_TYPE_CONFIG_REGISTRY, XklConfigRegistry))
-#define XKL_CONFIG_REGISTRY_CLASS(obj)       (G_TYPE_CHECK_CLASS_CAST ((obj), XKL_CONFIG_REGISTRY,  XklConfigRegistryClass))
+#define XKL_CONFIG_REGISTRY_CLASS(obj)       (G_TYPE_CHECK_CLASS_CAST ((obj), XKL_TYPE_CONFIG_REGISTRY,  XklConfigRegistryClass))
 #define XKL_IS_CONFIG_REGISTRY(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), XKL_TYPE_CONFIG_REGISTRY))
 #define XKL_IS_CONFIG_REGISTRY_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE ((obj), XKL_TYPE_CONFIG_REGISTRY))
 #define XKL_CONFIG_REGISTRY_GET_CLASS        (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_CONFIG_REGISTRY, XklConfigRegistryClass))

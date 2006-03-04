@@ -674,13 +674,6 @@ static void
 xkl_engine_init(XklEngine * engine)
 {
 	engine->priv = g_new0(XklEnginePrivate, 1);
-
-	const gchar *sdl = g_getenv("XKL_DEBUG");
-
-	if (sdl != NULL) {
-		xkl_set_debug_level(atoi(sdl));
-	}
-
 }
 
 static void
@@ -695,9 +688,7 @@ xkl_engine_get_property(GObject * object,
 			guint property_id,
 			GValue * value, GParamSpec * pspec)
 {
-	XklEngine *engine;
-
-	engine = XKL_ENGINE(object);
+	XklEngine *engine = XKL_ENGINE(object);
 
 	switch (property_id) {
 	case PROP_DISPLAY:
@@ -840,4 +831,12 @@ xkl_engine_class_init(XklEngineClass * klass)
 	g_object_class_install_property(object_class,
 					PROP_INDICATORS_HANDLING,
 					indicators_handling_param_spec);
+
+	/* static stuff initialized */
+
+	const gchar *sdl = g_getenv("XKL_DEBUG");
+
+	if (sdl != NULL) {
+		xkl_set_debug_level(atoi(sdl));
+	}
 }
