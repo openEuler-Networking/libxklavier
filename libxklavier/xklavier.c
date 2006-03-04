@@ -7,7 +7,7 @@
 
 #include "xklavier_private.h"
 
-static GObjectClass *g_object_class = NULL;
+static GObjectClass *parent_class = NULL;
 
 static XklEngine *the_engine = NULL;
 
@@ -599,11 +599,8 @@ xkl_engine_constructor(GType type,
 	{
 		/* Invoke parent constructor. */
 		XklEngineClass *klass;
-		GObjectClass *parent_class;
 		klass =
 		    XKL_ENGINE_CLASS(g_type_class_peek(XKL_TYPE_ENGINE));
-		parent_class =
-		    G_OBJECT_CLASS(g_type_class_peek_parent(klass));
 		obj =
 		    parent_class->constructor(type, n_construct_properties,
 					      construct_properties);
@@ -614,8 +611,6 @@ xkl_engine_constructor(GType type,
 	Display *display =
 	    (Display *) g_value_peek_pointer(construct_properties[0].
 					     value);
-
-	engine->priv = g_new0(XklEnginePrivate, 1);
 
 	xkl_engine_priv(engine, display) = display;
 
@@ -644,12 +639,6 @@ xkl_engine_constructor(GType type,
 	    XInternAtom(display, "XKLAVIER_ALLOW_SECONDARY", False);
 
 	xkl_engine_one_switch_to_secondary_group_performed(engine);
-
-	const gchar *sdl = g_getenv("XKL_DEBUG");
-
-	if (sdl != NULL) {
-		xkl_set_debug_level(atoi(sdl));
-	}
 
 	gint rv = -1;
 	xkl_debug(150, "Trying all backends:\n");
@@ -684,6 +673,14 @@ xkl_engine_constructor(GType type,
 static void
 xkl_engine_init(XklEngine * engine)
 {
+	engine->priv = g_new0(XklEnginePrivate, 1);
+
+	const gchar *sdl = g_getenv("XKL_DEBUG");
+
+	if (sdl != NULL) {
+		xkl_set_debug_level(atoi(sdl));
+	}
+
 }
 
 static void
@@ -756,7 +753,7 @@ xkl_engine_finalize(GObject * obj)
 		g_free(backend);
 	g_free(engine->priv);
 
-	G_OBJECT_CLASS(g_object_class)->finalize(obj);
+	G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
 
 static void
@@ -765,7 +762,7 @@ xkl_engine_class_init(XklEngineClass * klass)
 	GObjectClass *object_class;
 
 	object_class = (GObjectClass *) klass;
-	g_object_class = g_type_class_peek_parent(object_class);
+	parent_class = g_type_class_peek_parent(object_class);
 
 	object_class->constructor = xkl_engine_constructor;
 	object_class->finalize = xkl_engine_finalize;
