@@ -553,10 +553,10 @@ xkl_engine_resume_listen(XklEngine * engine)
 					SubstructureNotifyMask |
 					PropertyChangeMask);
 
-// TODO
-#if 0
-	(*xkl_vtable->get_server_state_func) (&xkl_curr_state);
-#endif
+	xkl_engine_vcall(engine,
+			 get_server_state) (engine,
+					    &xkl_engine_priv(engine,
+							     curr_state));
 	return 0;
 }
 
