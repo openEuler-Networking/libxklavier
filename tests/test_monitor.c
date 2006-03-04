@@ -22,6 +22,14 @@ print_usage()
 	printf("         -l3 - listen to track the keyboard state\n");
 }
 
+void
+state_changed(XklEngine * engine, XklStateChange type, gint new_group,
+	      gboolean restore)
+{
+	xkl_debug(0, "State changed: %d,%d,%d\n", type, new_group,
+		  restore);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -84,6 +92,9 @@ main(int argc, char *argv[])
 
 		current_config = xkl_config_rec_new();
 		xkl_config_rec_get_from_server(current_config, engine);
+
+		g_signal_connect(engine, "X-state-changed",
+				 G_CALLBACK(state_changed), NULL);
 
 		xkl_debug(0, "Now, listening: %X...\n", listener_type);
 		xkl_engine_start_listen(engine, listener_type);
