@@ -17,6 +17,18 @@ static XklLogAppender log_appender = xkl_default_log_appender;
 
 const gchar *xkl_last_error_message;
 
+enum {
+	PROP_0,
+	PROP_DISPLAY,
+	PROP_BACKEND_NAME,
+	PROP_FEATURES,
+	PROP_MAX_NUM_GROUPS,
+	PROP_NUM_GROUPS,
+	PROP_DEFAULT_GROUP,
+	PROP_SECONDARY_GROUPS_MASK,
+	PROP_INDICATORS_HANDLING,
+};
+
 void
 xkl_engine_set_indicators_handling(XklEngine * engine,
 				   gboolean whether_handle)
@@ -177,70 +189,9 @@ xkl_engine_get_instance(Display * display)
 		return NULL;
 	}
 
-	the_engine = XKL_ENGINE(g_object_new(xkl_engine_get_type(), NULL));
-
-	xkl_engine_priv(the_engine, display) = display;
-
-	int scr;
-
-	xkl_engine_priv(the_engine, default_error_handler) =
-	    XSetErrorHandler((XErrorHandler) xkl_process_error);
-
-	Display *dpy = xkl_engine_get_display(the_engine);
-	scr = DefaultScreen(dpy);
-	xkl_engine_priv(the_engine, root_window) = RootWindow(dpy, scr);
-
-	xkl_engine_priv(the_engine, skip_one_restore) = FALSE;
-	xkl_engine_priv(the_engine, default_group) = -1;
-	xkl_engine_priv(the_engine, secondary_groups_mask) = 0L;
-	xkl_engine_priv(the_engine, prev_toplvl_win) = 0;
-
-	xkl_engine_priv(the_engine, atoms)[WM_NAME] =
-	    XInternAtom(dpy, "WM_NAME", False);
-	xkl_engine_priv(the_engine, atoms)[WM_STATE] =
-	    XInternAtom(dpy, "WM_STATE", False);
-	xkl_engine_priv(the_engine, atoms)[XKLAVIER_STATE] =
-	    XInternAtom(dpy, "XKLAVIER_STATE", False);
-	xkl_engine_priv(the_engine, atoms)[XKLAVIER_TRANSPARENT] =
-	    XInternAtom(dpy, "XKLAVIER_TRANSPARENT", False);
-	xkl_engine_priv(the_engine, atoms)[XKLAVIER_ALLOW_SECONDARY] =
-	    XInternAtom(dpy, "XKLAVIER_ALLOW_SECONDARY", False);
-
-	xkl_engine_one_switch_to_secondary_group_performed(the_engine);
-
-	const gchar *sdl = g_getenv("XKL_DEBUG");
-
-	if (sdl != NULL) {
-		xkl_set_debug_level(atoi(sdl));
-	}
-
-	gint rv = -1;
-	xkl_debug(150, "Trying all backends:\n");
-#ifdef ENABLE_XKB_SUPPORT
-	xkl_debug(150, "Trying XKB backend\n");
-	rv = xkl_xkb_init(the_engine);
-#endif
-#ifdef ENABLE_XMM_SUPPORT
-	if (rv != 0) {
-		xkl_debug(150, "Trying XMM backend\n");
-		rv = xkl_xmm_init(the_engine);
-	}
-#endif
-	if (rv == 0) {
-		xkl_debug(150, "Actual backend: %s\n",
-			  xkl_engine_get_backend_name(the_engine));
-	} else {
-		xkl_debug(0, "All backends failed, last result: %d\n", rv);
-		xkl_engine_priv(the_engine, display) = NULL;
-		g_object_unref(G_OBJECT(the_engine));
-		the_engine = NULL;
-		return NULL;
-	}
-
-	if (!xkl_engine_load_all_info(the_engine)) {
-		g_object_unref(G_OBJECT(the_engine));
-		the_engine = NULL;
-	}
+	the_engine =
+	    XKL_ENGINE(g_object_new
+		       (xkl_engine_get_type(), "display", display, NULL));
 
 	return the_engine;
 }
@@ -638,10 +589,156 @@ xkl_get_the_engine()
 
 G_DEFINE_TYPE(XklEngine, xkl_engine, G_TYPE_OBJECT)
 
+static GObject *
+xkl_engine_constructor(GType type,
+		       guint n_construct_properties,
+		       GObjectConstructParam * construct_properties)
+{
+	GObject *obj;
+
+	{
+		/* Invoke parent constructor. */
+		XklEngineClass *klass;
+		GObjectClass *parent_class;
+		klass =
+		    XKL_ENGINE_CLASS(g_type_class_peek(XKL_TYPE_ENGINE));
+		parent_class =
+		    G_OBJECT_CLASS(g_type_class_peek_parent(klass));
+		obj =
+		    parent_class->constructor(type, n_construct_properties,
+					      construct_properties);
+	}
+
+	XklEngine *engine = XKL_ENGINE(obj);
+
+	Display *display =
+	    (Display *) g_value_peek_pointer(construct_properties[0].
+					     value);
+
+	engine->priv = g_new0(XklEnginePrivate, 1);
+
+	xkl_engine_priv(engine, display) = display;
+
+	int scr;
+
+	xkl_engine_priv(engine, default_error_handler) =
+	    XSetErrorHandler((XErrorHandler) xkl_process_error);
+
+	scr = DefaultScreen(display);
+	xkl_engine_priv(engine, root_window) = RootWindow(display, scr);
+
+	xkl_engine_priv(engine, skip_one_restore) = FALSE;
+	xkl_engine_priv(engine, default_group) = -1;
+	xkl_engine_priv(engine, secondary_groups_mask) = 0L;
+	xkl_engine_priv(engine, prev_toplvl_win) = 0;
+
+	xkl_engine_priv(engine, atoms)[WM_NAME] =
+	    XInternAtom(display, "WM_NAME", False);
+	xkl_engine_priv(engine, atoms)[WM_STATE] =
+	    XInternAtom(display, "WM_STATE", False);
+	xkl_engine_priv(engine, atoms)[XKLAVIER_STATE] =
+	    XInternAtom(display, "XKLAVIER_STATE", False);
+	xkl_engine_priv(engine, atoms)[XKLAVIER_TRANSPARENT] =
+	    XInternAtom(display, "XKLAVIER_TRANSPARENT", False);
+	xkl_engine_priv(engine, atoms)[XKLAVIER_ALLOW_SECONDARY] =
+	    XInternAtom(display, "XKLAVIER_ALLOW_SECONDARY", False);
+
+	xkl_engine_one_switch_to_secondary_group_performed(engine);
+
+	const gchar *sdl = g_getenv("XKL_DEBUG");
+
+	if (sdl != NULL) {
+		xkl_set_debug_level(atoi(sdl));
+	}
+
+	gint rv = -1;
+	xkl_debug(150, "Trying all backends:\n");
+#ifdef ENABLE_XKB_SUPPORT
+	xkl_debug(150, "Trying XKB backend\n");
+	rv = xkl_xkb_init(engine);
+#endif
+#ifdef ENABLE_XMM_SUPPORT
+	if (rv != 0) {
+		xkl_debug(150, "Trying XMM backend\n");
+		rv = xkl_xmm_init(engine);
+	}
+#endif
+	if (rv == 0) {
+		xkl_debug(150, "Actual backend: %s\n",
+			  xkl_engine_get_backend_name(engine));
+	} else {
+		xkl_debug(0, "All backends failed, last result: %d\n", rv);
+		xkl_engine_priv(engine, display) = NULL;
+		g_object_unref(G_OBJECT(engine));
+		return NULL;
+	}
+
+	if (!xkl_engine_load_all_info(engine)) {
+		g_object_unref(G_OBJECT(engine));
+		return NULL;
+	}
+
+	return obj;
+}
+
 static void
 xkl_engine_init(XklEngine * engine)
 {
-	engine->priv = g_new0(XklEnginePrivate, 1);
+}
+
+static void
+xkl_engine_set_property(GObject * object,
+			guint property_id,
+			const GValue * value, GParamSpec * pspec)
+{
+}
+
+static void
+xkl_engine_get_property(GObject * object,
+			guint property_id,
+			GValue * value, GParamSpec * pspec)
+{
+	XklEngine *engine;
+
+	engine = XKL_ENGINE(object);
+
+	switch (property_id) {
+	case PROP_DISPLAY:
+		g_value_set_pointer(value, xkl_engine_get_display(engine));
+		break;
+	case PROP_BACKEND_NAME:
+		g_value_set_string(value,
+				   xkl_engine_priv(engine, backend_id));
+		break;
+	case PROP_FEATURES:
+		g_value_set_uint(value, xkl_engine_priv(engine, features));
+		break;
+	case PROP_MAX_NUM_GROUPS:
+		g_value_set_uint(value,
+				 xkl_engine_vcall(engine,
+						  get_max_num_groups)
+				 (engine));
+		break;
+	case PROP_NUM_GROUPS:
+		g_value_set_uint(value,
+				 xkl_engine_vcall(engine, get_num_groups)
+				 (engine));
+		break;
+	case PROP_DEFAULT_GROUP:
+		g_value_set_uint(value,
+				 xkl_engine_priv(engine, default_group));
+		break;
+	case PROP_SECONDARY_GROUPS_MASK:
+		g_value_set_uint(value,
+				 xkl_engine_priv(engine,
+						 secondary_groups_mask));
+		break;
+	case PROP_INDICATORS_HANDLING:
+		g_value_set_boolean(value,
+				    xkl_engine_priv(engine,
+						    handle_indicators));
+		break;
+	}
 }
 
 static void
@@ -669,5 +766,81 @@ xkl_engine_class_init(XklEngineClass * klass)
 
 	object_class = (GObjectClass *) klass;
 	g_object_class = g_type_class_peek_parent(object_class);
+
+	object_class->constructor = xkl_engine_constructor;
 	object_class->finalize = xkl_engine_finalize;
+	object_class->set_property = xkl_engine_set_property;
+	object_class->get_property = xkl_engine_get_property;
+
+	GParamSpec *display_param_spec = g_param_spec_pointer("display",
+							      "Display",
+							      "X Display pointer",
+							      G_PARAM_CONSTRUCT_ONLY
+							      |
+							      G_PARAM_READWRITE);
+
+	GParamSpec *backend_name_param_spec =
+	    g_param_spec_string("backendName",
+				"backendName",
+				"Backend name",
+				NULL,
+				G_PARAM_READABLE);
+	GParamSpec *features_param_spec = g_param_spec_uint("features",
+							    "Features",
+							    "Backend features",
+							    0, 0x20, 0,
+							    G_PARAM_READABLE);
+	GParamSpec *max_num_groups_param_spec =
+	    g_param_spec_uint("max-num-ngroups",
+			      "maxNumGroups",
+			      "Max number of groups",
+			      0, 0x100, 0,
+			      G_PARAM_READABLE);
+
+	GParamSpec *num_groups_param_spec = g_param_spec_uint("num-groups",
+							      "numGroups",
+							      "Current number of groups",
+							      0, 0x100, 0,
+							      G_PARAM_READABLE);
+
+	GParamSpec *default_group_param_spec =
+	    g_param_spec_uint("default-group",
+			      "defaultGroup",
+			      "Default group",
+			      0, 0x100, 0,
+			      G_PARAM_READABLE);
+
+	GParamSpec *secondary_groups_mask_param_spec =
+	    g_param_spec_uint("secondary-groups-mask",
+			      "secondaryGroupsMask",
+			      "Secondary groups mask",
+			      0, 0x100, 0,
+			      G_PARAM_READABLE);
+
+	GParamSpec *indicators_handling_param_spec =
+	    g_param_spec_boolean("indicators-handling",
+				 "indicatorsHandling",
+				 "Whether engine should handle indicators",
+				 FALSE,
+				 G_PARAM_READABLE);
+
+	g_object_class_install_property(object_class,
+					PROP_DISPLAY, display_param_spec);
+	g_object_class_install_property(object_class,
+					PROP_BACKEND_NAME,
+					backend_name_param_spec);
+	g_object_class_install_property(object_class, PROP_FEATURES,
+					features_param_spec);
+	g_object_class_install_property(object_class, PROP_MAX_NUM_GROUPS,
+					max_num_groups_param_spec);
+	g_object_class_install_property(object_class, PROP_NUM_GROUPS,
+					num_groups_param_spec);
+	g_object_class_install_property(object_class, PROP_DEFAULT_GROUP,
+					default_group_param_spec);
+	g_object_class_install_property(object_class,
+					PROP_SECONDARY_GROUPS_MASK,
+					secondary_groups_mask_param_spec);
+	g_object_class_install_property(object_class,
+					PROP_INDICATORS_HANDLING,
+					indicators_handling_param_spec);
 }

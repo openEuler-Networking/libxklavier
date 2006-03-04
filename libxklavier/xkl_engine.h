@@ -21,7 +21,7 @@ extern "C" {
 
 #define XKL_TYPE_ENGINE             (xkl_engine_get_type ())
 #define XKL_ENGINE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), XKL_TYPE_ENGINE, XklEngine))
-#define XKL_ENGINE_CLASS(obj)       (G_TYPE_CHECK_CLASS_CAST ((obj), XKL_ENGINE,  XklEngineClass))
+#define XKL_ENGINE_CLASS(obj)       (G_TYPE_CHECK_CLASS_CAST ((obj), XKL_TYPE_ENGINE,  XklEngineClass))
 #define XKL_IS_ENGINE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), XKL_TYPE_ENGINE))
 #define XKL_IS_ENGINE_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE ((obj), XKL_TYPE_ENGINE))
 #define XKL_ENGINE_GET_CLASS        (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_ENGINE, XklEngineClass))
@@ -162,7 +162,7 @@ extern "C" {
  * @return maximum number of the groups in configuration, 
  *         0 if no restrictions.
  */
-	extern unsigned xkl_engine_get_max_num_groups(XklEngine * engine);
+	extern guint xkl_engine_get_max_num_groups(XklEngine * engine);
 
 /**
  * @defgroup xkbevents XKB event handling and management
@@ -219,8 +219,7 @@ extern "C" {
  * @return True on success
  */
 	extern gboolean xkl_engine_grab_key(XklEngine * engine,
-					    gint keycode,
-					    unsigned modifiers);
+					    gint keycode, guint modifiers);
 
 /**
  * Ungrabs some key
@@ -230,7 +229,7 @@ extern "C" {
  */
 	extern gboolean xkl_engine_ungrab_key(XklEngine * engine,
 					      gint keycode,
-					      unsigned modifiers);
+					      guint modifiers);
 
 /**
  * Processes X events. Should be included into the main event cycle of an
@@ -351,7 +350,7 @@ extern "C" {
  * @return the total number of groups in the current XKB configuration 
  * (keyboard)
  */
-	extern unsigned xkl_engine_get_num_groups(XklEngine * engine);
+	extern guint xkl_engine_get_num_groups(XklEngine * engine);
 
 /**
  * @return the array of group names for the current XKB configuration 

@@ -483,6 +483,7 @@ gint
 xkl_xkb_init(XklEngine * engine)
 {
 	Display *display = xkl_engine_get_display(engine);
+
 #ifdef XKB_HEADERS_PRESENT
 	gint opcode;
 	gboolean xkl_xkb_ext_present;
@@ -519,6 +520,8 @@ xkl_xkb_init(XklEngine * engine)
 	if (getenv("XKL_XKB_DISABLE") != NULL)
 		return -1;
 
+	xkl_engine_priv(engine, backend) = g_new0(XklXkb, 1);
+
 	xkl_xkb_ext_present = XkbQueryExtension(display,
 						&opcode,
 						&xkl_engine_backend(engine,
@@ -549,8 +552,6 @@ xkl_xkb_init(XklEngine * engine)
 
 	xkl_engine_priv(engine, default_model) = "pc101";
 	xkl_engine_priv(engine, default_layout) = "us";
-
-	xkl_engine_priv(engine, backend) = g_new0(XklXkb, 1);
 
 	/* First, we have to assign xkl_vtable - 
 	   because this function uses it */

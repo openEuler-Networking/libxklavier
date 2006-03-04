@@ -311,13 +311,13 @@ xkl_xmm_init(XklEngine * engine)
 	xkl_engine_priv(engine, backup_config_atom) =
 	    XInternAtom(display, "_XMM_NAMES_BACKUP", False);
 
+	xkl_engine_priv(engine, backend) = g_new0(XklXmm, 1);
+
 	xkl_engine_backend(engine, XklXmm, state_atom) =
 	    XInternAtom(display, "_XMM_STATE", False);
 
 	xkl_engine_priv(engine, default_model) = "generic";
 	xkl_engine_priv(engine, default_layout) = "us";
-
-	xkl_engine_priv(engine, backend) = g_new0(XklXmm, 1);
 
 	return 0;
 }
