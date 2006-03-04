@@ -857,20 +857,19 @@ xkl_engine_class_init(XklEngineClass * klass)
 	g_signal_new("X-config-changed", XKL_TYPE_ENGINE,
 		     G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET(XklEngineClass,
 							config_notify),
-		     NULL, NULL, g_cclosure_user_marshal_VOID__VOID,
-		     G_TYPE_NONE, 0);
+		     NULL, NULL, xkl_engine_VOID__VOID, G_TYPE_NONE, 0);
 
 	g_signal_new("new-toplevel-window", XKL_TYPE_ENGINE,
 		     G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET(XklEngineClass,
 							new_window_notify),
-		     NULL, NULL, g_cclosure_user_marshal_INT__LONG_LONG,
+		     NULL, NULL, xkl_engine_INT__LONG_LONG,
 		     G_TYPE_INT, 2, G_TYPE_LONG, G_TYPE_LONG);
 
 	g_signal_new("X-state-changed", XKL_TYPE_ENGINE,
 		     G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET(XklEngineClass,
 							state_notify),
 		     NULL, NULL,
-		     g_cclosure_user_marshal_VOID__FLAGS_INT_BOOLEAN,
+		     xkl_engine_VOID__FLAGS_INT_BOOLEAN,
 		     G_TYPE_NONE, 3, state_change_type, G_TYPE_INT,
 		     G_TYPE_BOOLEAN);
 

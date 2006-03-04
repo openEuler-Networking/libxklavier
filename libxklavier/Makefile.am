@@ -16,6 +16,14 @@ endif
 
 EXTRA_DIST=marshal.list
 
+GLIB_GENMARSHAL = $(shell pkg-config --variable=glib_genmarshal glib-2.0)
+
+xkl_engine_marshal.h: marshal.list
+	$(GLIB_GENMARSHAL) --prefix=xkl_engine marshal.list --header > xkl_engine_marshal.h
+
+xkl_engine_marshal.c: xkl_engine_marshal.h
+	$(GLIB_GENMARSHAL) --prefix=xkl_engine marshal.list --body > xkl_engine_marshal.c
+
 AM_CFLAGS=-Wall -Werror -DDATA_DIR=\"$(datadir)/$(PACKAGE)\" \
   -I. -I$(includedir) -I$(x_includes) -I$(top_srcdir) \
   $(XML_CFLAGS) $(GLIB_CFLAGS) \

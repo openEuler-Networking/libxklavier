@@ -51,12 +51,12 @@
 
 /* INT:LONG,LONG (marshal.list:2) */
 void
-g_cclosure_user_marshal_INT__LONG_LONG (GClosure     *closure,
-                                        GValue       *return_value,
-                                        guint         n_param_values,
-                                        const GValue *param_values,
-                                        gpointer      invocation_hint,
-                                        gpointer      marshal_data)
+xkl_engine_INT__LONG_LONG (GClosure     *closure,
+                           GValue       *return_value,
+                           guint         n_param_values,
+                           const GValue *param_values,
+                           gpointer      invocation_hint,
+                           gpointer      marshal_data)
 {
   typedef gint (*GMarshalFunc_INT__LONG_LONG) (gpointer     data1,
                                                glong        arg_1,
@@ -92,12 +92,12 @@ g_cclosure_user_marshal_INT__LONG_LONG (GClosure     *closure,
 
 /* VOID:FLAGS,INT,BOOLEAN (marshal.list:3) */
 void
-g_cclosure_user_marshal_VOID__FLAGS_INT_BOOLEAN (GClosure     *closure,
-                                                 GValue       *return_value,
-                                                 guint         n_param_values,
-                                                 const GValue *param_values,
-                                                 gpointer      invocation_hint,
-                                                 gpointer      marshal_data)
+xkl_engine_VOID__FLAGS_INT_BOOLEAN (GClosure     *closure,
+                                    GValue       *return_value,
+                                    guint         n_param_values,
+                                    const GValue *param_values,
+                                    gpointer      invocation_hint,
+                                    gpointer      marshal_data)
 {
   typedef void (*GMarshalFunc_VOID__FLAGS_INT_BOOLEAN) (gpointer     data1,
                                                         guint        arg_1,
