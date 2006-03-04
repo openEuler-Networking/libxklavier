@@ -14,6 +14,8 @@ else
   ENABLE_XMM_SUPPORT_CFLAG = -DDISABLE_XMM_SUPPORT=1
 endif
 
+EXTRA_DIST=marshal.list
+
 AM_CFLAGS=-Wall -Werror -DDATA_DIR=\"$(datadir)/$(PACKAGE)\" \
   -I. -I$(includedir) -I$(x_includes) -I$(top_srcdir) \
   $(XML_CFLAGS) $(GLIB_CFLAGS) \
@@ -26,12 +28,12 @@ noinst_HEADERS = xklavier_private.h xklavier_private_xkb.h xklavier_private_xmm.
 
 xklavierincdir = $(includedir)/libxklavier
 xklavierinc_HEADERS = xklavier.h xkl_config_registry.h xkl_engine.h \
-                      xkl_config_rec.h xkl_config_item.h
+                      xkl_config_rec.h xkl_config_item.h xkl_engine_marshal.h
 
 libxklavier_la_SOURCES = xklavier.c xklavier_evt.c xklavier_config.c \
 	xklavier_xkb.c xklavier_evt_xkb.c xklavier_config_xkb.c xklavier_toplevel.c \
 	xklavier_xmm.c xklavier_xmm_opts.c xklavier_evt_xmm.c xklavier_config_xmm.c \
-	xklavier_util.c xklavier_config_i18n.c xklavier_props.c xklavier_dump.c \
+	xklavier_util.c xklavier_config_i18n.c xklavier_props.c xklavier_dump.c xkl_engine_marshal.c \
 	$(noinst_HEADERS) $(xklavierinc_HEADERS)
 libxklavier_la_LDFLAGS = -version-info @VERSION_INFO@ \
  $(XML_LIBS) $(GLIB_LIBS) \
