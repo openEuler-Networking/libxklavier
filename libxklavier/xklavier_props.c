@@ -11,7 +11,7 @@
 
 #include "xklavier_private.h"
 
-static GObjectClass *g_object_class = NULL;
+static GObjectClass *parent_class = NULL;
 
 static void xkl_config_rec_destroy(XklConfigRec * data);
 
@@ -42,7 +42,7 @@ xkl_config_rec_finalize(GObject * obj)
 {
 	XklConfigRec *this = (XklConfigRec *) obj;
 	xkl_config_rec_destroy(this);
-	G_OBJECT_CLASS(g_object_class)->finalize(obj);
+	G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
 
 static void
@@ -51,7 +51,7 @@ xkl_config_rec_class_init(XklConfigRecClass * klass)
 	GObjectClass *object_class;
 
 	object_class = (GObjectClass *) klass;
-	g_object_class = g_type_class_peek_parent(object_class);
+	parent_class = g_type_class_peek_parent(object_class);
 	object_class->finalize = xkl_config_rec_finalize;
 }
 
