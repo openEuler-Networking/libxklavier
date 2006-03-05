@@ -93,11 +93,11 @@ main(int argc, char *const argv[])
 		fprintf(stderr, "Could not open display\n");
 		exit(1);
 	}
+	if (debug_level != -1)
+		xkl_set_debug_level(debug_level);
 	XklEngine *engine = xkl_engine_get_instance(dpy);
 	if (engine != NULL) {
 		XklConfigRec *current_config, *r2;
-		if (debug_level != -1)
-			xkl_set_debug_level(debug_level);
 		xkl_debug(0, "Xklavier initialized\n");
 		XklConfigRegistry *config =
 		    xkl_config_registry_get_instance(engine);
