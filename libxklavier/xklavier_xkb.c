@@ -315,8 +315,7 @@ xkl_xkb_get_server_state(XklEngine * engine, XklState * current_state_out)
  * Actually taken from mxkbledpanel, valueChangedProc
  */
 gboolean
-xkl_engine_set_indicator(XklEngine * engine, gint indicator_num,
-			 gboolean set)
+xkl_xkb_set_indicator(XklEngine * engine, gint indicator_num, gboolean set)
 {
 	XkbIndicatorMapPtr map;
 	Display *display = xkl_engine_get_display(engine);
@@ -514,6 +513,7 @@ xkl_xkb_init(XklEngine * engine)
 	xkl_engine_priv(engine, pause_listen) = xkl_xkb_pause_listen;
 	xkl_engine_priv(engine, resume_listen) = xkl_xkb_resume_listen;
 	xkl_engine_priv(engine, set_indicators) = xkl_xkb_set_indicators;
+	xkl_engine_priv(engine, finalize) = xkl_xkb_term;
 
 	if (getenv("XKL_XKB_DISABLE") != NULL)
 		return -1;
@@ -565,6 +565,11 @@ xkl_xkb_init(XklEngine * engine)
 		  "\n", display, xkl_engine_priv(engine, root_window));
 	return -1;
 #endif
+}
+
+void
+xkl_xkb_term(XklEngine * engine)
+{
 }
 
 #ifdef XKB_HEADERS_PRESENT

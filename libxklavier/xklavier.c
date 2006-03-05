@@ -557,20 +557,6 @@ xkl_engine_resume_listen(XklEngine * engine)
 	return 0;
 }
 
-gboolean
-xkl_engine_load_all_info(XklEngine * engine)
-{
-	xkl_engine_ensure_vtable_inited(engine);
-	return xkl_engine_vcall(engine, load_all_info) (engine);
-}
-
-void
-xkl_engine_free_all_info(XklEngine * engine)
-{
-	xkl_engine_ensure_vtable_inited(engine);
-	xkl_engine_vcall(engine, free_all_info) (engine);
-}
-
 guint
 xkl_engine_get_max_num_groups(XklEngine * engine)
 {
@@ -659,7 +645,8 @@ xkl_engine_constructor(GType type,
 		return NULL;
 	}
 
-	if (!xkl_engine_load_all_info(engine)) {
+	xkl_engine_ensure_vtable_inited(engine);
+	if (!xkl_engine_vcall(engine, load_all_info) (engine)) {
 		g_object_unref(G_OBJECT(engine));
 		return NULL;
 	}
@@ -735,7 +722,10 @@ xkl_engine_finalize(GObject * obj)
 	XSetErrorHandler((XErrorHandler)
 			 xkl_engine_priv(engine, default_error_handler));
 
-	xkl_engine_free_all_info(engine);
+	xkl_engine_ensure_vtable_inited(engine);
+	xkl_engine_vcall(engine, free_all_info) (engine);
+
+	xkl_engine_vcall(engine, finalize) (engine);
 
 	gpointer backend = xkl_engine_priv(engine, backend);
 	if (backend != NULL)

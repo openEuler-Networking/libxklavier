@@ -15,72 +15,42 @@
 
 #define SHORTCUT_OPTION_PREFIX "grp:"
 
-XmmSwitchOption all_switch_options[] = {
-	{
-	 "ralt_toggle",
-	 {{XK_Alt_R, 0}
+static XmmSwitchOption options[] = {
+	{{{XK_Alt_R, 0}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1}
-	 }
-	,
-	{
-	 "lalt_toggle",
-	 {{XK_Alt_L, 0}
+	 , {1}},
+	{{{XK_Alt_L, 0}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1}
-	 }
-	,
-	{
-	 "caps_toggle",
-	 {{XK_Caps_Lock, 0}
+	 , {1}},
+	{{{XK_Caps_Lock, 0}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1}
-	 }
-	,
-	{
-	 "shift_caps_toggle",
-	 {{XK_Caps_Lock, ShiftMask}
+	 , {1}},
+	{{{XK_Caps_Lock, ShiftMask}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1}
-	 }
-	,
-	{
-	 "shifts_toggle",
-	 {{XK_Shift_R, ShiftMask}
+	 , {1}},
+	{{{XK_Shift_R, ShiftMask}
 	  ,
 	  {XK_Shift_L, ShiftMask}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1, -1}
-	 }
-	,
-	{
-	 "alts_toggle",
-	 {{XK_Alt_R, Mod1Mask}
+	 , {1, -1}},
+	{{{XK_Alt_R, Mod1Mask}
 	  ,
 	  {XK_Alt_L, Mod1Mask}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1, -1}
-	 }
-	,
-	{
-	 "ctrls_toggle",
-	 {{XK_Control_R, ControlMask}
+	 , {1, -1}},
+	{{{XK_Control_R, ControlMask}
 	  ,
 	  {XK_Control_L, ControlMask}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1, -1}
-	 }
-	,
-	{
-	 "ctrl_shift_toggle",
-	 {{XK_Control_R, ShiftMask}
+	 , {1, -1}},
+	{{{XK_Control_R, ShiftMask}
 	  ,
 	  {XK_Control_L, ShiftMask}
 	  ,
@@ -89,12 +59,8 @@ XmmSwitchOption all_switch_options[] = {
 	  {XK_Shift_L, ControlMask}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1, -1, 1, -1}
-	 }
-	,
-	{
-	 "ctrl_alt_toggle",
-	 {{XK_Control_R, Mod1Mask}
+	 , {1, -1, 1, -1}},
+	{{{XK_Control_R, Mod1Mask}
 	  ,
 	  {XK_Control_L, Mod1Mask}
 	  ,
@@ -103,12 +69,8 @@ XmmSwitchOption all_switch_options[] = {
 	  {XK_Alt_L, ControlMask}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1, -1, 1, -1}
-	 }
-	,
-	{
-	 "alt_shift_toggle",
-	 {{XK_Shift_R, Mod1Mask}
+	 , {1, -1, 1, -1}},
+	{{{XK_Shift_R, Mod1Mask}
 	  ,
 	  {XK_Shift_L, Mod1Mask}
 	  ,
@@ -117,70 +79,75 @@ XmmSwitchOption all_switch_options[] = {
 	  {XK_Alt_L, ShiftMask}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1, -1, 1, -1}
-	 }
-	,
-	{
-	 "menu_toggle",
-	 {{XK_Menu, 0}
+	 , {1, -1, 1, -1}},
+	{{{XK_Menu, 0}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1}
-	 }
-	,
-	{
-	 "lwin_toggle",
-	 {{XK_Super_L, 0}
+	 , {1}},
+	{{{XK_Super_L, 0}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1}
-	 }
-	,
-	{
-	 "rwin_toggle",
-	 {{XK_Super_R, 0}
+	 , {1}},
+	{{{XK_Super_R, 0}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1}
-	 }
-	,
-	{
-	 "lshift_toggle",
-	 {{XK_Shift_L, 0}
+	 , {1}},
+	{{{XK_Shift_L, 0}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1}
-	 }
-	,
-	{
-	 "rshift_toggle",
-	 {{XK_Shift_R, 0}
+	 , {1}},
+	{{{XK_Shift_R, 0}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1}
-	 }
-	,
-	{
-	 "lctrl_toggle",
-	 {{XK_Control_L, 0}
+	 , {1}},
+	{{{XK_Control_L, 0}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1}
-	 }
-	,
-	{
-	 "rctrl_toggle",
-	 {{XK_Control_R, 0}
+	 , {1}},
+	{{{XK_Control_R, 0}
 	  , {XK_VoidSymbol}
 	  }
-	 , {1}
-	 }
-	,
-	{
-	 NULL,
-	 {{0, 0}
-	  , {XK_VoidSymbol}
-	  }
-	 , {1}
-	 }
+	 , {1}}
 };
+
+static const gchar *option_names[] = {
+	"ralt_toggle",
+	"lalt_toggle",
+	"caps_toggle",
+	"shift_caps_toggle",
+	"shifts_toggle",
+	"alts_toggle",
+	"ctrls_toggle",
+	"ctrl_shift_toggle",
+	"ctrl_alt_toggle",
+	"alt_shift_toggle",
+	"menu_toggle",
+	"lwin_toggle",
+	"rwin_toggle",
+	"lshift_toggle",
+	"rshift_toggle",
+	"lctrl_toggle",
+	"rctrl_toggle"
+};
+
+void
+xkl_xmm_init_switch_options(XklXmm * xmm)
+{
+	int i;
+	const gchar **pname = option_names;
+	const XmmSwitchOption *poption = options;
+
+	xmm->switch_options = g_hash_table_new(g_str_hash, g_str_equal);
+
+	for (i = sizeof(option_names) / sizeof(option_names[0]); --i >= 0;)
+		g_hash_table_insert(xmm->switch_options,
+				    (gpointer) (*pname++),
+				    (gpointer) (poption++));
+}
+
+void
+xkl_xmm_term_switch_options(XklXmm * xmm)
+{
+	g_hash_table_destroy(xmm->switch_options);
+	xmm->switch_options = NULL;
+}

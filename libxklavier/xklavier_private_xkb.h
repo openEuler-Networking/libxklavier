@@ -43,19 +43,22 @@ extern void xkl_xkb_config_native_cleanup(XklEngine * engine,
 					  XkbComponentNamesPtr
 					  component_names);
 
+extern gboolean xkl_xkb_set_indicator(XklEngine * engine,
+				      gint indicator_num, gboolean set);
+
 /* Start VTable methods */
 
 extern gboolean xkl_xkb_activate_config_rec(XklEngine * engine,
-					const XklConfigRec * data);
+					    const XklConfigRec * data);
 
 extern void xkl_xkb_init_config_registry(XklConfigRegistry * config);
 
 extern gboolean xkl_xkb_load_config_registry(XklConfigRegistry * config);
 
 extern gboolean xkl_xkb_write_config_rec_to_file(XklEngine * engine,
-					     const char *file_name,
-					     const XklConfigRec * data,
-					     const gboolean binary);
+						 const char *file_name,
+						 const XklConfigRec * data,
+						 const gboolean binary);
 
 extern gint xkl_xkb_process_x_event(XklEngine * engine, XEvent * kev);
 
@@ -82,6 +85,8 @@ extern gint xkl_xkb_resume_listen(XklEngine * engine);
 
 extern void xkl_xkb_set_indicators(XklEngine * engine,
 				   const XklState * window_state);
+
+extern void xkl_xkb_term(XklEngine * engine);
 
 /* End of VTable methods */
 

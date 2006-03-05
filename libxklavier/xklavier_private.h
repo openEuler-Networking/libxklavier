@@ -176,6 +176,11 @@ struct _XklEnginePrivate {
 	void (*set_indicators) (XklEngine * engine,
 				const XklState * window_state);
 
+  /**
+   * Perform the cleanup
+   */
+	void (*finalize) (XklEngine * engine);
+
 	/* all data is private - no direct access */
   /**
    * The base configuration atom.
@@ -238,8 +243,6 @@ extern void xkl_engine_process_state_modification(XklEngine * engine,
 
 extern Window xkl_engine_get_registered_parent(XklEngine * engine,
 					       Window win);
-extern gboolean xkl_engine_load_all_info(XklEngine * engine);
-extern void xkl_engine_free_all_info(XklEngine * engine);
 extern void xkl_engine_reset_all_info(XklEngine * engine,
 				      const gchar reason[]);
 extern gboolean xkl_engine_load_window_tree(XklEngine * engine);
@@ -299,9 +302,6 @@ extern Status xkl_engine_query_tree(XklEngine * engine,
 				    Window * parent_out,
 				    Window ** children_out,
 				    guint * nchildren_out);
-
-extern gboolean xkl_engine_set_indicator(XklEngine * engine,
-					 gint indicator_num, gboolean set);
 
 extern void xkl_engine_try_call_state_func(XklEngine * engine,
 					   XklStateChange change_type,

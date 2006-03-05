@@ -8,7 +8,6 @@ typedef struct _XmmShortcut {
 
 #define MAX_SHORTCUTS_PER_OPTION 4
 typedef struct _XmmSwitchOption {
-	const gchar *option_name;
 	XmmShortcut shortcuts[MAX_SHORTCUTS_PER_OPTION + 1];
 	gint shortcut_steps[MAX_SHORTCUTS_PER_OPTION + 1];
 } XmmSwitchOption;
@@ -19,11 +18,11 @@ typedef struct _XklXmm {
 	XklConfigRec current_config;
 
 	Atom state_atom;
+
+	GHashTable *switch_options;
 } XklXmm;
 
 /* in the ideal world this should be a hashmap */
-extern XmmSwitchOption all_switch_options[];
-
 extern void xkl_xmm_grab_ignoring_indicators(XklEngine * engine,
 					     gint keycode,
 					     guint modifiers);
@@ -49,6 +48,9 @@ const XmmSwitchOption *xkl_xmm_find_switch_option(XklEngine * engine,
 						  gint *
 						  current_shortcut_out);
 
+extern void xkl_xmm_init_switch_options(XklXmm * xmm);
+
+extern void xkl_xmm_term_switch_options(XklXmm * xmm);
 /* Start VTable methods */
 
 extern gboolean xkl_xmm_activate_config_rec(XklEngine * engine,
@@ -80,6 +82,11 @@ extern gboolean xkl_xmm_load_all_info(XklEngine * engine);
 extern gint xkl_xmm_listen_pause(XklEngine * engine);
 
 extern gint xkl_xmm_listen_resume(XklEngine * engine);
+
+extern void xkl_xmm_set_indicators(XklEngine * engine,
+				   const XklState * window_state);
+
+extern void xkl_xmm_term(XklEngine * engine);
 
 /* End of VTable methods */
 

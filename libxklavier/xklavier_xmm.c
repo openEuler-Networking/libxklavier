@@ -70,17 +70,16 @@ xkl_xmm_shortcut_get_current(XklEngine * engine)
 {
 	const gchar *option_name =
 	    xkl_xmm_shortcut_get_current_option_name(engine);
-	XmmSwitchOption *switch_option = all_switch_options;
+
 	xkl_debug(150, "Configured switch option: [%s]\n", option_name);
+
 	if (option_name == NULL)
 		return NULL;
-	while (switch_option->option_name != NULL) {
-		if (!g_ascii_strcasecmp
-		    (switch_option->option_name, option_name))
-			return switch_option;
-		switch_option++;
-	}
-	return NULL;
+
+	return (XmmSwitchOption *)
+	    g_hash_table_lookup(xkl_engine_backend
+				(engine, XklXmm, switch_options),
+				(gconstpointer) option_name);
 }
 
 const gchar *
@@ -269,6 +268,12 @@ xkl_xmm_lock_group(XklEngine * engine, gint group)
 	XSync(display, False);
 }
 
+void
+xkl_xmm_set_indicators(XklEngine * engine, const XklState * window_state)
+{
+}
+
+
 gint
 xkl_xmm_init(XklEngine * engine)
 {
@@ -300,7 +305,8 @@ xkl_xmm_init(XklEngine * engine)
 	    xkl_xmm_get_server_state;
 	xkl_engine_priv(engine, pause_listen) = xkl_xmm_pause_listen;
 	xkl_engine_priv(engine, resume_listen) = xkl_xmm_resume_listen;
-	xkl_engine_priv(engine, set_indicators) = NULL;
+	xkl_engine_priv(engine, set_indicators) = xkl_xmm_set_indicators;
+	xkl_engine_priv(engine, finalize) = xkl_xmm_term;
 
 	if (getenv("XKL_XMODMAP_DISABLE") != NULL)
 		return -1;
@@ -319,5 +325,15 @@ xkl_xmm_init(XklEngine * engine)
 	xkl_engine_priv(engine, default_model) = "generic";
 	xkl_engine_priv(engine, default_layout) = "us";
 
+	xkl_xmm_init_switch_options((XklXmm *)
+				    xkl_engine_priv(engine, backend));
+
 	return 0;
+}
+
+void
+xkl_xmm_term(XklEngine * engine)
+{
+	xkl_xmm_term_switch_options((XklXmm *)
+				    xkl_engine_priv(engine, backend));
 }

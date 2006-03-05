@@ -131,9 +131,9 @@ xkl_xkb_set_indicators(XklEngine * engine, const XklState * window_state)
 	    xkl_engine_backend(engine, XklXkb, cached_desc);
 	ForPhysIndicators(i, bit) if (cached->names->indicators[i] != None) {
 		gboolean status;
-		status = xkl_engine_set_indicator(engine, i,
-						  (window_state->
-						   indicators & bit) != 0);
+		status = xkl_xkb_set_indicator(engine, i,
+					       (window_state->
+						indicators & bit) != 0);
 		xkl_debug(150, "Set indicator \"%s\"/%d to %d: %d\n",
 			  xkl_engine_backend(engine, XklXkb,
 					     indicator_names)[i],
