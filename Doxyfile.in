@@ -433,7 +433,10 @@ INPUT                  = libxklavier
 # *.h++ *.idl *.odl *.cs *.php *.php3 *.inc *.m *.mm
 
 FILE_PATTERNS          = xklavier.h \
-                         xklavier_config.h
+                         xkl_config_item.h \
+                         xkl_config_rec.h \
+                         xkl_config_registry.h \
+                         xkl_engine.h
 
 # The RECURSIVE tag can be used to turn specify whether or not subdirectories 
 # should be searched for input files as well. Possible values are YES and NO. 
