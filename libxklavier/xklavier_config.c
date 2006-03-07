@@ -156,7 +156,7 @@ xkl_read_config_item(xmlNodePtr iptr, XklConfigItem * item)
 }
 
 static void
-xkl_config_registry_enum_from_node_set(XklConfigRegistry * config,
+xkl_config_registry_foreach_in_nodeset(XklConfigRegistry * config,
 				       xmlNodeSetPtr nodes,
 				       ConfigItemProcessFunc func,
 				       gpointer data)
@@ -175,9 +175,10 @@ xkl_config_registry_enum_from_node_set(XklConfigRegistry * config,
 }
 
 static void
-xkl_config_registry_enum_simple(XklConfigRegistry * config,
-				xmlXPathCompExprPtr xpath_comp_expr,
-				ConfigItemProcessFunc func, gpointer data)
+xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
+				     xmlXPathCompExprPtr xpath_comp_expr,
+				     ConfigItemProcessFunc func,
+				     gpointer data)
 {
 	xmlXPathObjectPtr xpath_obj;
 
@@ -187,7 +188,7 @@ xkl_config_registry_enum_simple(XklConfigRegistry * config,
 					 xkl_config_registry_priv(config,
 								  xpath_context));
 	if (xpath_obj != NULL) {
-		xkl_config_registry_enum_from_node_set(config,
+		xkl_config_registry_foreach_in_nodeset(config,
 						       xpath_obj->
 						       nodesetval, func,
 						       data);
@@ -196,9 +197,11 @@ xkl_config_registry_enum_simple(XklConfigRegistry * config,
 }
 
 static void
-xkl_config_registry_enum_direct(XklConfigRegistry * config,
-				const gchar * format, const gchar * value,
-				ConfigItemProcessFunc func, gpointer data)
+xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry * config,
+						const gchar * format,
+						const gchar * value,
+						ConfigItemProcessFunc func,
+						gpointer data)
 {
 	char xpath_expr[1024];
 	xmlXPathObjectPtr xpath_obj;
@@ -210,7 +213,7 @@ xkl_config_registry_enum_direct(XklConfigRegistry * config,
 				 xkl_config_registry_priv(config,
 							  xpath_context));
 	if (xpath_obj != NULL) {
-		xkl_config_registry_enum_from_node_set(config,
+		xkl_config_registry_foreach_in_nodeset(config,
 						       xpath_obj->
 						       nodesetval, func,
 						       data);
@@ -375,35 +378,39 @@ xkl_config_registry_free(XklConfigRegistry * config)
 }
 
 void
-xkl_config_registry_enum_models(XklConfigRegistry * config,
-				ConfigItemProcessFunc func, gpointer data)
+xkl_config_registry_foreach_model(XklConfigRegistry * config,
+				  ConfigItemProcessFunc func,
+				  gpointer data)
 {
-	xkl_config_registry_enum_simple(config, models_xpath, func, data);
+	xkl_config_registry_foreach_in_xpath(config, models_xpath, func,
+					     data);
 }
 
 void
-xkl_config_registry_enum_layouts(XklConfigRegistry * config,
-				 ConfigItemProcessFunc func, gpointer data)
+xkl_config_registry_foreach_layout(XklConfigRegistry * config,
+				   ConfigItemProcessFunc func,
+				   gpointer data)
 {
-	xkl_config_registry_enum_simple(config, layouts_xpath, func, data);
+	xkl_config_registry_foreach_in_xpath(config, layouts_xpath, func,
+					     data);
 }
 
 void
-xkl_config_registry_enum_layout_variants(XklConfigRegistry * config,
-					 const gchar * layout_name,
-					 ConfigItemProcessFunc func,
-					 gpointer data)
+xkl_config_registry_foreach_layout_variant(XklConfigRegistry * config,
+					   const gchar * layout_name,
+					   ConfigItemProcessFunc func,
+					   gpointer data)
 {
-	xkl_config_registry_enum_direct
+	xkl_config_registry_foreach_in_xpath_with_param
 	    (config,
 	     "/xkbConfigRegistry/layoutList/layout/variantList/variant[../../configItem/name = '%s']",
 	     layout_name, func, data);
 }
 
 void
-xkl_config_registry_enum_option_groups(XklConfigRegistry * config,
-				       GroupProcessFunc func,
-				       gpointer data)
+xkl_config_registry_foreach_option_group(XklConfigRegistry * config,
+					 GroupProcessFunc func,
+					 gpointer data)
 {
 	xmlXPathObjectPtr xpath_obj;
 	gint i;
@@ -444,11 +451,12 @@ xkl_config_registry_enum_option_groups(XklConfigRegistry * config,
 }
 
 void
-xkl_config_registry_enum_options(XklConfigRegistry * config,
-				 const gchar * option_group_name,
-				 ConfigItemProcessFunc func, gpointer data)
+xkl_config_registry_foreach_option(XklConfigRegistry * config,
+				   const gchar * option_group_name,
+				   ConfigItemProcessFunc func,
+				   gpointer data)
 {
-	xkl_config_registry_enum_direct
+	xkl_config_registry_foreach_in_xpath_with_param
 	    (config,
 	     "/xkbConfigRegistry/optionList/group/option[../configItem/name = '%s']",
 	     option_group_name, func, data);

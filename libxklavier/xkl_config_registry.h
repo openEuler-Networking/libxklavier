@@ -99,20 +99,21 @@ extern "C" {
  * @param func is a callback to call for every model
  * @param data is anything which can be stored into the pointer
  */
-	extern void xkl_config_registry_enum_models(XklConfigRegistry *
-						    config,
-						    ConfigItemProcessFunc
-						    func, gpointer data);
+	extern void xkl_config_registry_foreach_model(XklConfigRegistry *
+						      config,
+						      ConfigItemProcessFunc
+						      func, gpointer data);
 
 /**
  * Enumerates keyboard layouts from the XML configuration registry
  * @param func is a callback to call for every layout
  * @param data is anything which can be stored into the pointer
  */
-	extern void xkl_config_registry_enum_layouts(XklConfigRegistry *
-						     config,
-						     ConfigItemProcessFunc
-						     func, gpointer data);
+	extern void xkl_config_registry_foreach_layout(XklConfigRegistry *
+						       config,
+						       ConfigItemProcessFunc
+						       func,
+						       gpointer data);
 
 /**
  * Enumerates keyboard layout variants from the XML configuration registry
@@ -121,12 +122,12 @@ extern "C" {
  * @param data is anything which can be stored into the pointer
  */
 	extern void
-	 xkl_config_registry_enum_layout_variants(XklConfigRegistry *
-						  config,
-						  const gchar *
-						  layout_name,
-						  ConfigItemProcessFunc
-						  func, gpointer data);
+	 xkl_config_registry_foreach_layout_variant(XklConfigRegistry *
+						    config,
+						    const gchar *
+						    layout_name,
+						    ConfigItemProcessFunc
+						    func, gpointer data);
 
 /**
  * Enumerates keyboard option groups from the XML configuration registry
@@ -134,10 +135,10 @@ extern "C" {
  * @param data is anything which can be stored into the pointer
  */
 	extern void
-	 xkl_config_registry_enum_option_groups(XklConfigRegistry *
-						config,
-						GroupProcessFunc func,
-						gpointer data);
+	 xkl_config_registry_foreach_option_group(XklConfigRegistry *
+						  config,
+						  GroupProcessFunc func,
+						  gpointer data);
 
 /**
  * Enumerates keyboard options from the XML configuration registry
@@ -146,12 +147,13 @@ extern "C" {
  * @param func is a callback to call for every option
  * @param data is anything which can be stored into the pointer
  */
-	extern void xkl_config_registry_enum_options(XklConfigRegistry *
-						     config,
-						     const gchar *
-						     option_group_name,
-						     ConfigItemProcessFunc
-						     func, gpointer data);
+	extern void xkl_config_registry_foreach_option(XklConfigRegistry *
+						       config,
+						       const gchar *
+						       option_group_name,
+						       ConfigItemProcessFunc
+						       func,
+						       gpointer data);
 
 /** @} */
 
