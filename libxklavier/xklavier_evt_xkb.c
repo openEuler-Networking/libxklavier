@@ -30,9 +30,9 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 	xkl_debug(150, "Xkb event detected\n");
 
 	switch (kev->any.xkb_type) {
-    /*
-     * Group is changed!
-     */
+		/*
+		 * Group is changed!
+		 */
 	case XkbStateNotify:
 #define GROUP_CHANGE_MASK \
     ( XkbGroupStateMask | XkbGroupBaseMask | XkbGroupLatchMask | XkbGroupLockMask )
@@ -63,9 +63,9 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 
 		break;
 
-    /*
-     * Indicators are changed!
-     */
+		/*
+		 * Indicators are changed!
+		 */
 	case XkbIndicatorStateNotify:
 
 		xkl_debug(150, "XkbIndicatorStateNotify\n");
@@ -85,9 +85,9 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 						      0, inds, TRUE);
 		break;
 
-    /*
-     * The configuration is changed!
-     */
+		/*
+		 * The configuration is changed!
+		 */
 	case XkbIndicatorMapNotify:
 	case XkbControlsNotify:
 	case XkbNamesNotify:
@@ -105,9 +105,9 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 					  "XKB event: XkbNewKeyboardNotify");
 		break;
 
-    /*
-     * ...Not interested...
-     */
+		/*
+		 * ...Not interested...
+		 */
 	default:
 		xkl_debug(150, "Unknown XKB event %d [%s]\n",
 			  kev->any.xkb_type,

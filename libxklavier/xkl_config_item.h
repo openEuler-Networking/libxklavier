@@ -26,8 +26,6 @@
 extern "C" {
 #endif				/* __cplusplus */
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
 	typedef struct _XklConfigItem XklConfigItem;
 	typedef struct _XklConfigItemClass XklConfigItemClass;
 
@@ -37,8 +35,6 @@ extern "C" {
 #define XKL_IS_CONFIG_ITEM(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), XKL_TYPE_CONFIG_ITEM))
 #define XKL_IS_CONFIG_ITEM_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE ((obj), XKL_TYPE_CONFIG_ITEM))
 #define XKL_CONFIG_ITEM_GET_CLASS        (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_CONFIG_ITEM, XklConfigItemClass))
-
-#endif				// DOXYGEN_SHOULD_SKIP_THIS
 
 /**
  * The configuration item. Corresponds to XML element "configItem".
@@ -92,6 +88,7 @@ extern "C" {
 	extern XklConfigItem *xkl_config_item_new(void);
 
 /**
+ * ConfigItemProcessFunc:
  * @item: the item from registry
  * @data: anything which can be stored into the pointer
  *
@@ -101,6 +98,7 @@ extern "C" {
 					       gpointer data);
 
 /**
+ * GroupProcessFunc:
  * @item: the item from registry
  * @allow_multiple_selection: a flag whether this group allows multiple selection
  * @data: anything which can be stored into the pointer

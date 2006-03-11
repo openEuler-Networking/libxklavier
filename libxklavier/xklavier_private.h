@@ -45,170 +45,170 @@ struct _XklEnginePrivate {
 
 	Display *display;
 
-  /*
-   * Backend name
-   */
+	/*
+	 * Backend name
+	 */
 	const gchar *backend_id;
 
-  /*
-   * Functions supported by the backend, combination of XKLF_* constants
-   */
+	/*
+	 * Functions supported by the backend, combination of XKLF_* constants
+	 */
 	guint8 features;
 
-  /*
-   * Activates the configuration.
-   * xkb: create proper the XkbDescRec and send it to the server
-   * xmodmap: save the property, init layout #1
-   */
+	/*
+	 * Activates the configuration.
+	 * xkb: create proper the XkbDescRec and send it to the server
+	 * xmodmap: save the property, init layout #1
+	 */
 	 gboolean(*activate_config_rec) (XklEngine * engine,
 					 const XklConfigRec * data);
 
-  /*
-   * Background-specific initialization.
-   * xkb: XkbInitAtoms - init internal xkb atoms table
-   * xmodmap: void.
-   */
+	/*
+	 * Background-specific initialization.
+	 * xkb: XkbInitAtoms - init internal xkb atoms table
+	 * xmodmap: void.
+	 */
 	void (*init_config_registry) (XklConfigRegistry * config);
 
-  /*
-   * Loads the registry tree into DOM (using whatever path(s))
-   * The XklVTConfigFreeRegistry is static - no virtualization necessary.
-   * xkb: loads xml from XKB_BASE+"/rules/"+ruleset+".xml"
-   * xmodmap: loads xml from XMODMAP_BASE+"/"+ruleset+".xml"
-   */
+	/*
+	 * Loads the registry tree into DOM (using whatever path(s))
+	 * The XklVTConfigFreeRegistry is static - no virtualization necessary.
+	 * xkb: loads xml from XKB_BASE+"/rules/"+ruleset+".xml"
+	 * xmodmap: loads xml from XMODMAP_BASE+"/"+ruleset+".xml"
+	 */
 	 gboolean(*load_config_registry) (XklConfigRegistry * config);
 
-  /*
-   * Write the configuration into the file (binary/textual)
-   * xkb: write xkb or xkm file
-   * xmodmap: if text requested, just dump XklConfigRec to the 
-   * file - not really useful. If binary - fail (not supported)
-   */
+	/*
+	 * Write the configuration into the file (binary/textual)
+	 * xkb: write xkb or xkm file
+	 * xmodmap: if text requested, just dump XklConfigRec to the 
+	 * file - not really useful. If binary - fail (not supported)
+	 */
 	 gboolean(*write_config_rec_to_file) (XklEngine * engine,
 					      const gchar * file_name,
 					      const XklConfigRec * data,
 					      const gboolean binary);
 
-  /*
-   * Get the list of the group names
-   * xkb: return cached list of the group names
-   * xmodmap: return the list of layouts from the internal XklConfigRec
-   */
+	/*
+	 * Get the list of the group names
+	 * xkb: return cached list of the group names
+	 * xmodmap: return the list of layouts from the internal XklConfigRec
+	 */
 	const gchar **(*get_groups_names) (XklEngine * engine);
 
-  /*
-   * Get the maximum number of loaded groups
-   * xkb: returns 1 or XkbNumKbdGroups
-   * xmodmap: return 0
-   */
+	/*
+	 * Get the maximum number of loaded groups
+	 * xkb: returns 1 or XkbNumKbdGroups
+	 * xmodmap: return 0
+	 */
 	 guint(*get_max_num_groups) (XklEngine * engine);
 
-  /*
-   * Get the number of loaded groups
-   * xkb: return from the cached XkbDesc
-   * xmodmap: return number of layouts from internal XklConfigRec
-   */
+	/*
+	 * Get the number of loaded groups
+	 * xkb: return from the cached XkbDesc
+	 * xmodmap: return number of layouts from internal XklConfigRec
+	 */
 	 guint(*get_num_groups) (XklEngine * engine);
 
-  /*
-   * Switches the keyboard to the group N
-   * xkb: simple one-liner to call the XKB function
-   * xmodmap: changes the root window property 
-   * (listener invokes xmodmap with appropriate config file).
-   */
+	/*
+	 * Switches the keyboard to the group N
+	 * xkb: simple one-liner to call the XKB function
+	 * xmodmap: changes the root window property 
+	 * (listener invokes xmodmap with appropriate config file).
+	 */
 	void (*lock_group) (XklEngine * engine, gint group);
 
-  /*
-   * Handles X events.
-   * xkb: XkbEvent handling
-   * xmodmap: keep track on the root window properties. What else can we do?
-   */
+	/*
+	 * Handles X events.
+	 * xkb: XkbEvent handling
+	 * xmodmap: keep track on the root window properties. What else can we do?
+	 */
 	 gint(*process_x_event) (XklEngine * engine, XEvent * xev);
 
-  /*
-   * Flushes the cached server config info.
-   * xkb: frees XkbDesc
-   * xmodmap: frees internal XklConfigRec
-   */
+	/*
+	 * Flushes the cached server config info.
+	 * xkb: frees XkbDesc
+	 * xmodmap: frees internal XklConfigRec
+	 */
 	void (*free_all_info) (XklEngine * engine);
 
-  /*
-   * Compares the cached info with the actual one, from the server
-   * xkb: Compares some parts of XkbDescPtr
-   * xmodmap: returns False
-   */
+	/*
+	 * Compares the cached info with the actual one, from the server
+	 * xkb: Compares some parts of XkbDescPtr
+	 * xmodmap: returns False
+	 */
 	 gboolean(*if_cached_info_equals_actual) (XklEngine * engine);
 
-  /*
-   * Loads the configuration info from the server
-   * xkb: loads XkbDesc, names, indicators
-   * xmodmap: loads internal XklConfigRec from server
-   */
+	/*
+	 * Loads the configuration info from the server
+	 * xkb: loads XkbDesc, names, indicators
+	 * xmodmap: loads internal XklConfigRec from server
+	 */
 	 gboolean(*load_all_info) (XklEngine * engine);
 
-  /*
-   * Gets the current state
-   * xkb: XkbGetState and XkbGetIndicatorState
-   * xmodmap: check the root window property (regarding the group)
-   */
+	/*
+	 * Gets the current state
+	 * xkb: XkbGetState and XkbGetIndicatorState
+	 * xmodmap: check the root window property (regarding the group)
+	 */
 	void (*get_server_state) (XklEngine * engine,
 				  XklState * current_state_out);
 
-  /*
-   * Stop tracking the keyboard-related events
-   * xkb: XkbSelectEvents(..., 0)
-   * xmodmap: Ungrab the switching shortcut.
-   */
+	/*
+	 * Stop tracking the keyboard-related events
+	 * xkb: XkbSelectEvents(..., 0)
+	 * xmodmap: Ungrab the switching shortcut.
+	 */
 	 gint(*pause_listen) (XklEngine * engine);
 
-  /*
-   * Start tracking the keyboard-related events
-   * xkb: XkbSelectEvents + XkbSelectEventDetails
-   * xmodmap: Grab the switching shortcut.
-   */
+	/*
+	 * Start tracking the keyboard-related events
+	 * xkb: XkbSelectEvents + XkbSelectEventDetails
+	 * xmodmap: Grab the switching shortcut.
+	 */
 	 gint(*resume_listen) (XklEngine * engine);
 
-  /*
-   * Set the indicators state from the XklState
-   * xkb: XklSetIndicator for all indicators
-   * xmodmap: NULL. Not supported
-   */
+	/*
+	 * Set the indicators state from the XklState
+	 * xkb: XklSetIndicator for all indicators
+	 * xmodmap: NULL. Not supported
+	 */
 	void (*set_indicators) (XklEngine * engine,
 				const XklState * window_state);
 
-  /*
-   * Perform the cleanup
-   */
+	/*
+	 * Perform the cleanup
+	 */
 	void (*finalize) (XklEngine * engine);
 
 	/* all data is private - no direct access */
-  /*
-   * The base configuration atom.
-   * xkb: _XKB_RF_NAMES_PROP_ATOM
-   * xmodmap:  "_XMM_NAMES"
-   */
+	/*
+	 * The base configuration atom.
+	 * xkb: _XKB_RF_NAMES_PROP_ATOM
+	 * xmodmap:  "_XMM_NAMES"
+	 */
 	Atom base_config_atom;
 
-  /*
-   * The configuration backup atom
-   * xkb: "_XKB_RULES_NAMES_BACKUP"
-   * xmodmap: "_XMM_NAMES_BACKUP"
-   */
+	/*
+	 * The configuration backup atom
+	 * xkb: "_XKB_RULES_NAMES_BACKUP"
+	 * xmodmap: "_XMM_NAMES_BACKUP"
+	 */
 	Atom backup_config_atom;
 
-  /*
-   * Fallback for missing model
-   */
+	/*
+	 * Fallback for missing model
+	 */
 	const gchar *default_model;
 
-  /*
-   * Fallback for missing layout
-   */
+	/*
+	 * Fallback for missing layout
+	 */
 	const gchar *default_layout;
 
-  /*
-   * Any stuff backend might need to put in here
-   */
+	/*
+	 * Any stuff backend might need to put in here
+	 */
 	gpointer backend;
 };
 

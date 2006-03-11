@@ -197,10 +197,10 @@ xkl_engine_find_toplevel_window(XklEngine * engine, Window win,
 		return FALSE;
 	}
 
-  /*
-   * Here we first check the children (in case win is just above some "App Window")
-   * and then go upstairs
-   */
+	/*
+	 * Here we first check the children (in case win is just above some "App Window")
+	 * and then go upstairs
+	 */
 	child = children;
 	while (num) {
 		if (xkl_engine_if_window_has_wm_state(engine, *child)) {

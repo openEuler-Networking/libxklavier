@@ -49,7 +49,7 @@ xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
 	Atom state_atom = xkl_engine_backend(engine, XklXmm, state_atom);
 	xkl_debug(200, "Processing the PropertyNotify event: %d/%d\n",
 		  kpe->atom, state_atom);
-  /**
+  /*
    * Group is changed!
    */
 	if (kpe->atom == state_atom) {
@@ -80,7 +80,7 @@ xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
 							      0, False);
 		}
 	} else
-  /**
+  /*
    * Configuration is changed!
    */
 	if (kpe->atom == xkl_engine_priv(engine, base_config_atom)) {
@@ -91,7 +91,7 @@ xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
 	return 0;
 }
 
-/**
+/*
  * XMM event handler
  */
 gint
@@ -110,7 +110,7 @@ xkl_xmm_process_x_event(XklEngine * engine, XEvent * xev)
 	return 0;
 }
 
-/**
+/*
  * We have to find which of Shift/Lock/Control/ModX masks
  * belong to Caps/Num/Scroll lock
  */

@@ -190,7 +190,7 @@ xkl_xkb_if_cached_info_equals_actual(XklEngine * engine)
 				rv = i < 0;
 			}
 		}
-    /** 
+    /* 
      * in case of failure, reuse in _XklXkbLoadAllInfo
      * in case of success - free it
      */
@@ -207,7 +207,7 @@ xkl_xkb_if_cached_info_equals_actual(XklEngine * engine)
 	return rv;
 }
 
-/**
+/*
  * Load some XKB parameters
  */
 gboolean
@@ -287,7 +287,7 @@ xkl_xkb_lock_group(XklEngine * engine, gint group)
 	XSync(display, False);
 }
 
-/**
+/*
  * Updates current internal state from X state
  */
 void

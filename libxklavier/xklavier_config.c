@@ -89,7 +89,7 @@ xkl_read_config_item(xmlNodePtr iptr, XklConfigItem * item)
 				    xkl_get_language_priority((gchar *)
 							      lang);
 
-	/**
+	/*
          * Find desc/shortdesc with highest priority
          */
 				if (!g_ascii_strcasecmp(node_name,
@@ -124,7 +124,7 @@ xkl_read_config_item(xmlNodePtr iptr, XklConfigItem * item)
 	if (short_desc_element == NULL)
 		short_desc_element = nt_short_desc_element;
 
-  /**
+  /*
    * Actually, here we should have some code to find 
    * the correct localized description...
    */
@@ -535,7 +535,7 @@ xkl_config_registry_find_option(XklConfigRegistry * config,
 	     option_group_name, pitem, NULL);
 }
 
-/**
+/*
  * Calling through vtable
  */
 gboolean

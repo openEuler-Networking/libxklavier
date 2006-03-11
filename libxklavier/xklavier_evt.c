@@ -121,11 +121,11 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 				xkl_debug(150,
 					  "Leaving transparent window\n");
 
-      /*
-       * Reload the current state from the current window. 
-       * Do not do it for transparent window - we keep the state from 
-       * the _previous_ window.
-       */
+			/*
+			 * Reload the current state from the current window. 
+			 * Do not do it for transparent window - we keep the state from 
+			 * the _previous_ window.
+			 */
 			if (!old_win_transparent &&
 			    xkl_engine_get_toplevel_window_state(engine,
 								 xkl_engine_priv
@@ -195,11 +195,11 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 							  group,
 							  selected_window_state.
 							  group);
-	    /*
-             *  For fast mouse movements - the state is probably not updated yet
-             *  (because of the group change notification being late).
-             *  so we'll enforce the update. But this should only happen in GPA mode
-             */
+						/*
+						 *  For fast mouse movements - the state is probably not updated yet
+						 *  (because of the group change notification being late).
+						 *  so we'll enforce the update. But this should only happen in GPA mode
+						 */
 						xkl_engine_update_current_state
 						    (engine,
 						     selected_window_state.
@@ -495,9 +495,9 @@ xkl_engine_process_state_modification(XklEngine * engine,
 		return;
 	}
 
-  /* 
-   * Only if we manage states - otherwise xkl_engine_priv(engine,curr_toplvl_win) does not make sense 
-   */
+	/* 
+	 * Only if we manage states - otherwise xkl_engine_priv(engine,curr_toplvl_win) does not make sense 
+	 */
 	if (!xkl_engine_find_toplevel_window
 	    (engine, focused, &focused_toplevel)
 	    && xkl_engine_priv(engine,
@@ -518,9 +518,9 @@ xkl_engine_process_state_modification(XklEngine * engine,
 
 		if (focused_toplevel !=
 		    xkl_engine_priv(engine, curr_toplvl_win)) {
-      /*
-       * If not state - we got the new window
-       */
+			/*
+			 * If not state - we got the new window
+			 */
 			if (!xkl_engine_get_toplevel_window_state
 			    (engine, focused_toplevel, &old_state)) {
 				xkl_engine_update_current_state(engine,
@@ -534,9 +534,9 @@ xkl_engine_process_state_modification(XklEngine * engine,
 					     &xkl_engine_priv(engine,
 							      curr_state));
 			}
-      /*
-       * There is state - just get the state from the window
-       */
+			/*
+			 * There is state - just get the state from the window
+			 */
 			else {
 				grp = old_state.group;
 				inds = old_state.indicators;

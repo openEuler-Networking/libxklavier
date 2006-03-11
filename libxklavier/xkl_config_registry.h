@@ -1,7 +1,3 @@
-/**
- * @file xkl_config_registry.h
- */
-
 #ifndef __XKL_CONFIG_REGISTRY_H__
 #define __XKL_CONFIG_REGISTRY_H__
 
@@ -13,8 +9,6 @@
 extern "C" {
 #endif				/* __cplusplus */
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
 	typedef struct _XklConfigRegistry XklConfigRegistry;
 	typedef struct _XklConfigRegistryPrivate XklConfigRegistryPrivate;
 	typedef struct _XklConfigRegistryClass XklConfigRegistryClass;
@@ -25,8 +19,6 @@ extern "C" {
 #define XKL_IS_CONFIG_REGISTRY(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), XKL_TYPE_CONFIG_REGISTRY))
 #define XKL_IS_CONFIG_REGISTRY_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE ((obj), XKL_TYPE_CONFIG_REGISTRY))
 #define XKL_CONFIG_REGISTRY_GET_CLASS        (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_CONFIG_REGISTRY, XklConfigRegistryClass))
-
-#endif				// DOXYGEN_SHOULD_SKIP_THIS
 
 /**
  * The configuration manager. Corresponds to XML element "configItem".
@@ -50,54 +42,66 @@ extern "C" {
 		GObjectClass parent_class;
 	};
 /**
+ * xkl_config_registry_get_type:
+ *
  * Get type info for XConfig
- * @return GType for XConfig
+ *
+ * Returns: GType for XConfig
  */
 	extern GType xkl_config_registry_get_type(void);
 
 /**
+ * xkl_config_registry_get_instance:
+ * @engine: the engine to use for accessing X in all the operations
+ * (like accessing root window properties etc)
+ *
  * Create new XklConfig
- * @return new instance
+ *
+ * Returns: new instance
  */
 	extern XklConfigRegistry
 	    * xkl_config_registry_get_instance(XklEngine * engine);
 
 /**
- * @defgroup xklconfiginitterm XKB configuration handling initialization and termination
- * @{
- */
-
-/**
+ * xkl_config_registry_load_from_file:
+ * @config: the config registry
+ * @file_name: file to load
+ *
  * Loads XML configuration registry
- * @param file_name file name to load
- * @return true on success
+ *
+ * Returns: TRUE on success
  */
 	extern gboolean
 	    xkl_config_registry_load_from_file(XklConfigRegistry * config,
 					       const gchar * file_name);
 
 /**
- * Loads XML configuration registry
- * @return true on success
+ * xkl_config_registry_load:
+ * @config: the config registry
+ *
+ * Loads XML configuration registry. The name is taken from X server
+ * (for XKB/libxkbfile, from the root window property)
+ *
+ * Returns: TRUE on success
  */
 	extern gboolean xkl_config_registry_load(XklConfigRegistry *
 						 config);
 
 /**
+ * xkl_config_registry_free:
+ * @config: the config registry
+ *
  * Frees XML configuration registry
  */
 	extern void xkl_config_registry_free(XklConfigRegistry * config);
-/** @} */
 
 /**
- * @defgroup enum XKB configuration elements enumeration functions
- * @{
- */
-
-/**
+ * xkl_config_registry_foreach_model:
+ * @config: the config registry
+ * @func: callback to call for every model
+ * @data: anything which can be stored into the pointer
+ *
  * Enumerates keyboard models from the XML configuration registry
- * @param func is a callback to call for every model
- * @param data is anything which can be stored into the pointer
  */
 	extern void xkl_config_registry_foreach_model(XklConfigRegistry *
 						      config,
@@ -105,9 +109,12 @@ extern "C" {
 						      func, gpointer data);
 
 /**
+ * xkl_config_registry_foreach_layout:
+ * @config: the config registry
+ * @func: callback to call for every layout
+ * @data: anything which can be stored into the pointer
+ *
  * Enumerates keyboard layouts from the XML configuration registry
- * @param func is a callback to call for every layout
- * @param data is anything which can be stored into the pointer
  */
 	extern void xkl_config_registry_foreach_layout(XklConfigRegistry *
 						       config,
@@ -116,10 +123,13 @@ extern "C" {
 						       gpointer data);
 
 /**
+ * xkl_config_registry_foreach_layout_variant:
+ * @config: the config registry
+ * @layout_name: layout name for which variants will be listed
+ * @func: callback to call for every layout variant
+ * @data: anything which can be stored into the pointer
+ *
  * Enumerates keyboard layout variants from the XML configuration registry
- * @param layout_name is the layout name for which variants will be listed
- * @param func is a callback to call for every layout variant
- * @param data is anything which can be stored into the pointer
  */
 	extern void
 	 xkl_config_registry_foreach_layout_variant(XklConfigRegistry *
@@ -130,9 +140,12 @@ extern "C" {
 						    func, gpointer data);
 
 /**
+ * xkl_config_registry_foreach_option_group:
+ * @config: the config registry
+ * @func: callback to call for every option group
+ * @data: anything which can be stored into the pointer
+ *
  * Enumerates keyboard option groups from the XML configuration registry
- * @param func is a callback to call for every option group
- * @param data is anything which can be stored into the pointer
  */
 	extern void
 	 xkl_config_registry_foreach_option_group(XklConfigRegistry *
@@ -141,11 +154,14 @@ extern "C" {
 						  gpointer data);
 
 /**
- * Enumerates keyboard options from the XML configuration registry
- * @param option_group_name is the option group name for which variants 
+ * xkl_config_registry_foreach_option:
+ * @config: the config registry
+ * @option_group_name: option group name for which variants 
  * will be listed
- * @param func is a callback to call for every option
- * @param data is anything which can be stored into the pointer
+ * @func: callback to call for every option
+ * @data: anything which can be stored into the pointer
+ *
+ * Enumerates keyboard options from the XML configuration registry
  */
 	extern void xkl_config_registry_foreach_option(XklConfigRegistry *
 						       config,
@@ -155,18 +171,15 @@ extern "C" {
 						       func,
 						       gpointer data);
 
-/** @} */
-
 /**
- * @defgroup lookup XKB configuration element lookup functions
- * @{
- */
-
-/**
- * Loads a keyboard model information from the XML configuration registry.
- * @param item is a pointer to a XklConfigItem containing the name of the
+ * xkl_config_registry_find_model:
+ * @config: the config registry
+ * @item: pointer to a XklConfigItem containing the name of the
  * keyboard model. On successfull return, the descriptions are filled.
- * @return TRUE if appropriate element was found and loaded
+ *
+ * Loads a keyboard model information from the XML configuration registry.
+ *
+ * Returns: TRUE if appropriate element was found and loaded
  */
 	extern gboolean xkl_config_registry_find_model(XklConfigRegistry *
 						       config,
@@ -174,10 +187,14 @@ extern "C" {
 						       item);
 
 /**
- * Loads a keyboard layout information from the XML configuration registry.
- * @param item is a pointer to a XklConfigItem containing the name of the
+ * xkl_config_registry_find_layout:
+ * @config: the config registry
+ * @item: pointer to a XklConfigItem containing the name of the
  * keyboard layout. On successfull return, the descriptions are filled.
- * @return TRUE if appropriate element was found and loaded
+ *
+ * Loads a keyboard layout information from the XML configuration registry.
+ *
+ * Returns: TRUE if appropriate element was found and loaded
  */
 	extern gboolean xkl_config_registry_find_layout(XklConfigRegistry *
 							config,
@@ -185,12 +202,16 @@ extern "C" {
 							item);
 
 /**
+ * xkl_config_registry_find_variant:
+ * @config: the config registry
+ * @layout_name: name of the parent layout
+ * @item: pointer to a XklConfigItem containing the name of the
+ * keyboard layout variant. On successfull return, the descriptions are filled.
+ *
  * Loads a keyboard layout variant information from the XML configuration 
  * registry.
- * @param layout_name is a name of the parent layout
- * @param item is a pointer to a XklConfigItem containing the name of the
- * keyboard layout variant. On successfull return, the descriptions are filled.
- * @return TRUE if appropriate element was found and loaded
+ *
+ * Returns: TRUE if appropriate element was found and loaded
  */
 	extern gboolean xkl_config_registry_find_variant(XklConfigRegistry
 							 * config,
@@ -200,13 +221,17 @@ extern "C" {
 							 item);
 
 /**
+ * xkl_config_registry_find_option_group:
+ * @config: the config registry
+ * @item: pointer to a XklConfigItem containing the name of the
+ * keyboard option group. On successfull return, the descriptions are filled.
+ * @allow_multiple_selection: pointer to some gboolean variable to fill 
+ * the corresponding attribute of XML element "group".
+ *
  * Loads a keyboard option group information from the XML configuration 
  * registry.
- * @param item is a pointer to a XklConfigItem containing the name of the
- * keyboard option group. On successfull return, the descriptions are filled.
- * @param allow_multiple_selection is a pointer to some gboolean variable to fill 
- * the corresponding attribute of XML element "group".
- * @return TRUE if appropriate element was found and loaded
+ *
+ * Returns: TRUE if appropriate element was found and loaded
  */
 	extern gboolean
 	    xkl_config_registry_find_option_group(XklConfigRegistry *
@@ -216,12 +241,16 @@ extern "C" {
 						  allow_multiple_selection);
 
 /**
+ * xkl_config_registry_find_option:
+ * @config: the config registry
+ * @option_group_name: name of the option group
+ * @item: pointer to a XklConfigItem containing the name of the
+ * keyboard option. On successfull return, the descriptions are filled.
+ *
  * Loads a keyboard option information from the XML configuration 
  * registry.
- * @param option_group_name is a name of the option group
- * @param item is a pointer to a XklConfigItem containing the name of the
- * keyboard option. On successfull return, the descriptions are filled.
- * @return TRUE if appropriate element was found and loaded
+ *
+ * Returns: TRUE if appropriate element was found and loaded
  */
 	extern gboolean xkl_config_registry_find_option(XklConfigRegistry *
 							config,
@@ -229,8 +258,6 @@ extern "C" {
 							option_group_name,
 							XklConfigItem *
 							item);
-/** @} */
-
 #ifdef __cplusplus
 }
 #endif				/* __cplusplus */
