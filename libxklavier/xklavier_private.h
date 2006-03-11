@@ -236,7 +236,7 @@ extern void xkl_engine_process_create_window_evt(XklEngine * engine,
 extern void xkl_process_error(Display * dpy, XErrorEvent * evt);
 
 extern void xkl_engine_process_state_modification(XklEngine * engine,
-						  XklStateChange
+						  XklEngineStateChange
 						  change_type, gint group,
 						  unsigned inds,
 						  gboolean set_indicators);
@@ -304,7 +304,8 @@ extern Status xkl_engine_query_tree(XklEngine * engine,
 				    guint * nchildren_out);
 
 extern void xkl_engine_try_call_state_func(XklEngine * engine,
-					   XklStateChange change_type,
+					   XklEngineStateChange
+					   change_type,
 					   XklState * old_state);
 
 extern void xkl_i18n_init(void);

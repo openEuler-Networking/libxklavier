@@ -23,7 +23,7 @@ print_usage()
 }
 
 void
-state_changed(XklEngine * engine, XklStateChange type, gint new_group,
+state_changed(XklEngine * engine, XklEngineStateChange type, gint new_group,
 	      gboolean restore)
 {
 	xkl_debug(0, "State changed: %d,%d,%d\n", type, new_group,

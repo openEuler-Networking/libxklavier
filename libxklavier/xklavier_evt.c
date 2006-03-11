@@ -478,8 +478,9 @@ xkl_process_error(Display * dpy, XErrorEvent * evt)
  */
 void
 xkl_engine_process_state_modification(XklEngine * engine,
-				      XklStateChange change_type, gint grp,
-				      guint inds, gboolean set_inds)
+				      XklEngineStateChange change_type,
+				      gint grp, guint inds,
+				      gboolean set_inds)
 {
 	Window focused, focused_toplevel;
 	XklState old_state;

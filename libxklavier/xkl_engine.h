@@ -20,51 +20,44 @@ extern "C" {
 #define XKL_IS_ENGINE_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE ((obj), XKL_TYPE_ENGINE))
 #define XKL_ENGINE_GET_CLASS        (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_ENGINE, XklEngineClass))
 
+/**
+ * The type of the keyboard state change
+ *   GroupChanged: Group was changed
+ *   IndicatorsChanged: Indicators were changed
+ */
 	typedef enum {
-/**
- * Group was changed
- */
 		GROUP_CHANGED,
-/**
- * Indicators were changed
- */
 		INDICATORS_CHANGED
-	} XklStateChange;
+	} XklEngineStateChange;
 
-/*
- * Backend allows to toggls indicators on/off
+/**
+ * A set of flags used to indicate the capabilities of the active backend
+ *   CanToggleIndicators: Backend allows to toggls indicators on/off
+ *   CanOutputConfigAsASCII: Backend allows writing ASCII representation of the configuration
+ *   CanOutputConfigAsBinary: Backend allows writing binary representation of the configuration
+ *   MultipleLayoutsSupported: Backend supports multiple layouts
+ *   RequiresManualLayoutManagement: Backend requires manual configuration, some daemon should do 
+ *                                   xkl_start_listen(engine,XKLL_MANAGE_LAYOUTS);
  */
-#define XKLF_CAN_TOGGLE_INDICATORS 0x01
-
-/*
- * Backend allows to write ascii representation of the configuration
- */
-#define XKLF_CAN_OUTPUT_CONFIG_AS_ASCII 0x02
-
-/*
- * Backend allows to write binary representation of the configuration
- */
-#define XKLF_CAN_OUTPUT_CONFIG_AS_BINARY 0x04
-
-/*
- * Backend supports multiple layouts
- */
-#define XKLF_MULTIPLE_LAYOUTS_SUPPORTED 0x08
-
-/*
- * Backend requires manual configuration, 
- * some daemon should do 
- * xkl_StartListen( XKLL_MANAGE_LAYOUTS );
- */
-#define XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT 0x10
+	typedef enum {
+		XKLF_CAN_TOGGLE_INDICATORS = 0x01,
+		XKLF_CAN_OUTPUT_CONFIG_AS_ASCII = 0x02,
+		XKLF_CAN_OUTPUT_CONFIG_AS_BINARY = 0x04,
+		XKLF_MULTIPLE_LAYOUTS_SUPPORTED = 0x08,
+		XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT = 0x10,
+	} XklEngineFeatures;
 
 /**
  * XKB state. Can be global or per-window
  */
 	typedef struct {
-/** selected group */
+/** 
+ * selected group 
+ */
 		gint32 group;
-/** set of active indicators */
+/**
+ * set of active indicators
+ */
 		guint32 indicators;
 	} XklState;
 
@@ -123,7 +116,7 @@ extern "C" {
  * Used for notifying application of the window state change.
  */
 		void (*state_notify) (XklEngine * engine,
-				      XklStateChange change_type,
+				      XklEngineStateChange change_type,
 				      gint group, gboolean restore);
 
 	};
@@ -184,22 +177,19 @@ extern "C" {
  */
 	extern guint xkl_engine_get_max_num_groups(XklEngine * engine);
 
-/*
- * The listener process should handle the per-window states 
- * and all the related activity
+/**
+ * The listener action modes:
+ *   ManageWindowStates: The listener process should handle the per-window states 
+ *                       and all the related activity
+ *   TrackKeyboardState: Just track the state and pass it to the application above.
+ *   ManageLayouts: The listener process should help backend to maintain the configuration
+ *                  (manually switch layouts etc).
  */
-#define XKLL_MANAGE_WINDOW_STATES   0x01
-
-/*
- * Just track the state and pass it to the application above.
- */
-#define XKLL_TRACK_KEYBOARD_STATE 0x02
-
-/*
- * The listener process should help backend to maintain the configuration
- * (manually switch layouts etc).
- */
-#define XKLL_MANAGE_LAYOUTS  0x04
+	typedef enum {
+		XKLL_MANAGE_WINDOW_STATES = 0x01,
+		XKLL_TRACK_KEYBOARD_STATE = 0x02,
+		XKLL_MANAGE_LAYOUTS = 0x04
+	} XklEngineListenModes;
 
 /**
  * xkl_engine_start_listen:

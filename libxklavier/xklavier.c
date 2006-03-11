@@ -431,7 +431,7 @@ xkl_engine_select_input_merging(XklEngine * engine, Window win,
 
 void
 xkl_engine_try_call_state_func(XklEngine * engine,
-			       XklStateChange change_type,
+			       XklEngineStateChange change_type,
 			       XklState * old_state)
 {
 	gint group = xkl_engine_priv(engine, curr_state).group;
@@ -740,16 +740,21 @@ static void
 xkl_engine_class_init(XklEngineClass * klass)
 {
 	static GFlagsValue feature_flags[] = {
-		{0x01, "XKLF_CAN_TOGGLE_INDICATORS", NULL},
-		{0x02, "XKLF_CAN_OUTPUT_CONFIG_AS_ASCII", NULL},
-		{0x04, "XKLF_CAN_OUTPUT_CONFIG_AS_BINARY", NULL},
-		{0x08, "XKLF_MULTIPLE_LAYOUTS_SUPPORTED", NULL},
-		{0x10, "XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT", NULL},
+		{XKLF_CAN_TOGGLE_INDICATORS, "XKLF_CAN_TOGGLE_INDICATORS",
+		 NULL},
+		{XKLF_CAN_OUTPUT_CONFIG_AS_ASCII,
+		 "XKLF_CAN_OUTPUT_CONFIG_AS_ASCII", NULL},
+		{XKLF_CAN_OUTPUT_CONFIG_AS_BINARY,
+		 "XKLF_CAN_OUTPUT_CONFIG_AS_BINARY", NULL},
+		{XKLF_MULTIPLE_LAYOUTS_SUPPORTED,
+		 "XKLF_MULTIPLE_LAYOUTS_SUPPORTED", NULL},
+		{XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT,
+		 "XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT", NULL},
 		{0, NULL, NULL}
 	};
 	static GEnumValue state_change_values[] = {
-		{0, "GROUP_CHANGED", NULL},
-		{1, "INDICATORS_CHANGED", NULL},
+		{GROUP_CHANGED, "GROUP_CHANGED", NULL},
+		{INDICATORS_CHANGED, "INDICATORS_CHANGED", NULL},
 		{0, NULL, NULL}
 	};
 
@@ -791,7 +796,7 @@ xkl_engine_class_init(XklEngineClass * klass)
 							     0,
 							     G_PARAM_READABLE);
 	GParamSpec *max_num_groups_param_spec =
-	    g_param_spec_uint("max-num-ngroups",
+	    g_param_spec_uint("max-num-groups",
 			      "maxNumGroups",
 			      "Max number of groups",
 			      0, 0x100, 0,
