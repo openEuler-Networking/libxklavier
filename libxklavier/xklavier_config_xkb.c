@@ -1,6 +1,6 @@
 #include <errno.h>
-#include <string.h>
 #include <locale.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/param.h>

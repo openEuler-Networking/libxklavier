@@ -1,6 +1,6 @@
+#include <iconv.h>
 #include <stdlib.h>
 #include <string.h>
-#include <iconv.h>
 
 #include "config.h"
 
