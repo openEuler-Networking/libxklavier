@@ -86,7 +86,7 @@ xkl_engine_save_state(XklEngine * engine, Window win, XklState * state)
 						      state);
 }
 
-/**
+/*
  *  Prepares the name of window suitable for debugging (32characters long).
  */
 gchar *
@@ -111,7 +111,7 @@ xkl_engine_get_current_window(XklEngine * engine)
 	return xkl_engine_priv(engine, curr_toplvl_win);
 }
 
-/**
+/*
  * Loads subtree. 
  * All the windows with WM_STATE are added.
  * All the windows within level 0 are listened for focus and property
@@ -181,7 +181,7 @@ xkl_engine_load_subtree(XklEngine * engine, Window window, gint level,
 	return retval;
 }
 
-/**
+/*
  * Checks whether given window has WM_STATE property (i.e. "App window").
  */
 gboolean
@@ -203,7 +203,7 @@ xkl_engine_if_window_has_wm_state(XklEngine * engine, Window win)
 	return type != None;
 }
 
-/**
+/*
  * Finds out the official parent window (accortind to XQueryTree)
  */
 Window

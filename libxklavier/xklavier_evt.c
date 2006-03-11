@@ -65,7 +65,7 @@ xkl_engine_filter_events(XklEngine * engine, XEvent * xev)
 	return 1;
 }
 
-/**
+/*
  * FocusIn handler
  */
 void
@@ -121,7 +121,7 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 				xkl_debug(150,
 					  "Leaving transparent window\n");
 
-      /**
+      /*
        * Reload the current state from the current window. 
        * Do not do it for transparent window - we keep the state from 
        * the _previous_ window.
@@ -195,7 +195,7 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 							  group,
 							  selected_window_state.
 							  group);
-	    /**
+	    /*
              *  For fast mouse movements - the state is probably not updated yet
              *  (because of the group change notification being late).
              *  so we'll enforce the update. But this should only happen in GPA mode
@@ -285,7 +285,7 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 	}
 }
 
-/** 
+/* 
  * FocusOut handler
  */
 void
@@ -311,7 +311,7 @@ xkl_engine_process_focus_out_evt(XklEngine * engine,
 
 	if (xkl_engine_is_window_transparent(engine, fev->window)) {
 		xkl_debug(150, "Leaving transparent window!\n");
-/** 
+/* 
  * If we are leaving the transparent window - we skip the restore operation.
  * This is useful for secondary groups switching from the transparent control 
  * window.
@@ -325,7 +325,7 @@ xkl_engine_process_focus_out_evt(XklEngine * engine,
 	}
 }
 
-/**
+/*
  * PropertyChange handler
  * Interested in :
  *  + for XKLL_MANAGE_WINDOW_STATES
@@ -400,7 +400,7 @@ xkl_engine_process_property_evt(XklEngine * engine, XPropertyEvent * pev)
 	}			/* XKLL_MANAGE_WINDOW_STATES */
 }
 
-/**
+/*
  * CreateNotify handler. Just interested in properties and focus events...
  */
 void
@@ -443,7 +443,7 @@ xkl_engine_process_create_window_evt(XklEngine * engine,
 	}
 }
 
-/**
+/*
  * Just error handler - sometimes we get BadWindow error for already gone 
  * windows, so we'll just ignore
  */
@@ -473,7 +473,7 @@ xkl_process_error(Display * dpy, XErrorEvent * evt)
 	}
 }
 
-/**
+/*
  * Some common functionality for Xkb handler
  */
 void
@@ -495,7 +495,7 @@ xkl_engine_process_state_modification(XklEngine * engine,
 		return;
 	}
 
-  /** 
+  /* 
    * Only if we manage states - otherwise xkl_engine_priv(engine,curr_toplvl_win) does not make sense 
    */
 	if (!xkl_engine_find_toplevel_window
@@ -518,7 +518,7 @@ xkl_engine_process_state_modification(XklEngine * engine,
 
 		if (focused_toplevel !=
 		    xkl_engine_priv(engine, curr_toplvl_win)) {
-      /**
+      /*
        * If not state - we got the new window
        */
 			if (!xkl_engine_get_toplevel_window_state
@@ -534,7 +534,7 @@ xkl_engine_process_state_modification(XklEngine * engine,
 					     &xkl_engine_priv(engine,
 							      curr_state));
 			}
-      /**
+      /*
        * There is state - just get the state from the window
        */
 			else {

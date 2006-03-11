@@ -37,7 +37,7 @@ xkl_engine_set_toplevel_window_transparent(XklEngine * engine,
 	}
 }
 
-/**
+/*
  * "Adds" app window to the set of managed windows.
  * Actually, no data structures involved. The only thing we do is save app state
  * and register ourselves us listeners.
@@ -111,7 +111,7 @@ xkl_engine_add_toplevel_window(XklEngine * engine, Window toplevel_win,
 	xkl_debug(150, "done\n");
 }
 
-/**
+/*
  * Checks the window and goes up
  */
 gboolean
@@ -152,7 +152,7 @@ xkl_engine_find_toplevel_window_bottom_to_top(XklEngine * engine,
 							     toplevel_win_out);
 }
 
-/**
+/*
  * Recursively finds "App window" (window with WM_STATE) for given window.
  * First, checks the window itself
  * Then, for first level of recursion, checks childen,
@@ -197,7 +197,7 @@ xkl_engine_find_toplevel_window(XklEngine * engine, Window win,
 		return FALSE;
 	}
 
-  /**
+  /*
    * Here we first check the children (in case win is just above some "App Window")
    * and then go upstairs
    */
@@ -228,7 +228,7 @@ xkl_engine_find_toplevel_window(XklEngine * engine, Window win,
 	return rv;
 }
 
-/**
+/*
  * Gets the state from the window property
  */
 gboolean
@@ -285,7 +285,7 @@ xkl_engine_get_toplevel_window_state(XklEngine * engine,
 	return ret;
 }
 
-/**
+/*
  * Deletes the state from the window properties
  */
 void
@@ -296,7 +296,7 @@ xkl_engine_remove_toplevel_window_state(XklEngine * engine,
 			xkl_engine_priv(engine, atoms)[XKLAVIER_STATE]);
 }
 
-/**
+/*
  * Saves the state into the window properties
  */
 void

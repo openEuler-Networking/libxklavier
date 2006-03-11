@@ -1,28 +1,24 @@
-/**
- * @file xkl_config_item.h
- */
-
 #ifndef __XKL_CONFIG_ITEM_H__
 #define __XKL_CONFIG_ITEM_H__
 
 #include <glib-object.h>
 
-/**
+/*
  * Maximum name length, including '\'0' character
  */
 #define XKL_MAX_CI_NAME_LENGTH 32
 
-/**
- * Maximum short description length, including '\\0' character.
- * Important: this length is in bytes, so for unicode (UTF-8 encoding in 
- * XML file) the actual maximum length can be smaller.
+/*
+ * Maximum short description length, including '\\0' character
+ * (this length is in bytes, so for UTF-8 encoding in 
+ * XML file the actual maximum length can be smaller)
  */
 #define XKL_MAX_CI_SHORT_DESC_LENGTH 10
 
-/**
- * Maximum description length, including '\\0' character.
- * Important: this length is in bytes, so for unicode (UTF-8 encoding in 
- * XML file) the actual maximum length can be smaller.
+/*
+ * Maximum description length, including '\\0' character
+ * (this length is in bytes, so for UTF-8 encoding in 
+ * XML file the actual maximum length can be smaller)
  */
 #define XKL_MAX_CI_DESC_LENGTH 192
 
@@ -78,42 +74,43 @@ extern "C" {
 		GObjectClass parent_class;
 	};
 /**
+ * xkl_config_item_get_type:
+ * 
  * Get type info for XklConfigItem
- * @return GType for XklConfigItem
+ *
+ * Returns: GType for XklConfigItem
  */
 	extern GType xkl_config_item_get_type(void);
 
 /**
+ * xkl_config_item_new:
+ *
  * Create new XklConfigItem
- * @return new instance
+ *
+ * Returns: new instance
  */
 	extern XklConfigItem *xkl_config_item_new(void);
 
 /**
- * @defgroup enum XKB configuration elements enumeration functions
- * @{
- */
-
-/**
+ * @item: the item from registry
+ * @data: anything which can be stored into the pointer
+ *
  * Callback type used for enumerating keyboard models, layouts, variants, options
- * @param item is the item from registry
- * @param data is anything which can be stored into the pointer
  */
 	typedef void (*ConfigItemProcessFunc) (const XklConfigItem * item,
 					       gpointer data);
 
 /**
+ * @item: the item from registry
+ * @allow_multiple_selection: a flag whether this group allows multiple selection
+ * @data: anything which can be stored into the pointer
+ *
  * Callback type used for enumerating keyboard option groups
- * @param item is the item from registry
- * @param allow_multiple_selection is a flag whether this group allows multiple selection
- * @param data is anything which can be stored into the pointer
  */
 	typedef void (*GroupProcessFunc) (const XklConfigItem * item,
 					  gboolean
 					  allow_multiple_selection,
 					  gpointer data);
-
-/** @} */
 
 #ifdef __cplusplus
 }

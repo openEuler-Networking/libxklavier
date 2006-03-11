@@ -1,7 +1,3 @@
-/**
- * @file xkl_engine.h
- */
-
 #ifndef __XKL_ENGINE_H__
 #define __XKL_ENGINE_H__
 
@@ -12,8 +8,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 	typedef struct _XklEngine XklEngine;
 	typedef struct _XklEnginePrivate XklEnginePrivate;
@@ -26,9 +20,6 @@ extern "C" {
 #define XKL_IS_ENGINE_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE ((obj), XKL_TYPE_ENGINE))
 #define XKL_ENGINE_GET_CLASS        (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_ENGINE, XklEngineClass))
 
-#endif				// DOXYGEN_SHOULD_SKIP_THIS
-
-
 	typedef enum {
 /**
  * Group was changed
@@ -40,27 +31,27 @@ extern "C" {
 		INDICATORS_CHANGED
 	} XklStateChange;
 
-/**
+/*
  * Backend allows to toggls indicators on/off
  */
 #define XKLF_CAN_TOGGLE_INDICATORS 0x01
 
-/**
+/*
  * Backend allows to write ascii representation of the configuration
  */
 #define XKLF_CAN_OUTPUT_CONFIG_AS_ASCII 0x02
 
-/**
+/*
  * Backend allows to write binary representation of the configuration
  */
 #define XKLF_CAN_OUTPUT_CONFIG_AS_BINARY 0x04
 
-/**
+/*
  * Backend supports multiple layouts
  */
 #define XKLF_MULTIPLE_LAYOUTS_SUPPORTED 0x08
 
-/**
+/*
  * Backend requires manual configuration, 
  * some daemon should do 
  * xkl_StartListen( XKLL_MANAGE_LAYOUTS );
@@ -101,190 +92,244 @@ extern "C" {
 		GObjectClass parent_class;
 
 /**
+ * XklEngine::config-notify:
+ * @engine: the object on which the signal is emitted
+ *
  * Used for notifying application of the XKB configuration change.
  */
 		void (*config_notify) (XklEngine * engine);
 
 /**
+ * XklEngine::new_window_notify:
+ * @engine: the object on which the signal is emitted
+ * @win: new window
+ * @parent: new window's parent
+ *
  * Used for notifying application of new window creation (actually, 
  * registration).
- * @param win is a new window
- * @param parent is a new window's parent
- * @return the initial group id for the window (-1 to use the default value)
+ *
+ * Returns: the initial group id for the window (-1 to use the default value)
  */
 		 gint(*new_window_notify) (XklEngine * engine, Window win,
 					   Window parent);
 /**
- * Used for notifying application of the window state change.
- * @param changeType is a mask of changes
- * @param group is a new group
- * @param restore is indicator of whether this state is restored from
+ * XklEngine::state_notify
+ * @engine: the object on which the signal is emitted
+ * @change_type: mask of changes
+ * @group: new group
+ * @restore: whether this state is restored from
  * saved state of set as new.
+ *
+ * Used for notifying application of the window state change.
  */
 		void (*state_notify) (XklEngine * engine,
-				      XklStateChange changeType,
+				      XklStateChange change_type,
 				      gint group, gboolean restore);
 
 	};
 
 
 /**
+ * xkl_engine_get_type:
+ *
  * Get type info for XklEngine
- * @return GType for XklEngine
+ *
+ * Returns: GType for XklEngine
  */
 	extern GType xkl_engine_get_type(void);
 
 
 /**
- * Get the instance of the XklEngine. Within a process, there is always once instance
- * @return the singleton instance
+ * xkl_engine_get_instance:
+ * @display: the X display used by the application
+ *
+ * Get the instance of the XklEngine. Within a process, there is always once instance.
+ *
+ * Returns: the singleton instance
  */
 	extern XklEngine *xkl_engine_get_instance(Display * display);
 
 
 /**
- * What kind of backend if used
- * @return some string id of the backend
+ * xkl_engine_get_backend_name:
+ * @engine: the engine
+ * 
+ * What kind of backend is used
+ *
+ * Returns: some string id of the backend
  */
 	extern const gchar *xkl_engine_get_backend_name(XklEngine *
 							engine);
 
 /**
+ * xkl_engine_get_features:
+ * @engine: the engine
+ *
  * Provides information regarding available backend features
  * (combination of XKLF_* constants)
- * @return ORed XKLF_* constants
+ *
+ * Returns: ORed XKLF_* constants
  */
 	extern guint xkl_engine_get_features(XklEngine * engine);
 
 /**
+ * xkl_engine_get_max_num_groups:
+ * @engine: the engine
+ *
  * Provides the information on maximum number of simultaneously supported 
  * groups (layouts)
- * @return maximum number of the groups in configuration, 
+ *
+ * Returns: maximum number of the groups in configuration, 
  *         0 if no restrictions.
  */
 	extern guint xkl_engine_get_max_num_groups(XklEngine * engine);
 
-/**
- * @defgroup xkbevents XKB event handling and management
- * @{
- */
-
-/**
+/*
  * The listener process should handle the per-window states 
  * and all the related activity
  */
 #define XKLL_MANAGE_WINDOW_STATES   0x01
 
-/**
+/*
  * Just track the state and pass it to the application above.
  */
 #define XKLL_TRACK_KEYBOARD_STATE 0x02
 
-/**
+/*
  * The listener process should help backend to maintain the configuration
  * (manually switch layouts etc).
  */
 #define XKLL_MANAGE_LAYOUTS  0x04
 
 /**
+ * xkl_engine_start_listen:
+ * @engine: the engine
+ * @flags: any combination of XKLL_* constants
+ *
  * Starts listening for XKB-related events
- * @param what any combination of XKLL_* constants
- * @return 0
+ *
+ * Returns: 0
  */
 	extern gint xkl_engine_start_listen(XklEngine * engine,
-					    guint what);
+					    guint flags);
 
 /**
+ * xkl_engine_stop_listen:
+ * @engine: the engine
+ *
  * Stops listening for XKB-related events
- * @return 0
+ * Returns: 0
  */
 	extern gint xkl_engine_stop_listen(XklEngine * engine);
 
 /**
+ * xkl_engine_pause_listen:
+ * @engine: the engine
+ *
  * Temporary pauses listening for XKB-related events
- * @return 0
+ *
+ * Returns: 0
  */
 	extern gint xkl_engine_pause_listen(XklEngine * engine);
 
 /**
+ * xkl_engine_resume_listen:
+ * @engine: the engine
+ *
  * Resumes listening for XKB-related events
- * @return 0
+ *
+ * Returns: 0
  */
 	extern gint xkl_engine_resume_listen(XklEngine * engine);
 
 /**
+ * xkl_engine_grab_key:
+ * @engine: the engine
+ * @keycode: keycode
+ * @modifiers: bitmask of modifiers
+ *
  * Grabs some key
- * @param keycode is a keycode
- * @param modifiers is a bitmask of modifiers
- * @return True on success
+ *
+ * Returns: TRUE on success
  */
 	extern gboolean xkl_engine_grab_key(XklEngine * engine,
 					    gint keycode, guint modifiers);
 
 /**
+ * xkl_engine_ungrab_key:
+ * @engine: the engine
+ * @keycode: keycode
+ * @modifiers: bitmask of modifiers
+ *
  * Ungrabs some key
- * @param keycode is a keycode
- * @param modifiers is a bitmask of modifiers
- * @return True on success
+ *
+ * Returns: TRUE on success
  */
 	extern gboolean xkl_engine_ungrab_key(XklEngine * engine,
 					      gint keycode,
 					      guint modifiers);
 
 /**
+ * xkl_engine_filter_events:
+ * @engine: the engine
+ * @evt: delivered X event
+ *
  * Processes X events. Should be included into the main event cycle of an
  * application. One of the most important functions. 
- * @param evt is delivered X event
- * @return 0 if the event it processed - 1 otherwise
- * @see xkl_StartListen
+ *
+ * Returns: 0 if the event it processed - 1 otherwise
  */
 	extern gint xkl_engine_filter_events(XklEngine * engine,
 					     XEvent * evt);
 
 /**
+ * xkl_engine_allow_one_switch_to_secondary_group:
+ * @engine: the engine
+ *
  * Allows to switch (once) to the secondary group
+ *
  */
 	extern void
 	 xkl_engine_allow_one_switch_to_secondary_group(XklEngine *
 							engine);
 
-/** @} */
-
 /**
- * @defgroup currents Current state of the library
- * @{
- */
-
-/**
- * @return currently focused window
+ * xkl_engine_get_current_window:
+ * @engine: the engine
+ *
+ * Returns: currently focused window
  */
 	extern Window xkl_engine_get_current_window(XklEngine * engine);
 
 /**
- * @return current state of the keyboard (in XKB terms). 
+ * xkl_engine_get_current_state:
+ * @engine: the engine
+ *
+ * Returns: current state of the keyboard.
  * Returned value is a statically allocated buffer, should not be freed.
  */
 	extern XklState *xkl_engine_get_current_state(XklEngine * engine);
 
-/** @} */
-
 /**
- * @defgroup wininfo Per-window information
- * @{
- */
-
-/**
- * @return the window title of some window or NULL. 
+ * xkl_engine_get_window_title:
+ * @engine: the engine
+ * @win: X window
+ *
+ * Returns: the window title of some window or NULL. 
  * If not NULL, it should be freed with XFree
  */
 	extern gchar *xkl_engine_get_window_title(XklEngine * engine,
-						  Window w);
+						  Window win);
 
 /** 
+ * xkl_engine_get_state:
+ * @engine: the engine
+ * @win: window to query
+ * @state_out: structure to store the state
+ * 
  * Finds the state for a given window (for its "App window").
- * @param win is a target window
- * @param state_out is a structure to store the state
- * @return True on success, otherwise False 
+ *
+ * Returns: TRUE on success, otherwise FALSE 
  * (the error message can be obtained using xkl_GetLastError).
  */
 	extern gboolean xkl_engine_get_state(XklEngine * engine,
@@ -292,26 +337,34 @@ extern "C" {
 					     XklState * state_out);
 
 /**
+ * xkl_engine_delete_state:
+ * @engine: the engine
+ * @win: target window
+ *
  * Drops the state of a given window (of its "App window").
- * @param win is a target window
  */
 	extern void xkl_engine_delete_state(XklEngine * engine,
 					    Window win);
 
 /** 
+ * xkl_engine_save_state:
+ * @engine: the engine
+ * @win: target window
+ * @state: new state of the window
+ *
  * Stores ths state for a given window
- * @param win is a target window
- * @param state is a new state of the window
  */
 	extern void xkl_engine_save_state(XklEngine * engine, Window win,
 					  XklState * state);
 
 /**
+ * xkl_engine_set_window_transparent:
+ * @engine: the engine
+ * @win: window do set the flag for.
+ * @transparent: if true, the windows is transparent.
+ *
  * Sets the "transparent" flag. It means focus switching onto 
  * this window will never change the state.
- * @param win is the window do set the flag for.
- * @param transparent - if true, the windows is transparent.
- * @see xkl_IsTranspatent
  */
 	extern void xkl_engine_set_window_transparent(XklEngine * engine,
 						      Window win,
@@ -319,19 +372,25 @@ extern "C" {
 						      transparent);
 
 /**
- * Returns "transparent" flag. 
- * @param win is the window to get the transparent flag from.
- * @see xkl_SetTranspatent
+ * xkl_engine_is_window_transparent:
+ * @engine: the engine
+ * @win: window to get the transparent flag from.
+ *
+ * Returns: TRUE if the window is "transparent"
  */
 	extern gboolean xkl_engine_is_window_transparent(XklEngine *
 							 engine,
 							 Window win);
 
 /**
+ * xkl_engine_is_window_from_same_toplevel_window:
+ * @engine: the engine
+ * @win1: first window
+ * @win2: second window
+ *
  * Checks whether 2 windows have the same topmost window
- * @param win1 is first window
- * @param win2 is second window
- * @return True is windows are in the same application
+ *
+ * Returns: TRUE is windows are in the same application
  */
 	extern gboolean
 	    xkl_engine_is_window_from_same_toplevel_window(XklEngine *
@@ -339,21 +398,20 @@ extern "C" {
 							   Window win1,
 							   Window win2);
 
-/** @} */
-
 /**
- * @defgroup xkbinfo Various XKB configuration info
- * @{
- */
-
-/**
- * @return the total number of groups in the current XKB configuration 
+ * xkl_engine_get_num_groups:
+ * @engine: the engine
+ *
+ * Returns: the total number of groups in the current configuration 
  * (keyboard)
  */
 	extern guint xkl_engine_get_num_groups(XklEngine * engine);
 
 /**
- * @return the array of group names for the current XKB configuration 
+ * xkl_engine_get_groups_names:
+ * @engine: the engine
+ *
+ * Returns: the array of group names for the current XKB configuration 
  * (keyboard).
  * This array is static, should not be freed
  */
@@ -361,116 +419,137 @@ extern "C" {
 							 engine);
 
 /**
- * @return the array of indicator names for the current XKB configuration 
+ * xkl_engine_get_indicators_names:
+ * @engine: the engine
+ *
+ * Returns: the array of indicator names for the current XKB configuration 
  * (keyboard).
  * This array is static, should not be freed
  */
 	extern const gchar **xkl_engine_get_indicators_names(XklEngine *
 							     engine);
 
-/** @} */
-
 /**
- * @defgroup xkbgroup XKB group calculation and change
- * @{
- */
-
-/**
+ * xkl_engine_get_next_group:
+ * @engine: the engine
+ *
  * Calculates next group id. Does not change the state of anything.
- * @return next group id
+ *
+ * Returns: next group id
  */
 	extern gint xkl_engine_get_next_group(XklEngine * engine);
 
 /**
+ * xkl_engine_get_prev_group:
+ * @engine: the engine
+ *
  * Calculates prev group id. Does not change the state of anything.
- * @return prev group id
+ *
+ * Returns: prev group id
  */
 	extern gint xkl_engine_get_prev_group(XklEngine * engine);
 
 /**
- * @return saved group id of the current window. 
- * Does not change the state of anything.
+ * xkl_engine_get_current_window_group:
+ * @engine: the engine
+ *
+ * Returns: saved group id of the current window. 
  */
 	extern gint xkl_engine_get_current_window_group(XklEngine *
 							engine);
 
 /**
+ * xkl_engine_lock_group:
+ * @engine: the engine
+ * @group: group number for locking
+ *
  * Locks the group. Can be used after xkl_GetXXXGroup functions
- * @param group is a group number for locking
- * @see xkl_GetNextGroup
- * @see xkl_GetPrevGroup
- * @see xkl_GetRestoreGroup
  */
 	extern void xkl_engine_lock_group(XklEngine * engine, gint group);
 
-/** @} */
-
 /**
- * @defgroup settings Settings for event processing
- * @{
- */
-
-/**
+ * xkl_engine_set_group_per_toplevel_window:
+ * @engine: the engine
+ * @is_global: new parameter value
+ *
  * Sets the configuration parameter: group per application
- * @param isGlobal is a new parameter value
  */
 	extern void xkl_engine_set_group_per_toplevel_window(XklEngine *
 							     engine,
 							     gboolean
-							     isGlobal);
+							     is_global);
 
 /**
- *  @return the value of the parameter: group per application
+ * xkl_engine_is_group_per_toplevel_window:
+ * @engine: the engine
+ * 
+ * Returns: the value of the parameter: group per application
  */
 	extern gboolean xkl_engine_is_group_per_toplevel_window(XklEngine *
 								engine);
 
 /**
+ * xkl_engine_set_indicators_handling:
+ * @engine: the engine
+ * @whether_handle: new parameter value
+ *
  * Sets the configuration parameter: perform indicators handling
- * @param whetherHandle is a new parameter value
  */
 	extern void xkl_engine_set_indicators_handling(XklEngine * engine,
 						       gboolean
-						       whetherHandle);
+						       whether_handle);
 
 /**
- * @return the value of the parameter: perform indicator handling
+ * xkl_engine_get_indicators_handling:
+ * @engine: the engine
+ *
+ * Returns: the value of the parameter: perform indicator handling
  */
 	extern gboolean xkl_engine_get_indicators_handling(XklEngine *
 							   engine);
 
 /**
+ * xkl_engine_set_secondary_groups_mask:
+ * @engine: the engine
+ * @mask: new group mask
+ *
  * Sets the secondary groups (one bit per group). 
  * Secondary groups require explicit "allowance" for switching
- * @param mask is a new group mask
- * @see xkl_allow_one_switch_to_secondary_group
  */
 	extern void xkl_engine_set_secondary_groups_mask(XklEngine *
 							 engine,
 							 guint mask);
 
 /**
- * @return the secondary group mask
+ * xkl_engine_get_secondary_groups_mask:
+ * @engine: the engine
+ *
+ * Returns: the secondary group mask
  */
 	extern guint xkl_engine_get_secondary_groups_mask(XklEngine *
 							  engine);
 
 /**
+ * xkl_engine_group_set_default:
+ * @engine: the engine
+ * @group: default group
+ *
  * Configures the default group set on window creation.
  * If -1, no default group is used
- * @param group the default group
  */
 	extern void xkl_engine_group_set_default(XklEngine * engine,
 						 gint group);
 
 /**
+ * xkl_engine_group_get_default:
+ * @engine: the engine
+ *
  * Returns the default group set on window creation
  * If -1, no default group is used
- * @return the default group
+ *
+ * Returns: the default group
  */
 	extern gint xkl_engine_group_get_default(XklEngine * engine);
-
-/** @} */
 
 #ifdef __cplusplus
 }

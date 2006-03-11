@@ -92,7 +92,7 @@ extern void xkl_xkb_term(XklEngine * engine);
 
 #else
 
-/**
+/*
  * VERY VERY BAD STYLE, some kind of 'protected' methods - 
  * but some programs may want to hook into them.
  */

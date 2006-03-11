@@ -133,6 +133,9 @@ do
       automake --add-missing --gnu $am_opt
       echo "Running autoconf ..."
       autoconf
+
+      echo "Running gtkdocize ..."
+      gtkdocize || exit 1
     )
   fi
 done

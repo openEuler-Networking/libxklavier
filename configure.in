@@ -25,6 +25,7 @@ dnl AC_ARG_PROGRAM
 AM_PROG_LIBTOOL
 AM_ICONV
 
+GTK_DOC_CHECK(1.0)
 
 dnl From Bruno Haible.
 dnl From gnoome-vfs
@@ -101,12 +102,6 @@ AC_SUBST(xkbheaders_present)
 
 CFLAGS="$save_CFLAGS"
 
-AC_ARG_ENABLE(doxygen, 
-[  --enable-doxygen       Build doxygen documentation],
-, enable_doxygen=no)
-
-AC_SUBST(DO_DOXYGEN,"${enable_doxygen}")
-
 AC_ARG_ENABLE(xkb-support, 
 [  --enable-xkb-support       Enable XKB support],
 , enable_xkb_support=yes)
@@ -147,9 +142,8 @@ AC_OUTPUT([
 Makefile
 libxklavier/Makefile
 libxklavier.spec
-Doxyfile
 doc/Makefile
-doc/html/Makefile
+doc/reference/Makefile
 tests/Makefile
 libxklavier.pc
 ])

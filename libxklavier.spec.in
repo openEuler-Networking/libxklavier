@@ -5,7 +5,7 @@ Release:	1
 License:	LGPL
 Group:		Development/Libraries
 Url: http://gswitchit.sourceforge.net/
-BuildRequires: doxygen
+BuildRequires: gtk-doc
 Source: http://gswitchit.sourceforge.net/%{name}-%{version}.tar.gz
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
@@ -27,8 +27,7 @@ Libraries, include files, etc you can use to develop libxklavier applications.
 %build
 
 CONFIG_FLAGS="--prefix=%{_prefix} --libdir=%{_libdir} \
-  --includedir=%{_includedir} --bindir=%{_bindir} \
-  --disable-doxygen"
+  --includedir=%{_includedir} --bindir=%{_bindir}"
 
 if [ ! -f configure ]; then
     CFLAGS="$RPM_OPT_FLAGS" ./autogen.sh $CONFIG_FLAGS

@@ -8,7 +8,7 @@
 #include "xklavier_private.h"
 #include "xklavier_private_xkb.h"
 
-/**
+/*
  * XKB event handler
  */
 gint
@@ -30,7 +30,7 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 	xkl_debug(150, "Xkb event detected\n");
 
 	switch (kev->any.xkb_type) {
-    /**
+    /*
      * Group is changed!
      */
 	case XkbStateNotify:
@@ -63,7 +63,7 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 
 		break;
 
-    /**
+    /*
      * Indicators are changed!
      */
 	case XkbIndicatorStateNotify:
@@ -85,7 +85,7 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 						      0, inds, TRUE);
 		break;
 
-    /**
+    /*
      * The configuration is changed!
      */
 	case XkbIndicatorMapNotify:
@@ -105,7 +105,7 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 					  "XKB event: XkbNewKeyboardNotify");
 		break;
 
-    /**
+    /*
      * ...Not interested...
      */
 	default:

@@ -1,7 +1,3 @@
-/**
- * @file xklavier.h
- */
-
 #ifndef __XKLAVIER_H__
 #define __XKLAVIER_H__
 
@@ -21,41 +17,38 @@ extern "C" {
 #endif
 
 /**
- * @defgroup debugerr Debugging, error processing 
- * @{
- */
-
-/**
- * @return the text message (statically allocated) of the last error
+ * xkl_get_last_error:
+ *
+ * Returns: the text message (statically allocated) of the last error
  */
 	extern const gchar *xkl_get_last_error(void);
 
 /**
- * Output (optionally) some debug info
- * @param file is the name of the source file. 
+ * _xkl_debug:
+ * @file: the name of the source file. 
  * Preprocessor symbol__FILE__ should be used here
- * @param function is a name of the function
+ * @function: name of the function
  * Preprocessor symbol__func__ should be used here
- * @param level is a level of the message
- * @param format is a format (like in printf)
- * @see xkl_debug
+ * @level: level of the message
+ * @format: is a format (like in printf)
+ *
+ * Output (optionally) some debug info
  */
 	extern void _xkl_debug(const gchar file[], const gchar function[],
 			       gint level, const gchar format[], ...);
 
 /**
+ * XklLogAppender:
+ * @file: name of the source file. 
+ * Preprocessor symbol__FILE__ should be used here
+ * @function: name of the function
+ * Preprocessor symbol__func__ should be used here
+ * @level: level of the message
+ * @format: format (like in printf)
+ * @args: list of parameters
+ *
  * Custom log output method for _xkl_debug. This appender is NOT called if the
  * level of the message is greater than currently set debug level.
- *
- * @param file is the name of the source file. 
- * Preprocessor symbol__FILE__ should be used here
- * @param function is a name of the function
- * Preprocessor symbol__func__ should be used here
- * @param level is a level of the message
- * @param format is a format (like in printf)
- * @param args is the list of parameters
- * @see _xkl_debug
- * @see xkl_set_debug_level
  */
 	typedef void (*XklLogAppender) (const gchar file[],
 					const gchar function[],
@@ -64,15 +57,16 @@ extern "C" {
 					va_list args);
 
 /**
- * Default log output method. Sends everything to stdout.
- *
- * @param file is the name of the source file. 
+ * xkl_default_log_appender:
+ * @file: name of the source file. 
  * Preprocessor symbol__FILE__ should be used here
- * @param function is a name of the function
+ * @function: name of the function
  * Preprocessor symbol__func__ should be used here
- * @param level is a level of the message
- * @param format is a format (like in printf)
- * @param args is the list of parameters
+ * @level: level of the message
+ * @format: format (like in printf)
+ * @args: list of parameters
+ *
+ * Default log output method. Sends everything to stdout.
  */
 	extern void xkl_default_log_appender(const gchar file[],
 					     const gchar function[],
@@ -81,45 +75,45 @@ extern "C" {
 					     va_list args);
 
 /**
+ * xkl_set_log_appender:
+ * @fun: new log appender
+ *
  * Installs the custom log appender.function
- * @param fun is the new log appender
  */
 	extern void xkl_set_log_appender(XklLogAppender fun);
 
 /**
+ * xkl_set_debug_level:
+ * @level: new debug level
+ *
  * Sets maximum debug level. 
  * Message of the level more than the one set here - will be ignored
- * @param level is a new debug level
  */
 	extern void xkl_set_debug_level(gint level);
 
-/* Just to make doxygen happy - two block with/without @param format */
-#if defined(G_HAVE_GNUC_VARARGS)
-/**
- * Output (optionally) some debug info
- * @param level is a level of the message
- * @param format is a format (like in printf)
- * @see _xkl_Debug
- */
-#else
-/**
- * Output (optionally) some debug info
- * @param level is a level of the message
- * @see _xkl_Debug
- */
-#endif
 #ifdef G_HAVE_ISO_VARARGS
+/**
+ * xkl_debug:
+ * @level: level of the message
+ *
+ * Output (optionally) some debug info
+ */
 #define xkl_debug( level, ... ) \
   _xkl_debug( __FILE__, __func__, level, __VA_ARGS__ )
 #elif defined(G_HAVE_GNUC_VARARGS)
+/**
+ * xkl_debug:
+ * @level: level of the message
+ * @format: format (like in printf)
+ *
+ * Output (optionally) some debug info
+ */
 #define xkl_debug( level, format, args... ) \
    _xkl_debug( __FILE__, __func__, level, format, ## args )
 #else
 #define xkl_debug( level, ... ) \
   _xkl_debug( __FILE__, __func__, level, __VA_ARGS__ )
 #endif
-
-/** @} */
 
 #ifdef __cplusplus
 }

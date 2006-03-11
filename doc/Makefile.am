@@ -1,1 +1,1 @@
-SUBDIRS=html
+SUBDIRS=reference
