@@ -110,7 +110,6 @@ main(int argc, char *argv[])
 
 		g_object_unref(G_OBJECT(current_config));
 
-		xkl_config_registry_free(config);
 		g_object_unref(G_OBJECT(config));
 		xkl_debug(0, "Xklavier registry freed\n");
 		xkl_debug(0, "Xklavier terminating\n");

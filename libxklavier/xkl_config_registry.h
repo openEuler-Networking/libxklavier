@@ -63,19 +63,6 @@ extern "C" {
 	    * xkl_config_registry_get_instance(XklEngine * engine);
 
 /**
- * xkl_config_registry_load_from_file:
- * @config: the config registry
- * @file_name: file to load
- *
- * Loads XML configuration registry
- *
- * Returns: TRUE on success
- */
-	extern gboolean
-	    xkl_config_registry_load_from_file(XklConfigRegistry * config,
-					       const gchar * file_name);
-
-/**
  * xkl_config_registry_load:
  * @config: the config registry
  *
@@ -86,14 +73,6 @@ extern "C" {
  */
 	extern gboolean xkl_config_registry_load(XklConfigRegistry *
 						 config);
-
-/**
- * xkl_config_registry_free:
- * @config: the config registry
- *
- * Frees XML configuration registry
- */
-	extern void xkl_config_registry_free(XklConfigRegistry * config);
 
 /**
  * xkl_config_registry_foreach_model:
@@ -150,8 +129,8 @@ extern "C" {
 	extern void
 	 xkl_config_registry_foreach_option_group(XklConfigRegistry *
 						  config,
-						  GroupProcessFunc func,
-						  gpointer data);
+						  ConfigItemProcessFunc
+						  func, gpointer data);
 
 /**
  * xkl_config_registry_foreach_option:
@@ -225,8 +204,6 @@ extern "C" {
  * @config: the config registry
  * @item: pointer to a XklConfigItem containing the name of the
  * keyboard option group. On successfull return, the descriptions are filled.
- * @allow_multiple_selection: pointer to some gboolean variable to fill 
- * the corresponding attribute of XML element "group".
  *
  * Loads a keyboard option group information from the XML configuration 
  * registry.
@@ -236,9 +213,7 @@ extern "C" {
 	extern gboolean
 	    xkl_config_registry_find_option_group(XklConfigRegistry *
 						  config,
-						  XklConfigItem * item,
-						  gboolean *
-						  allow_multiple_selection);
+						  XklConfigItem * item);
 
 /**
  * xkl_config_registry_find_option:

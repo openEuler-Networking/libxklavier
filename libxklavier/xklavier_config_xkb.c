@@ -398,24 +398,22 @@ xkl_xkb_multiple_layouts_supported(XklEngine * engine)
 	static int support_state = UNCHECKED;
 
 	if (support_state == UNCHECKED) {
-		XklConfigRec data;
-		char *layouts[] = { "us", "de", NULL };
-		char *variants[] = { NULL, NULL, NULL };
+		XklConfigRec *data = xkl_config_rec_new();
 #ifdef XKB_HEADERS_PRESENT
 		XkbComponentNamesRec component_names;
 		memset(&component_names, 0, sizeof(component_names));
 #endif
 
-		data.model = "pc105";
-		data.layouts = layouts;
-		data.variants = variants;
-		data.options = NULL;
+		data->model = g_strdup("pc105");
+		data->layouts = g_strsplit_set("us:de", ":", -1);
+		data->variants = g_strsplit_set(":", ":", -1);
+		data->options = NULL;
 
 		xkl_debug(100, "!!! Checking multiple layouts support\n");
 		support_state = NON_SUPPORTED;
 #ifdef XKB_HEADERS_PRESENT
 		if (xkl_xkb_config_native_prepare
-		    (engine, &data, &component_names)) {
+		    (engine, data, &component_names)) {
 			xkl_debug(100,
 				  "!!! Multiple layouts ARE supported\n");
 			support_state = SUPPORTED;
@@ -426,6 +424,7 @@ xkl_xkb_multiple_layouts_supported(XklEngine * engine)
 				  "!!! Multiple layouts ARE NOT supported\n");
 		}
 #endif
+		g_object_unref(G_OBJECT(data));
 	}
 	return support_state == SUPPORTED;
 }

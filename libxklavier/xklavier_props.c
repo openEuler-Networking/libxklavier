@@ -189,23 +189,22 @@ xkl_backup_names_prop(XklEngine * engine)
 {
 	gboolean rv = TRUE;
 	gchar *rf = NULL;
-	XklConfigRec data;
+	XklConfigRec *data = xkl_config_rec_new();
 	gboolean cgp = FALSE;
 
-	xkl_config_rec_init(&data);
 	if (xkl_config_rec_get_from_root_window_property
-	    (&data, xkl_engine_priv(engine, backup_config_atom), NULL,
+	    (data, xkl_engine_priv(engine, backup_config_atom), NULL,
 	     engine)) {
-		xkl_config_rec_destroy(&data);
+		g_object_unref(G_OBJECT(data));
 		return TRUE;
 	}
 	/* "backup" property is not defined */
-	xkl_config_rec_reset(&data);
-	cgp = xkl_config_rec_get_full_from_server(&rf, &data, engine);
+	xkl_config_rec_reset(data);
+	cgp = xkl_config_rec_get_full_from_server(&rf, data, engine);
 
 	if (cgp) {
 		if (!xkl_config_rec_set_to_root_window_property
-		    (&data, xkl_engine_priv(engine, backup_config_atom),
+		    (data, xkl_engine_priv(engine, backup_config_atom),
 		     rf, engine)) {
 			xkl_debug(150,
 				  "Could not backup the configuration");
@@ -218,7 +217,7 @@ xkl_backup_names_prop(XklEngine * engine)
 			  "Could not get the configuration for backup");
 		rv = FALSE;
 	}
-	xkl_config_rec_destroy(&data);
+	g_object_unref(G_OBJECT(data));
 	return rv;
 }
 
@@ -227,23 +226,22 @@ xkl_restore_names_prop(XklEngine * engine)
 {
 	gboolean rv = TRUE;
 	gchar *rf = NULL;
-	XklConfigRec data;
+	XklConfigRec *data = xkl_config_rec_new();
 
-	xkl_config_rec_init(&data);
 	if (!xkl_config_rec_get_from_root_window_property
-	    (&data, xkl_engine_priv(engine, backup_config_atom), NULL,
+	    (data, xkl_engine_priv(engine, backup_config_atom), NULL,
 	     engine)) {
-		xkl_config_rec_destroy(&data);
+		g_object_unref(G_OBJECT(data));
 		return FALSE;
 	}
 
 	if (!xkl_config_rec_set_to_root_window_property
-	    (&data, xkl_engine_priv(engine, base_config_atom), rf,
+	    (data, xkl_engine_priv(engine, base_config_atom), rf,
 	     engine)) {
 		xkl_debug(150, "Could not backup the configuration");
 		rv = FALSE;
 	}
-	xkl_config_rec_destroy(&data);
+	g_object_unref(G_OBJECT(data));
 	return rv;
 }
 

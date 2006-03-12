@@ -364,6 +364,13 @@ xkl_engine_is_one_switch_to_secondary_group_allowed(XklEngine * engine);
 extern void xkl_engine_one_switch_to_secondary_group_performed(XklEngine *
 							       engine);
 
+extern gboolean xkl_config_registry_load_from_file(XklConfigRegistry *
+						   config,
+						   const gchar *
+						   file_name);
+
+extern void xkl_config_registry_free(XklConfigRegistry * config);
+
 #define XKLAVIER_STATE_PROP_LENGTH 2
 
 /* taken from XFree86 maprules.c */

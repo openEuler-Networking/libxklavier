@@ -61,6 +61,11 @@ extern "C" {
 	};
 
 /**
+ * Extra property for the XklConfigItem, defining whether the group allows multiple selection
+ */
+#define XCI_PROP_ALLOW_MULTIPLE_SELECTION "allowMultipleSelection"
+
+/**
  * The XklConfigItem class, derived from GObject
  */
 	struct _XklConfigItemClass {
@@ -96,19 +101,6 @@ extern "C" {
  */
 	typedef void (*ConfigItemProcessFunc) (const XklConfigItem * item,
 					       gpointer data);
-
-/**
- * GroupProcessFunc:
- * @item: the item from registry
- * @allow_multiple_selection: a flag whether this group allows multiple selection
- * @data: anything which can be stored into the pointer
- *
- * Callback type used for enumerating keyboard option groups
- */
-	typedef void (*GroupProcessFunc) (const XklConfigItem * item,
-					  gboolean
-					  allow_multiple_selection,
-					  gpointer data);
 
 #ifdef __cplusplus
 }
