@@ -92,16 +92,6 @@ extern "C" {
  */
 	extern XklConfigItem *xkl_config_item_new(void);
 
-/**
- * ConfigItemProcessFunc:
- * @item: the item from registry
- * @data: anything which can be stored into the pointer
- *
- * Callback type used for enumerating keyboard models, layouts, variants, options
- */
-	typedef void (*ConfigItemProcessFunc) (const XklConfigItem * item,
-					       gpointer data);
-
 #ifdef __cplusplus
 }
 #endif				/* __cplusplus */

@@ -166,7 +166,7 @@ xkl_config_registry_foreach_in_nodeset(XklConfigRegistry * config,
 		XklConfigItem *ci = xkl_config_item_new();
 		for (i = nodes->nodeNr; --i >= 0;) {
 			if (xkl_read_config_item(*pnode, ci))
-				func(ci, data);
+				func(config, ci, data);
 
 			pnode++;
 		}
@@ -439,7 +439,7 @@ xkl_config_registry_foreach_option_group(XklConfigRegistry * config,
 							  (allow_multisel));
 				}
 
-				func(ci, data);
+				func(config, ci, data);
 			}
 
 			pnode++;

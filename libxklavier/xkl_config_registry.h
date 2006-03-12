@@ -75,6 +75,18 @@ extern "C" {
 						 config);
 
 /**
+ * ConfigItemProcessFunc:
+ * @config: the config registry
+ * @item: the item from registry
+ * @data: anything which can be stored into the pointer
+ *
+ * Callback type used for enumerating keyboard models, layouts, variants, options
+ */
+	typedef void (*ConfigItemProcessFunc) (XklConfigRegistry * config,
+					       const XklConfigItem * item,
+					       gpointer data);
+
+/**
  * xkl_config_registry_foreach_model:
  * @config: the config registry
  * @func: callback to call for every model
