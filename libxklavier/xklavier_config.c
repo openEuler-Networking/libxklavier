@@ -1,721 +1,593 @@
 #include <errno.h>
-#include <locale.h>
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
+#include <locale.h>
 #include <sys/stat.h>
+
+#include <libxml/xpath.h>
 
 #include "config.h"
 
 #include "xklavier_private.h"
 
-static GObjectClass *parent_class = NULL;
-
-static XklConfigRegistry *the_config = NULL;
-
-static xmlXPathCompExprPtr models_xpath;
-static xmlXPathCompExprPtr layouts_xpath;
-static xmlXPathCompExprPtr option_groups_xpath;
-
-enum {
-	PROP_0,
-	PROP_ENGINE,
-};
-
-#define xkl_config_registry_is_initialized(config) \
-  ( xkl_config_registry_priv(config,xpath_context) != NULL )
-
-static xmlChar *
-xkl_node_get_xml_lang_attr(xmlNodePtr nptr)
+typedef struct _XklConfigRegistry
 {
-	if (nptr->properties != NULL &&
-	    !g_ascii_strcasecmp("lang", (char *) nptr->properties[0].name)
-	    && nptr->properties[0].ns != NULL
-	    && !g_ascii_strcasecmp("xml",
-				   (char *) nptr->properties[0].ns->prefix)
-	    && nptr->properties[0].children != NULL)
-		return nptr->properties[0].children->content;
-	else
-		return NULL;
+  xmlDocPtr doc;
+  xmlXPathContextPtr xpathContext;
+}
+XklConfigRegistry;
+
+static XklConfigRegistry theRegistry;
+
+static xmlXPathCompExprPtr modelsXPath;
+static xmlXPathCompExprPtr layoutsXPath;
+static xmlXPathCompExprPtr optionGroupsXPath;
+
+#define _XklConfigRegistryIsInitialized() \
+  ( theRegistry.xpathContext != NULL )
+
+static xmlChar *_XklNodeGetXmlLangAttr( xmlNodePtr nptr )
+{
+  if( nptr->properties != NULL &&
+      !strcmp( "lang", (char *)nptr->properties[0].name ) &&
+      nptr->properties[0].ns != NULL &&
+      !strcmp( "xml", (char *)nptr->properties[0].ns->prefix ) &&
+      nptr->properties[0].children != NULL )
+    return nptr->properties[0].children->content;
+  else
+    return NULL;
 }
 
-static gboolean
-xkl_read_config_item(xmlNodePtr iptr, XklConfigItem * item)
+static Bool _XklReadConfigItem( xmlNodePtr iptr, XklConfigItemPtr pci )
 {
-	xmlNodePtr name_element, nptr, ptr;
-	xmlNodePtr desc_element = NULL, short_desc_element = NULL;
-	xmlNodePtr nt_desc_element = NULL, nt_short_desc_element = NULL;
+  xmlNodePtr nameElement, descElement = NULL, ntDescElement =
+    NULL, nptr, ptr, shortDescElement = NULL, ntShortDescElement = NULL;
+  int maxDescPriority = -1;
+  int maxShortDescPriority = -1;
 
-	gint max_desc_priority = -1;
-	gint max_short_desc_priority = -1;
+  *pci->name = 0;
+  *pci->shortDescription = 0;
+  *pci->description = 0;
+  if( iptr->type != XML_ELEMENT_NODE )
+    return False;
+  ptr = iptr->children;
+  while( ptr != NULL )
+  {
+    switch ( ptr->type )
+    {
+      case XML_ELEMENT_NODE:
+        if( !strcmp( (char *)ptr->name, "configItem" ) )
+          break;
+        return False;
+      case XML_TEXT_NODE:
+      case XML_COMMENT_NODE:
+        ptr = ptr->next;
+        continue;
+      default:
+        return False;
+    }
+    break;
+  }
+  if( ptr == NULL )
+    return False;
 
-	*item->name = 0;
-	*item->short_description = 0;
-	*item->description = 0;
-	if (iptr->type != XML_ELEMENT_NODE)
-		return FALSE;
-	ptr = iptr->children;
-	while (ptr != NULL) {
-		switch (ptr->type) {
-		case XML_ELEMENT_NODE:
-			if (!g_ascii_strcasecmp((char *) ptr->name,
-						"configItem"))
-				break;
-			return FALSE;
-		case XML_TEXT_NODE:
-		case XML_COMMENT_NODE:
-			ptr = ptr->next;
-			continue;
-		default:
-			return FALSE;
-		}
-		break;
-	}
-	if (ptr == NULL)
-		return FALSE;
+  nptr = ptr->children;
 
-	nptr = ptr->children;
+  if( nptr->type == XML_TEXT_NODE )
+    nptr = nptr->next;
+  nameElement = nptr;
+  nptr = nptr->next;
 
-	if (nptr->type == XML_TEXT_NODE)
-		nptr = nptr->next;
-	name_element = nptr;
-	nptr = nptr->next;
+  while( nptr != NULL )
+  {
+    if( nptr->type != XML_TEXT_NODE )
+    {
+      xmlChar *lang = _XklNodeGetXmlLangAttr( nptr );
 
-	while (nptr != NULL) {
-		char *node_name = (char *) nptr->name;
-		if (nptr->type != XML_TEXT_NODE) {
-			xmlChar *lang = xkl_node_get_xml_lang_attr(nptr);
+      if( lang != NULL )
+      {
+        int priority = _XklGetLanguagePriority( (char *)lang );
+        if( !strcmp( (char *)nptr->name, "description" ) && ( priority > maxDescPriority ) )    /* higher priority */
+        {
+          descElement = nptr;
+          maxDescPriority = priority;
+        } else if( !strcmp( (char *)nptr->name, "shortDescription" ) && ( priority > maxShortDescPriority ) )   /* higher priority */
+        {
+          shortDescElement = nptr;
+          maxShortDescPriority = priority;
+        }
+      } else
+      {
+        if( !strcmp( (char *)nptr->name, "description" ) )
+          ntDescElement = nptr;
+        else if( !strcmp( (char *)nptr->name, "shortDescription" ) )
+          ntShortDescElement = nptr;
+      }
+    }
+    nptr = nptr->next;
+  }
 
-			if (lang != NULL) {
-				gint priority =
-				    xkl_get_language_priority((gchar *)
-							      lang);
+  /* if no language-specific description found - use the ones without lang */
+  if( descElement == NULL )
+    descElement = ntDescElement;
 
-				/*
-				 * Find desc/shortdesc with highest priority
-				 */
-				if (!g_ascii_strcasecmp(node_name,
-							"description") &&
-				    (priority > max_desc_priority)) {
-					desc_element = nptr;
-					max_desc_priority = priority;
-				} else if (!g_ascii_strcasecmp(node_name,
-							       "shortDescription")
-					   && (priority >
-					       max_short_desc_priority)) {
-					short_desc_element = nptr;
-					max_short_desc_priority = priority;
-				}
-			} else	// no language specified!
-			{
-				if (!g_ascii_strcasecmp(node_name,
-							"description"))
-					nt_desc_element = nptr;
-				else if (!g_ascii_strcasecmp(node_name,
-							     "shortDescription"))
-					nt_short_desc_element = nptr;
-			}
-		}
-		nptr = nptr->next;
-	}
+  if( shortDescElement == NULL )
+    shortDescElement = ntShortDescElement;
 
-	/* if no language-specific description found - use the ones without lang */
-	if (desc_element == NULL)
-		desc_element = nt_desc_element;
+  /**
+   * Actually, here we should have some code to find the correct localized description...
+   */ 
 
-	if (short_desc_element == NULL)
-		short_desc_element = nt_short_desc_element;
+  if( nameElement != NULL && nameElement->children != NULL )
+    strncat( pci->name, (char *)nameElement->children->content,
+             XKL_MAX_CI_NAME_LENGTH - 1 );
 
-	/*
-	 * Actually, here we should have some code to find 
-	 * the correct localized description...
-	 */
+  if( shortDescElement != NULL && shortDescElement->children != NULL )
+  {
+    char * lsd = _XklLocaleFromUtf8( (const char *)shortDescElement->children->content );
+    strncat( pci->shortDescription,
+             lsd,
+             XKL_MAX_CI_SHORT_DESC_LENGTH - 1 );
+    free( lsd );
+  }
 
-	if (name_element != NULL && name_element->children != NULL)
-		strncat(item->name,
-			(char *) name_element->children->content,
-			XKL_MAX_CI_NAME_LENGTH - 1);
-
-	if (short_desc_element != NULL &&
-	    short_desc_element->children != NULL) {
-		gchar *lmsg = xkl_locale_from_utf8((const gchar *)
-						   short_desc_element->
-						   children->content);
-		strncat(item->short_description, lmsg,
-			XKL_MAX_CI_SHORT_DESC_LENGTH - 1);
-		g_free(lmsg);
-	}
-
-	if (desc_element != NULL && desc_element->children != NULL) {
-		gchar *lmsg =
-		    xkl_locale_from_utf8((const gchar *) desc_element->
-					 children->content);
-		strncat(item->description, lmsg,
-			XKL_MAX_CI_DESC_LENGTH - 1);
-		g_free(lmsg);
-	}
-	return TRUE;
+  if( descElement != NULL && descElement->children != NULL )
+  {
+    char * ld = _XklLocaleFromUtf8( (const char *)descElement->children->content );
+    strncat( pci->description,
+             ld,
+             XKL_MAX_CI_DESC_LENGTH - 1 );
+    free( ld );
+  }
+  return True;
 }
 
-static void
-xkl_config_registry_foreach_in_nodeset(XklConfigRegistry * config,
-				       xmlNodeSetPtr nodes,
-				       ConfigItemProcessFunc func,
-				       gpointer data)
+static void _XklConfigEnumFromNodeSet( xmlNodeSetPtr nodes,
+                                       ConfigItemProcessFunc func,
+                                       void *userData )
 {
-	gint i;
-	if (nodes != NULL) {
-		xmlNodePtr *pnode = nodes->nodeTab;
-		for (i = nodes->nodeNr; --i >= 0;) {
-			XklConfigItem ci;
-			if (xkl_read_config_item(*pnode, &ci))
-				func(&ci, data);
+  int i;
+  if( nodes != NULL )
+  {
+    xmlNodePtr *theNodePtr = nodes->nodeTab;
+    for( i = nodes->nodeNr; --i >= 0; )
+    {
+      XklConfigItem ci;
+      if( _XklReadConfigItem( *theNodePtr, &ci ) )
+        func( &ci, userData );
 
-			pnode++;
-		}
-	}
+      theNodePtr++;
+    }
+  }
 }
 
-static void
-xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
-				     xmlXPathCompExprPtr xpath_comp_expr,
-				     ConfigItemProcessFunc func,
-				     gpointer data)
+static void _XklConfigEnumSimple( xmlXPathCompExprPtr xpathCompExpr,
+                                  ConfigItemProcessFunc func, void *userData )
 {
-	xmlXPathObjectPtr xpath_obj;
+  xmlXPathObjectPtr xpathObj;
 
-	if (!xkl_config_registry_is_initialized(config))
-		return;
-	xpath_obj = xmlXPathCompiledEval(xpath_comp_expr,
-					 xkl_config_registry_priv(config,
-								  xpath_context));
-	if (xpath_obj != NULL) {
-		xkl_config_registry_foreach_in_nodeset(config,
-						       xpath_obj->
-						       nodesetval, func,
-						       data);
-		xmlXPathFreeObject(xpath_obj);
-	}
+  if( !_XklConfigRegistryIsInitialized(  ) )
+    return;
+  xpathObj = xmlXPathCompiledEval( xpathCompExpr, theRegistry.xpathContext );
+  if( xpathObj != NULL )
+  {
+    _XklConfigEnumFromNodeSet( xpathObj->nodesetval, func, userData );
+    xmlXPathFreeObject( xpathObj );
+  }
 }
 
-static void
-xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry * config,
-						const gchar * format,
-						const gchar * value,
-						ConfigItemProcessFunc func,
-						gpointer data)
+static void _XklConfigEnumDirect( const char *format,
+                                  const char *value,
+                                  ConfigItemProcessFunc func, void *userData )
 {
-	char xpath_expr[1024];
-	xmlXPathObjectPtr xpath_obj;
+  char xpathExpr[1024];
+  xmlXPathObjectPtr xpathObj;
 
-	if (!xkl_config_registry_is_initialized(config))
-		return;
-	snprintf(xpath_expr, sizeof xpath_expr, format, value);
-	xpath_obj = xmlXPathEval((unsigned char *) xpath_expr,
-				 xkl_config_registry_priv(config,
-							  xpath_context));
-	if (xpath_obj != NULL) {
-		xkl_config_registry_foreach_in_nodeset(config,
-						       xpath_obj->
-						       nodesetval, func,
-						       data);
-		xmlXPathFreeObject(xpath_obj);
-	}
+  if( !_XklConfigRegistryIsInitialized(  ) )
+    return;
+  snprintf( xpathExpr, sizeof xpathExpr, format, value );
+  xpathObj = xmlXPathEval( (unsigned char *)xpathExpr, theRegistry.xpathContext );
+  if( xpathObj != NULL )
+  {
+    _XklConfigEnumFromNodeSet( xpathObj->nodesetval, func, userData );
+    xmlXPathFreeObject( xpathObj );
+  }
 }
 
-static gboolean
-xkl_config_registry_find_object(XklConfigRegistry * config,
-				const gchar * format, const gchar * arg1,
-				XklConfigItem * pitem /* in/out */ ,
-				xmlNodePtr * pnode /* out */ )
+static Bool _XklConfigFindObject( const char *format,
+                                  const char *arg1,
+                                  XklConfigItemPtr ptr /* in/out */ ,
+                                  xmlNodePtr * nodePtr /* out */  )
 {
-	xmlXPathObjectPtr xpath_obj;
-	xmlNodeSetPtr nodes;
-	gboolean rv = FALSE;
-	gchar xpath_expr[1024];
+  xmlXPathObjectPtr xpathObj;
+  xmlNodeSetPtr nodes;
+  Bool rv = False;
+  char xpathExpr[1024];
 
-	if (!xkl_config_registry_is_initialized(config))
-		return FALSE;
+  if( !_XklConfigRegistryIsInitialized(  ) )
+    return False;
 
-	snprintf(xpath_expr, sizeof xpath_expr, format, arg1, pitem->name);
-	xpath_obj = xmlXPathEval((unsigned char *) xpath_expr,
-				 xkl_config_registry_priv(config,
-							  xpath_context));
-	if (xpath_obj == NULL)
-		return FALSE;
+  snprintf( xpathExpr, sizeof xpathExpr, format, arg1, ptr->name );
+  xpathObj = xmlXPathEval( (unsigned char *)xpathExpr, theRegistry.xpathContext );
+  if( xpathObj == NULL )
+    return False;
 
-	nodes = xpath_obj->nodesetval;
-	if (nodes != NULL && nodes->nodeTab != NULL) {
-		rv = xkl_read_config_item(*nodes->nodeTab, pitem);
-		if (pnode != NULL) {
-			*pnode = *nodes->nodeTab;
-		}
-	}
+  nodes = xpathObj->nodesetval;
+  if( nodes != NULL && nodes->nodeTab != NULL )
+  {
+    rv = _XklReadConfigItem( *nodes->nodeTab, ptr );
+    if( nodePtr != NULL )
+    {
+      *nodePtr = *nodes->nodeTab;
+    }
+  }
 
-	xmlXPathFreeObject(xpath_obj);
-	return rv;
+  xmlXPathFreeObject( xpathObj );
+  return rv;
 }
 
-gchar *
-xkl_config_rec_merge_layouts(const XklConfigRec * data)
+char *_XklConfigRecMergeLayouts( const XklConfigRecPtr data )
 {
-	return xkl_strings_concat_comma_separated(data->layouts);
+  return _XklConfigRecMergeByComma( ( const char ** ) data->layouts,
+                                    data->numLayouts );
 }
 
-gchar *
-xkl_config_rec_merge_variants(const XklConfigRec * data)
+char *_XklConfigRecMergeVariants( const XklConfigRecPtr data )
 {
-	return xkl_strings_concat_comma_separated(data->variants);
+  return _XklConfigRecMergeByComma( ( const char ** ) data->variants,
+                                    data->numVariants );
 }
 
-gchar *
-xkl_config_rec_merge_options(const XklConfigRec * data)
+char *_XklConfigRecMergeOptions( const XklConfigRecPtr data )
 {
-	return xkl_strings_concat_comma_separated(data->options);
+  return _XklConfigRecMergeByComma( ( const char ** ) data->options,
+                                    data->numOptions );
 }
 
-gchar *
-xkl_strings_concat_comma_separated(gchar ** array)
+char *_XklConfigRecMergeByComma( const char **array, const int arrayLength )
 {
-	return g_strjoinv(",", array);
+  int len = 0;
+  int i;
+  char *merged;
+  const char **theString;
+
+  if( ( theString = array ) == NULL )
+    return NULL;
+
+  for( i = arrayLength; --i >= 0; theString++ )
+  {
+    if( *theString != NULL )
+      len += strlen( *theString );
+    len++;
+  }
+
+  if( len < 1 )
+    return NULL;
+
+  merged = ( char * ) malloc( len );
+  merged[0] = '\0';
+
+  theString = array;
+  for( i = arrayLength; --i >= 0; theString++ )
+  {
+    if( *theString != NULL )
+      strcat( merged, *theString );
+    if( i != 0 )
+      strcat( merged, "," );
+  }
+  return merged;
 }
 
-void
-xkl_config_rec_split_layouts(XklConfigRec * data, const gchar * merged)
+void _XklConfigRecSplitLayouts( XklConfigRecPtr data, const char *merged )
 {
-	xkl_strings_split_comma_separated(&data->layouts, merged);
+  _XklConfigRecSplitByComma( &data->layouts, &data->numLayouts, merged );
 }
 
-void
-xkl_config_rec_split_variants(XklConfigRec * data, const gchar * merged)
+void _XklConfigRecSplitVariants( XklConfigRecPtr data, const char *merged )
 {
-	xkl_strings_split_comma_separated(&data->variants, merged);
+  _XklConfigRecSplitByComma( &data->variants, &data->numVariants, merged );
 }
 
-void
-xkl_config_rec_split_options(XklConfigRec * data, const gchar * merged)
+void _XklConfigRecSplitOptions( XklConfigRecPtr data, const char *merged )
 {
-	xkl_strings_split_comma_separated(&data->options, merged);
+  _XklConfigRecSplitByComma( &data->options, &data->numOptions, merged );
 }
 
-void
-xkl_strings_split_comma_separated(gchar *** array, const gchar * merged)
+void _XklConfigRecSplitByComma( char ***array,
+                                int *arraySize, const char *merged )
 {
-	*array = g_strsplit(merged, ",", 0);
+  const char *pc = merged;
+  char **ppc, *npc;
+  *arraySize = 0;
+  *array = NULL;
+
+  if( merged == NULL || merged[0] == '\0' )
+    return;
+
+  /* first count the elements */
+  while( ( npc = strchr( pc, ',' ) ) != NULL )
+  {
+    ( *arraySize )++;
+    pc = npc + 1;
+  }
+  ( *arraySize )++;
+
+  if( ( *arraySize ) != 0 )
+  {
+    int len;
+    *array = ( char ** ) malloc( ( sizeof( char * ) ) * ( *arraySize ) );
+
+    ppc = *array;
+    pc = merged;
+    while( ( npc = strchr( pc, ',' ) ) != NULL )
+    {
+      int len = npc - pc;
+      /* *ppc = ( char * ) strndup( pc, len ); */
+      *ppc = ( char * ) malloc( len + 1 );
+      if ( *ppc != NULL )
+      {
+        strncpy( *ppc, pc, len );
+        (*ppc)[len] = '\0';
+      }
+
+      ppc++;
+      pc = npc + 1;
+    }
+
+    /* len = npc - pc; */
+    len = strlen( pc );
+    /* *ppc = ( char * ) strndup( pc, len ); */
+    *ppc = ( char * ) malloc( len + 1 );
+    if ( *ppc != NULL )
+      strcpy( *ppc, pc );
+  }
 }
 
-gchar *
-xkl_engine_get_ruleset_name(XklEngine * engine,
-			    const gchar default_ruleset[])
+char* _XklGetRulesSetName( const char defaultRuleset[] )
 {
-	static gchar rules_set_name[1024] = "";
-	if (!rules_set_name[0]) {
-		/* first call */
-		gchar *rf = NULL;
-		if (!xkl_config_rec_get_from_root_window_property
-		    (NULL, xkl_engine_priv(engine, base_config_atom), &rf,
-		     engine)
-		    || (rf == NULL)) {
-			g_strlcpy(rules_set_name, default_ruleset,
-				  sizeof rules_set_name);
-			xkl_debug(100, "Using default rules set: [%s]\n",
-				  rules_set_name);
-			return rules_set_name;
-		}
-		g_strlcpy(rules_set_name, rf, sizeof rules_set_name);
-		g_free(rf);
-	}
-	xkl_debug(100, "Rules set: [%s]\n", rules_set_name);
-	return rules_set_name;
+  static char rulesSetName[1024] = "";
+  if ( !rulesSetName[0] )
+  {
+    char* rf = NULL;
+    if( !XklGetNamesProp( xklVTable->baseConfigAtom, &rf, NULL ) || ( rf == NULL ) )
+    {
+      strncpy( rulesSetName, defaultRuleset, sizeof rulesSetName );
+      XklDebug( 100, "Using default rules set: [%s]\n", rulesSetName );
+      return rulesSetName;
+    }
+    strncpy( rulesSetName, rf, sizeof rulesSetName );
+    free( rf );
+  }
+  XklDebug( 100, "Rules set: [%s]\n", rulesSetName );
+  return rulesSetName;
 }
 
-XklConfigRegistry *
-xkl_config_registry_get_instance(XklEngine * engine)
+void XklConfigInit( void )
 {
-	if (the_config != NULL) {
-		g_object_ref(G_OBJECT(the_config));
-		return the_config;
-	}
+  xmlXPathInit(  );
+  modelsXPath = xmlXPathCompile( (unsigned char *)"/xkbConfigRegistry/modelList/model" );
+  layoutsXPath = xmlXPathCompile( (unsigned char *)"/xkbConfigRegistry/layoutList/layout" );
+  optionGroupsXPath =
+    xmlXPathCompile( (unsigned char *)"/xkbConfigRegistry/optionList/group" );
+  _XklI18NInit(  );
 
-	if (!engine) {
-		xkl_debug(10,
-			  "xkl_config_registry_get_instance : engine is NULL ?\n");
-		return NULL;
-	}
-
-	the_config =
-	    XKL_CONFIG_REGISTRY(g_object_new
-				(xkl_config_registry_get_type(), "engine",
-				 engine, NULL));
-
-	return the_config;
+  _XklEnsureVTableInited();
+  (*xklVTable->xklConfigInitHandler)();
 }
 
-gboolean
-xkl_config_registry_load_from_file(XklConfigRegistry * config,
-				   const gchar * file_name)
+void XklConfigTerm( void )
 {
-	xkl_config_registry_priv(config, doc) = xmlParseFile(file_name);
-	if (xkl_config_registry_priv(config, doc) == NULL) {
-		xkl_config_registry_priv(config, xpath_context) = NULL;
-		xkl_last_error_message =
-		    "Could not parse XKB configuration registry";
-	} else
-		xkl_config_registry_priv(config, xpath_context) =
-		    xmlXPathNewContext(xkl_config_registry_priv
-				       (config, doc));
-	return xkl_config_registry_is_initialized(config);
+  if( modelsXPath != NULL )
+  {
+    xmlXPathFreeCompExpr( modelsXPath );
+    modelsXPath = NULL;
+  }
+  if( layoutsXPath != NULL )
+  {
+    xmlXPathFreeCompExpr( layoutsXPath );
+    layoutsXPath = NULL;
+  }
+  if( optionGroupsXPath != NULL )
+  {
+    xmlXPathFreeCompExpr( optionGroupsXPath );
+    optionGroupsXPath = NULL;
+  }
 }
 
-void
-xkl_config_registry_free(XklConfigRegistry * config)
+Bool XklConfigLoadRegistryFromFile( const char * fileName )
 {
-	if (xkl_config_registry_is_initialized(config)) {
-		xmlXPathFreeContext(xkl_config_registry_priv
-				    (config, xpath_context));
-		xmlFreeDoc(xkl_config_registry_priv(config, doc));
-		xkl_config_registry_priv(config, xpath_context) = NULL;
-		xkl_config_registry_priv(config, doc) = NULL;
-	}
+  theRegistry.doc = xmlParseFile( fileName );
+  if( theRegistry.doc == NULL )
+  {
+    theRegistry.xpathContext = NULL;
+    _xklLastErrorMsg = "Could not parse XKB configuration registry";
+  } else
+    theRegistry.xpathContext = xmlXPathNewContext( theRegistry.doc );
+  return _XklConfigRegistryIsInitialized(  );
 }
 
-void
-xkl_config_registry_foreach_model(XklConfigRegistry * config,
-				  ConfigItemProcessFunc func,
-				  gpointer data)
+void XklConfigFreeRegistry( void )
 {
-	xkl_config_registry_foreach_in_xpath(config, models_xpath, func,
-					     data);
+  if( _XklConfigRegistryIsInitialized(  ) )
+  {
+    xmlXPathFreeContext( theRegistry.xpathContext );
+    xmlFreeDoc( theRegistry.doc );
+    theRegistry.xpathContext = NULL;
+    theRegistry.doc = NULL;
+  }
 }
 
-void
-xkl_config_registry_foreach_layout(XklConfigRegistry * config,
-				   ConfigItemProcessFunc func,
-				   gpointer data)
+void XklConfigEnumModels( ConfigItemProcessFunc func, void *userData )
 {
-	xkl_config_registry_foreach_in_xpath(config, layouts_xpath, func,
-					     data);
+  _XklConfigEnumSimple( modelsXPath, func, userData );
 }
 
-void
-xkl_config_registry_foreach_layout_variant(XklConfigRegistry * config,
-					   const gchar * layout_name,
-					   ConfigItemProcessFunc func,
-					   gpointer data)
+void XklConfigEnumLayouts( ConfigItemProcessFunc func, void *userData )
 {
-	xkl_config_registry_foreach_in_xpath_with_param
-	    (config,
-	     "/xkbConfigRegistry/layoutList/layout/variantList/variant[../../configItem/name = '%s']",
-	     layout_name, func, data);
+  _XklConfigEnumSimple( layoutsXPath, func, userData );
 }
 
-void
-xkl_config_registry_foreach_option_group(XklConfigRegistry * config,
-					 GroupProcessFunc func,
-					 gpointer data)
+void XklConfigEnumLayoutVariants( const char *layoutName,
+                                  ConfigItemProcessFunc func, void *userData )
 {
-	xmlXPathObjectPtr xpath_obj;
-	gint i;
-
-	if (!xkl_config_registry_is_initialized(config))
-		return;
-	xpath_obj =
-	    xmlXPathCompiledEval(option_groups_xpath,
-				 xkl_config_registry_priv(config,
-							  xpath_context));
-	if (xpath_obj != NULL) {
-		xmlNodeSetPtr nodes = xpath_obj->nodesetval;
-		xmlNodePtr *pnode = nodes->nodeTab;
-		for (i = nodes->nodeNr; --i >= 0;) {
-			XklConfigItem ci;
-
-			if (xkl_read_config_item(*pnode, &ci)) {
-				gboolean allow_multisel = TRUE;
-				xmlChar *sallow_multisel =
-				    xmlGetProp(*pnode,
-					       (unsigned char *)
-					       "allowMultipleSelection");
-				if (sallow_multisel != NULL) {
-					allow_multisel =
-					    !g_ascii_strcasecmp("true",
-								(char *)
-								sallow_multisel);
-					xmlFree(sallow_multisel);
-				}
-
-				func(&ci, allow_multisel, data);
-			}
-
-			pnode++;
-		}
-		xmlXPathFreeObject(xpath_obj);
-	}
+  _XklConfigEnumDirect
+    ( "/xkbConfigRegistry/layoutList/layout/variantList/variant[../../configItem/name = '%s']",
+      layoutName, func, userData );
 }
 
-void
-xkl_config_registry_foreach_option(XklConfigRegistry * config,
-				   const gchar * option_group_name,
-				   ConfigItemProcessFunc func,
-				   gpointer data)
+void XklConfigEnumOptionGroups( GroupProcessFunc func, void *userData )
 {
-	xkl_config_registry_foreach_in_xpath_with_param
-	    (config,
-	     "/xkbConfigRegistry/optionList/group/option[../configItem/name = '%s']",
-	     option_group_name, func, data);
+  xmlXPathObjectPtr xpathObj;
+  int i;
+
+  if( !_XklConfigRegistryIsInitialized(  ) )
+    return;
+  xpathObj =
+    xmlXPathCompiledEval( optionGroupsXPath, theRegistry.xpathContext );
+  if( xpathObj != NULL )
+  {
+    xmlNodeSetPtr nodes = xpathObj->nodesetval;
+    xmlNodePtr *theNodePtr = nodes->nodeTab;
+    for( i = nodes->nodeNr; --i >= 0; )
+    {
+      XklConfigItem ci;
+
+      if( _XklReadConfigItem( *theNodePtr, &ci ) )
+      {
+        Bool allowMC = True;
+        xmlChar *allowMCS =
+          xmlGetProp( *theNodePtr, (unsigned char *)"allowMultipleSelection" );
+        if( allowMCS != NULL )
+        {
+          allowMC = strcmp( "false", (char *)allowMCS );
+          xmlFree( allowMCS );
+        }
+
+        func( &ci, allowMC, userData );
+      }
+
+      theNodePtr++;
+    }
+    xmlXPathFreeObject( xpathObj );
+  }
 }
 
-gboolean
-xkl_config_registry_find_model(XklConfigRegistry * config,
-			       XklConfigItem * pitem /* in/out */ )
+void XklConfigEnumOptions( const char *optionGroupName,
+                           ConfigItemProcessFunc func, void *userData )
 {
-	return
-	    xkl_config_registry_find_object
-	    (config,
-	     "/xkbConfigRegistry/modelList/model[configItem/name = '%s%s']",
-	     "", pitem, NULL);
+  _XklConfigEnumDirect
+    ( "/xkbConfigRegistry/optionList/group/option[../configItem/name = '%s']",
+      optionGroupName, func, userData );
 }
 
-gboolean
-xkl_config_registry_find_layout(XklConfigRegistry * config,
-				XklConfigItem * pitem /* in/out */ )
+Bool XklConfigFindModel( XklConfigItemPtr ptr /* in/out */  )
 {
-	return
-	    xkl_config_registry_find_object
-	    (config,
-	     "/xkbConfigRegistry/layoutList/layout[configItem/name = '%s%s']",
-	     "", pitem, NULL);
+  return
+    _XklConfigFindObject
+    ( "/xkbConfigRegistry/modelList/model[configItem/name = '%s%s']", "",
+      ptr, NULL );
 }
 
-gboolean
-xkl_config_registry_find_variant(XklConfigRegistry * config,
-				 const char *layout_name,
-				 XklConfigItem * pitem /* in/out */ )
+Bool XklConfigFindLayout( XklConfigItemPtr ptr /* in/out */  )
 {
-	return
-	    xkl_config_registry_find_object
-	    (config,
-	     "/xkbConfigRegistry/layoutList/layout/variantList/variant"
-	     "[../../configItem/name = '%s' and configItem/name = '%s']",
-	     layout_name, pitem, NULL);
+  return
+    _XklConfigFindObject
+    ( "/xkbConfigRegistry/layoutList/layout[configItem/name = '%s%s']", "",
+      ptr, NULL );
 }
 
-gboolean
-xkl_config_registry_find_option_group(XklConfigRegistry * config,
-				      XklConfigItem * pitem /* in/out */ ,
-				      gboolean *
-				      allow_multiple_selection /* out */ )
+Bool XklConfigFindVariant( const char *layoutName,
+                           XklConfigItemPtr ptr /* in/out */  )
 {
-	xmlNodePtr node;
-	gboolean rv = xkl_config_registry_find_object(config,
-						      "/xkbConfigRegistry/optionList/group[configItem/name = '%s%s']",
-						      "",
-						      pitem, &node);
-
-	if (rv && allow_multiple_selection != NULL) {
-		xmlChar *val = xmlGetProp(node,
-					  (unsigned char *)
-					  "allowMultipleSelection");
-		*allow_multiple_selection = FALSE;
-		if (val != NULL) {
-			*allow_multiple_selection =
-			    !g_ascii_strcasecmp("true", (char *) val);
-			xmlFree(val);
-		}
-	}
-	return rv;
+  return
+    _XklConfigFindObject
+    ( "/xkbConfigRegistry/layoutList/layout/variantList/variant"
+      "[../../configItem/name = '%s' and configItem/name = '%s']",
+      layoutName, ptr, NULL );
 }
 
-gboolean
-xkl_config_registry_find_option(XklConfigRegistry * config,
-				const char *option_group_name,
-				XklConfigItem * pitem /* in/out */ )
+Bool XklConfigFindOptionGroup( XklConfigItemPtr ptr /* in/out */ ,
+                               Bool * allowMultipleSelection /* out */  )
 {
-	return
-	    xkl_config_registry_find_object
-	    (config, "/xkbConfigRegistry/optionList/group/option"
-	     "[../configItem/name = '%s' and configItem/name = '%s']",
-	     option_group_name, pitem, NULL);
+  xmlNodePtr node = NULL;
+  Bool rv =
+    _XklConfigFindObject
+    ( "/xkbConfigRegistry/optionList/group[configItem/name = '%s%s']", "",
+      ptr, &node );
+
+  if( rv && allowMultipleSelection != NULL )
+  {
+    xmlChar *val = xmlGetProp( node, (unsigned char *)"allowMultipleSelection" );
+    *allowMultipleSelection = False;
+    if( val != NULL )
+    {
+      *allowMultipleSelection = !strcmp( (char *)val, "true" );
+      xmlFree( val );
+    }
+  }
+  return rv;
 }
 
-/*
+Bool XklConfigFindOption( const char *optionGroupName,
+                          XklConfigItemPtr ptr /* in/out */  )
+{
+  return
+    _XklConfigFindObject
+    ( "/xkbConfigRegistry/optionList/group/option"
+      "[../configItem/name = '%s' and configItem/name = '%s']",
+      optionGroupName, ptr, NULL );
+}
+
+/**
  * Calling through vtable
  */
-gboolean
-xkl_config_rec_activate(const XklConfigRec * data, XklEngine * engine)
+Bool XklConfigActivate( const XklConfigRecPtr data )
 {
-	xkl_engine_ensure_vtable_inited(engine);
-	return xkl_engine_vcall(engine, activate_config_rec) (engine,
-							      data);
+  _XklEnsureVTableInited();
+  return (*xklVTable->xklConfigActivateHandler)( data );
 }
 
-gboolean
-xkl_config_registry_load(XklConfigRegistry * config)
+Bool XklConfigLoadRegistry( void )
 {
-	XklEngine *engine = xkl_config_registry_get_engine(config);
-	xkl_engine_ensure_vtable_inited(engine);
-	return xkl_engine_vcall(engine, load_config_registry) (config);
+  _XklEnsureVTableInited();
+  return (*xklVTable->xklConfigLoadRegistryHandler)();
 }
 
-gboolean
-xkl_config_rec_write_to_file(XklEngine * engine, const gchar * file_name,
-			     const XklConfigRec * data,
-			     const gboolean binary)
+Bool XklConfigWriteFile( const char *fileName,
+                         const XklConfigRecPtr data,
+                         const Bool binary )
 {
-	if ((!binary &&
-	     !(xkl_engine_priv(engine, features) &
-	       XKLF_CAN_OUTPUT_CONFIG_AS_ASCII))
-	    || (binary
-		&& !(xkl_engine_priv(engine, features) &
-		     XKLF_CAN_OUTPUT_CONFIG_AS_BINARY))) {
-		xkl_last_error_message =
-		    "Function not supported at backend";
-		return FALSE;
-	}
-	xkl_engine_ensure_vtable_inited(engine);
-	return xkl_engine_vcall(engine, write_config_rec_to_file) (engine,
-								   file_name,
-								   data,
-								   binary);
-}
-
-void
-xkl_config_rec_dump(FILE * file, XklConfigRec * data)
-{
-	int j;
-	fprintf(file, "  model: [%s]\n", data->model);
-
-	fprintf(file, "  layouts:\n");
-#define OUTPUT_ARRZ(arrz) \
-  { \
-    fprintf( file, "  " #arrz ":\n" ); \
-    gchar **p = data->arrz; \
-    if ( p != NULL ) \
-      for( j = 0; *p != NULL; ) \
-        fprintf( file, "  %d: [%s]\n", j++, *p++ ); \
+  if( ( !binary && 
+        !( xklVTable->features & XKLF_CAN_OUTPUT_CONFIG_AS_ASCII ) ) ||
+      ( binary && 
+        !( xklVTable->features & XKLF_CAN_OUTPUT_CONFIG_AS_BINARY ) ) )
+  {
+    _xklLastErrorMsg = "Function not supported at backend";
+    return False;
   }
-	OUTPUT_ARRZ(layouts);
-	OUTPUT_ARRZ(variants);
-	OUTPUT_ARRZ(options);
-
+  _XklEnsureVTableInited();
+  return (*xklVTable->xklConfigWriteFileHandler)( fileName, data, binary );
 }
 
-G_DEFINE_TYPE(XklConfigRegistry, xkl_config_registry, G_TYPE_OBJECT)
-
-static GObject *
-xkl_config_registry_constructor(GType type,
-				guint n_construct_properties,
-				GObjectConstructParam *
-				construct_properties)
+void XklConfigDump( FILE* file,
+                    XklConfigRecPtr data )
 {
-	GObject *obj;
+  int i,j;
+  char**p;
+  fprintf( file, "  model: [%s]\n", data->model );
 
-	{
-		/* Invoke parent constructor. */
-		XklConfigRegistryClass *klass;
-		klass =
-		    XKL_CONFIG_REGISTRY_CLASS(g_type_class_peek
-					      (XKL_TYPE_CONFIG_REGISTRY));
-		obj =
-		    parent_class->constructor(type, n_construct_properties,
-					      construct_properties);
-	}
+  fprintf( file, "  layouts(%d):\n", data->numLayouts );
+  p = data->layouts;
+  for( i = data->numLayouts, j = 0; --i >= 0; )
+    fprintf( file, "  %d: [%s]\n", j++, *p++ );
 
-	XklConfigRegistry *config = XKL_CONFIG_REGISTRY(obj);
+  fprintf( file, "  variants(%d):\n", data->numVariants );
+  p = data->variants;
+  for( i = data->numVariants, j = 0; --i >= 0; )
+    fprintf( file, "  %d: [%s]\n", j++, *p++ );
 
-	XklEngine *engine =
-	    XKL_ENGINE(g_value_peek_pointer(construct_properties[0].
-					    value));
-	xkl_config_registry_get_engine(config) = engine;
-
-	xkl_engine_ensure_vtable_inited(engine);
-	xkl_engine_vcall(engine, init_config_registry) (config);
-
-	return obj;
-}
-
-static void
-xkl_config_registry_init(XklConfigRegistry * config)
-{
-	config->priv = g_new0(XklConfigRegistryPrivate, 1);
-}
-
-static void
-xkl_config_registry_set_property(GObject * object,
-				 guint property_id,
-				 const GValue * value, GParamSpec * pspec)
-{
-}
-
-static void
-xkl_config_registry_get_property(GObject * object,
-				 guint property_id,
-				 GValue * value, GParamSpec * pspec)
-{
-	XklConfigRegistry *config = XKL_CONFIG_REGISTRY(object);
-
-	switch (property_id) {
-	case PROP_ENGINE:
-		g_value_set_pointer(value,
-				    xkl_config_registry_get_engine
-				    (config));
-		break;
-	}
-
-}
-
-static void
-xkl_config_registry_finalize(GObject * obj)
-{
-	XklConfigRegistry *config = (XklConfigRegistry *) obj;
-
-	if (models_xpath != NULL) {
-		xmlXPathFreeCompExpr(models_xpath);
-		models_xpath = NULL;
-	}
-	if (layouts_xpath != NULL) {
-		xmlXPathFreeCompExpr(layouts_xpath);
-		layouts_xpath = NULL;
-	}
-	if (option_groups_xpath != NULL) {
-		xmlXPathFreeCompExpr(option_groups_xpath);
-		option_groups_xpath = NULL;
-	}
-
-	g_free(config->priv);
-
-	G_OBJECT_CLASS(parent_class)->finalize(obj);
-}
-
-static void
-xkl_config_registry_class_init(XklConfigRegistryClass * klass)
-{
-	GObjectClass *object_class;
-
-	object_class = (GObjectClass *) klass;
-	parent_class = g_type_class_peek_parent(object_class);
-	object_class->constructor = xkl_config_registry_constructor;
-	object_class->finalize = xkl_config_registry_finalize;
-	object_class->set_property = xkl_config_registry_set_property;
-	object_class->get_property = xkl_config_registry_get_property;
-
-	GParamSpec *engine_param_spec = g_param_spec_object("engine",
-							    "Engine",
-							    "XklEngine",
-							    XKL_TYPE_ENGINE,
-							    G_PARAM_CONSTRUCT_ONLY
-							    |
-							    G_PARAM_READWRITE);
-
-	g_object_class_install_property(object_class,
-					PROP_ENGINE, engine_param_spec);
-
-	/* static stuff initialized */
-
-	xmlXPathInit();
-	models_xpath = xmlXPathCompile((unsigned char *)
-				       "/xkbConfigRegistry/modelList/model");
-	layouts_xpath = xmlXPathCompile((unsigned char *)
-					"/xkbConfigRegistry/layoutList/layout");
-	option_groups_xpath = xmlXPathCompile((unsigned char *)
-					      "/xkbConfigRegistry/optionList/group");
-	xkl_i18n_init();
+  fprintf( file, "  options(%d):\n", data->numOptions );
+  p = data->options;
+  for( i = data->numOptions, j = 0; --i >= 0; )
+    fprintf( file, "  %d: [%s]\n", j++, *p++ );
 }
