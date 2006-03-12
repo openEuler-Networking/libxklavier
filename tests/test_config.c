@@ -13,7 +13,9 @@
 
 extern void xkl_config_rec_dump(FILE * file, XklConfigRec * data);
 
-enum { ACTION_NONE, ACTION_GET, ACTION_SET, ACTION_WRITE };
+enum { ACTION_NONE, ACTION_LIST, ACTION_GET, ACTION_SET,
+	ACTION_WRITE
+};
 
 static void
 print_usage(void)
@@ -21,6 +23,10 @@ print_usage(void)
 	printf
 	    ("Usage: test_config (-g)|(-s -m <model> -l <layouts> -o <options>)|(-h)|(-ws)|(-wb)(-d <debugLevel>)\n");
 	printf("Options:\n");
+	printf("         -al - list all available layouts and variants\n");
+	printf("         -am - list all available models\n");
+	printf
+	    ("         -ao - list all available options groups and options\n");
 	printf
 	    ("         -g - Dump the current config, load original system settings and revert back\n");
 	printf
@@ -33,10 +39,58 @@ print_usage(void)
 	printf("         -h - Show this help\n");
 }
 
+static void
+print_option(XklConfigRegistry * config, const XklConfigItem * item,
+	     gpointer data)
+{
+	printf("  [%s][%s][%s]\n", item->name,
+	       item->description, item->short_description);
+}
+
+static void
+print_option_group(XklConfigRegistry * config, const XklConfigItem * item,
+		   gpointer data)
+{
+	printf("[%s][%s][%s] %s multiple selection\n", item->name,
+	       item->description, item->short_description,
+	       GPOINTER_TO_INT(g_object_get_data
+			       (G_OBJECT(item),
+				XCI_PROP_ALLOW_MULTIPLE_SELECTION)) ?
+	       "Allows" : "Does not allow");
+	xkl_config_registry_foreach_option(config, item->name,
+					   print_option, data);
+}
+
+static void
+print_model(XklConfigRegistry * config, const XklConfigItem * item,
+	    gpointer data)
+{
+	printf("[%s][%s][%s]\n", item->name, item->description,
+	       item->short_description);
+}
+
+static void
+print_variant(XklConfigRegistry * config, const XklConfigItem * item,
+	      gpointer data)
+{
+	printf("  [%s][%s][%s]\n", item->name,
+	       item->description, item->short_description);
+}
+static void
+print_layout(XklConfigRegistry * config, const XklConfigItem * item,
+	     gpointer data)
+{
+	printf("[%s][%s][%s]\n", item->name, item->description,
+	       item->short_description);
+	xkl_config_registry_foreach_layout_variant(config, item->name,
+						   print_variant, data);
+}
+
 int
 main(int argc, char *const argv[])
 {
 	int c;
+	char which_list = 0;
 	int action = ACTION_NONE;
 	const char *model = NULL;
 	const char *layouts = NULL;
@@ -49,10 +103,15 @@ main(int argc, char *const argv[])
 				     G_TYPE_DEBUG_SIGNALS);
 
 	while (1) {
-		c = getopt(argc, argv, "hsgm:l:o:d:w:");
+		c = getopt(argc, argv, "ha:sgm:l:o:d:w:");
 		if (c == -1)
 			break;
 		switch (c) {
+		case 'a':
+			which_list = optarg[0];
+			printf("List the registry\n");
+			action = ACTION_LIST;
+			break;
 		case 's':
 			printf("Set the config\n");
 			action = ACTION_SET;
@@ -91,9 +150,8 @@ main(int argc, char *const argv[])
 		print_usage();
 		exit(0);
 	}
-
 #ifdef HAVE_SETLOCALE
-	setlocale( LC_ALL, "" );
+	setlocale(LC_ALL, "");
 #endif
 
 	dpy = XOpenDisplay(NULL);
@@ -122,6 +180,28 @@ main(int argc, char *const argv[])
 		xkl_config_rec_get_from_server(current_config, engine);
 
 		switch (action) {
+		case ACTION_LIST:
+			switch (which_list) {
+			case 'l':
+				xkl_config_registry_foreach_layout(config,
+								   print_layout,
+								   NULL);
+				break;
+			case 'm':
+				xkl_config_registry_foreach_model(config,
+								  print_model,
+								  NULL);
+				break;
+			case 'o':
+				xkl_config_registry_foreach_option_group
+				    (config, print_option_group, NULL);
+				break;
+			default:
+				printf("Unknown list: %c\n", which_list);
+				print_usage();
+				break;
+			}
+			break;
 		case ACTION_GET:
 			xkl_debug(0, "Got config from the server\n");
 			xkl_config_rec_dump(stdout, current_config);
