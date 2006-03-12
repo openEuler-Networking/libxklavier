@@ -195,7 +195,7 @@ xkl_i18n_init(void)
 		gint idx = dot_pos - locale;
 		if (idx >= MAX_LOCALE_LEN)
 			idx = MAX_LOCALE_LEN - 1;
-		g_strlcpy(cur_substring, locale, idx);
+		g_strlcpy(cur_substring, locale, idx + 1);
 		cur_substring += MAX_LOCALE_LEN;
 	}
 
@@ -205,7 +205,7 @@ xkl_i18n_init(void)
 		gint idx = underscore_pos - locale;
 		if (idx >= MAX_LOCALE_LEN)
 			idx = MAX_LOCALE_LEN - 1;
-		g_strlcpy(cur_substring, locale, idx);
+		g_strlcpy(cur_substring, locale, idx + 1);
 	}
 
 	xkl_debug(150, "Locale search order:\n");
