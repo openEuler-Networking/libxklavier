@@ -1,3 +1,5 @@
+2.2	Bugfixes. XML processing improved. Better compatibility with
+	modular X.org filesystem layout
 2.1	Bugfixes. GCC 4.x compatibility patches.
 2.0     New stable release (for GNOME 2.10). Minor changes since 1.14:
 	some optimization and cleanup.

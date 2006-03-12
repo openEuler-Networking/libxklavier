@@ -1,3 +1,8 @@
+2006-02-14 svu
+	
+	* libxklavier/xklavier.c: libxklavier/xklavier_evt.c: hopefully fixing
+	the crash on SetTransparent
+
 2006-01-16 svu
 	
 	* libxklavier/xklavier_config.c: handling XML comments
