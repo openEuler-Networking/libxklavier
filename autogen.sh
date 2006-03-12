@@ -133,12 +133,15 @@ do
       automake --add-missing --gnu $am_opt
       echo "Running autoconf ..."
       autoconf
+
+      echo "Running gtkdocize ..."
+      gtkdocize || exit 1
     )
   fi
 done
 
 #conf_flags="--enable-maintainer-mode --enable-compile-warnings" #--enable-iso-c
-conf_flags="--enable-doxygen"
+conf_flags="--enable-gtk-doc"
 
 if test x$NOCONFIGURE = x; then
   echo Running $srcdir/configure $conf_flags "$@" ...

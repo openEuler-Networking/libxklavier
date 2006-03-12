@@ -6,217 +6,223 @@
 #include <string.h>
 #include <X11/Xlib.h>
 #include <libxklavier/xklavier.h>
-#include <libxklavier/xklavier_config.h>
 
 #ifdef HAVE_SETLOCALE
 # include <locale.h>
 #endif
 
-#ifdef __STRICT_ANSI__
-/* these are functions which are NOT in ANSI C. 
-   Probably we should provide the implementation */
-extern char *strdup( const char *s );
-#endif
-
-extern void XklConfigDump( FILE* file,
-                           XklConfigRecPtr data );
+extern void xkl_config_rec_dump(FILE * file, XklConfigRec * data);
 
 enum { ACTION_NONE, ACTION_GET, ACTION_SET, ACTION_WRITE };
 
-static void printUsage(void)
+static void
+print_usage(void)
 {
-  printf( "Usage: test_config (-g)|(-s -m <model> -l <layouts> -o <options>)|(-h)|(-ws)|(-wb)(-d <debugLevel>)\n" );
-  printf( "Options:\n" );
-  printf( "         -g - Dump the current config, load original system settings and revert back\n" ); 
-  printf( "         -s - Set the configuration given my -m -l -o options. Similar to setxkbmap\n" ); 
-  printf( "         -ws - Write the binary XKB config file (" PACKAGE ".xkm)\n" );
-  printf( "         -wb - Write the source XKB config file (" PACKAGE ".xkb)\n" );
-  printf( "         -d - Set the debug level (by default, 0)\n" );
-  printf( "         -h - Show this help\n" );
+	printf
+	    ("Usage: test_config (-g)|(-s -m <model> -l <layouts> -o <options>)|(-h)|(-ws)|(-wb)(-d <debugLevel>)\n");
+	printf("Options:\n");
+	printf
+	    ("         -g - Dump the current config, load original system settings and revert back\n");
+	printf
+	    ("         -s - Set the configuration given my -m -l -o options. Similar to setxkbmap\n");
+	printf("         -ws - Write the binary XKB config file (" PACKAGE
+	       ".xkm)\n");
+	printf("         -wb - Write the source XKB config file (" PACKAGE
+	       ".xkb)\n");
+	printf("         -d - Set the debug level (by default, 0)\n");
+	printf("         -h - Show this help\n");
 }
 
-int main( int argc, char * const argv[] )
+int
+main(int argc, char *const argv[])
 {
-  int c, i;
-  int action = ACTION_NONE;
-  const char* model = NULL;
-  const char* layouts = NULL;
-  const char* options = NULL;
-  int debugLevel = -1;
-  int binary = 0;
-  Display *dpy;
+	int c;
+	int action = ACTION_NONE;
+	const char *model = NULL;
+	const char *layouts = NULL;
+	const char *options = NULL;
+	int debug_level = -1;
+	int binary = 0;
+	Display *dpy;
 
-  while (1)
-  {
-    c = getopt( argc, argv, "hsgm:l:o:d:w:" );
-    if ( c == -1 )
-      break;
-    switch (c)
-    {
-      case 's':
-        printf( "Set the config\n" );
-        action = ACTION_SET;
-        break;
-      case 'g':
-        printf( "Get the config\n" );
-        action = ACTION_GET;
-        break;
-      case 'm':
-        printf( "Model: [%s]\n", model = optarg );
-        break;
-      case 'l':
-        printf( "Layouts: [%s]\n", layouts = optarg );
-        break;
-      case 'o':
-        printf( "Options: [%s]\n", options = optarg );
-        break;
-      case 'h':
-        printUsage();
-        exit(0);
-      case 'd':
-        debugLevel = atoi( optarg );
-        break;
-      case 'w':
-        action = ACTION_WRITE;
-        binary = ( 'b' == optarg[0] );
-      default:
-        fprintf( stderr, "?? getopt returned character code 0%o ??\n", c );
-        printUsage();
-    }
-  }
+	g_type_init_with_debug_flags(G_TYPE_DEBUG_OBJECTS |
+				     G_TYPE_DEBUG_SIGNALS);
 
-  if ( action == ACTION_NONE )
-  {
-    printUsage();
-    exit( 0 );
-  }
+	while (1) {
+		c = getopt(argc, argv, "hsgm:l:o:d:w:");
+		if (c == -1)
+			break;
+		switch (c) {
+		case 's':
+			printf("Set the config\n");
+			action = ACTION_SET;
+			break;
+		case 'g':
+			printf("Get the config\n");
+			action = ACTION_GET;
+			break;
+		case 'm':
+			printf("Model: [%s]\n", model = optarg);
+			break;
+		case 'l':
+			printf("Layouts: [%s]\n", layouts = optarg);
+			break;
+		case 'o':
+			printf("Options: [%s]\n", options = optarg);
+			break;
+		case 'h':
+			print_usage();
+			exit(0);
+		case 'd':
+			debug_level = atoi(optarg);
+			break;
+		case 'w':
+			action = ACTION_WRITE;
+			binary = ('b' == optarg[0]);
+		default:
+			fprintf(stderr,
+				"?? getopt returned character code 0%o ??\n",
+				c);
+			print_usage();
+		}
+	}
+
+	if (action == ACTION_NONE) {
+		print_usage();
+		exit(0);
+	}
 
 #ifdef HAVE_SETLOCALE
-  setlocale( LC_ALL, "" );
+	setlocale( LC_ALL, "" );
 #endif
 
-  dpy = XOpenDisplay( NULL );
-  if ( dpy == NULL )
-  {
-    fprintf( stderr, "Could not open display\n" );
-    exit(1);
-  }
-  printf( "opened display: %p\n", dpy );
-  if ( !XklInit( dpy ) )
-  {
-    XklConfigRec currentConfig, r2;
-    if( debugLevel != -1 )
-      XklSetDebugLevel( debugLevel );
-    XklDebug( 0, "Xklavier initialized\n" );
-    XklConfigInit();
-    XklConfigLoadRegistry();
-    XklDebug( 0, "Xklavier registry loaded\n" );
-    XklDebug( 0, "Backend: [%s]\n", XklGetBackendName() );
-    XklDebug( 0, "Supported features: 0x0%X\n", XklGetBackendFeatures() );
-    XklDebug( 0, "Max number of groups: %d\n", XklGetMaxNumGroups() );
+	dpy = XOpenDisplay(NULL);
+	if (dpy == NULL) {
+		fprintf(stderr, "Could not open display\n");
+		exit(1);
+	}
+	if (debug_level != -1)
+		xkl_set_debug_level(debug_level);
+	XklEngine *engine = xkl_engine_get_instance(dpy);
+	if (engine != NULL) {
+		XklConfigRec *current_config, *r2;
+		xkl_debug(0, "Xklavier initialized\n");
+		XklConfigRegistry *config =
+		    xkl_config_registry_get_instance(engine);
+		xkl_config_registry_load(config);
+		xkl_debug(0, "Xklavier registry loaded\n");
+		xkl_debug(0, "Backend: [%s]\n",
+			  xkl_engine_get_backend_name(engine));
+		xkl_debug(0, "Supported features: 0x0%X\n",
+			  xkl_engine_get_features(engine));
+		xkl_debug(0, "Max number of groups: %d\n",
+			  xkl_engine_get_max_num_groups(engine));
 
-    XklConfigRecInit( &currentConfig );
-    XklConfigGetFromServer( &currentConfig );
+		current_config = xkl_config_rec_new();
+		xkl_config_rec_get_from_server(current_config, engine);
 
-    switch ( action )
-    {
-      case ACTION_GET:
-        XklDebug( 0, "Got config from the server\n" );
-        XklConfigDump( stdout, &currentConfig );
+		switch (action) {
+		case ACTION_GET:
+			xkl_debug(0, "Got config from the server\n");
+			xkl_config_rec_dump(stdout, current_config);
 
-        XklConfigRecInit( &r2 );
+			r2 = xkl_config_rec_new();
 
-        if ( XklConfigGetFromBackup( &r2 ) )
-        {
-          XklDebug( 0, "Got config from the backup\n" );
-          XklConfigDump( stdout, &r2 );
-        }
+			if (xkl_config_rec_get_from_backup(r2, engine)) {
+				xkl_debug(0,
+					  "Got config from the backup\n");
+				xkl_config_rec_dump(stdout, r2);
+			}
 
-        if ( XklConfigActivate( &r2 ) )
-        {
-          XklDebug( 0, "The backup configuration restored\n" );
-          if ( XklConfigActivate( &currentConfig ) )
-          {
-            XklDebug( 0, "Reverting the configuration change\n" );
-          } else
-          {
-            XklDebug( 0, "The configuration could not be reverted: %s\n", XklGetLastError() );
-          }
-        } else
-        {
-          XklDebug( 0, "The backup configuration could not be restored: %s\n", XklGetLastError() );
-        }
+			if (xkl_config_rec_activate(r2, engine)) {
+				xkl_debug(0,
+					  "The backup configuration restored\n");
+				if (xkl_config_rec_activate
+				    (current_config, engine)) {
+					xkl_debug(0,
+						  "Reverting the configuration change\n");
+				} else {
+					xkl_debug(0,
+						  "The configuration could not be reverted: %s\n",
+						  xkl_get_last_error());
+				}
+			} else {
+				xkl_debug(0,
+					  "The backup configuration could not be restored: %s\n",
+					  xkl_get_last_error());
+			}
 
-        XklConfigRecDestroy( &r2 );
-        break;
-      case ACTION_SET:
-        if ( model != NULL )
-        {
-          if ( currentConfig.model != NULL ) free ( currentConfig.model );
-          currentConfig.model = strdup( model );
-        }
+			g_object_unref(G_OBJECT(r2));
+			break;
+		case ACTION_SET:
+			if (model != NULL) {
+				if (current_config->model != NULL)
+					g_free(current_config->model);
+				current_config->model = g_strdup(model);
+			}
 
-        if ( layouts != NULL )
-        {
-          if ( currentConfig.layouts != NULL ) 
-          {
-            for ( i = currentConfig.numLayouts; --i >=0; )
-              free ( currentConfig.layouts[i] );
-            free ( currentConfig.layouts );
-            for ( i = currentConfig.numVariants; --i >=0; )
-              free ( currentConfig.variants[i] );
-            free ( currentConfig.variants );
-          }
-          currentConfig.numLayouts = 
-          currentConfig.numVariants = 1;
-          currentConfig.layouts = malloc( sizeof ( char* ) );
-          currentConfig.layouts[0] = strdup( layouts );
-          currentConfig.variants = malloc( sizeof ( char* ) );
-          currentConfig.variants[0] = strdup( "" );
-        }
+			if (layouts != NULL) {
+				if (current_config->layouts != NULL)
+					g_strfreev(current_config->
+						   layouts);
+				if (current_config->variants != NULL)
+					g_strfreev(current_config->
+						   variants);
 
-        if ( options != NULL )
-        {
-          if ( currentConfig.options != NULL ) 
-          {
-            for ( i = currentConfig.numOptions; --i >=0; )
-              free ( currentConfig.options[i] );
-            free ( currentConfig.options );
-          }
-          currentConfig.numOptions = 1;
-          currentConfig.options = malloc( sizeof ( char* ) );
-          currentConfig.options[0] = strdup( options );
-        }
+				current_config->layouts =
+				    g_new0(char *, 2);
+				current_config->layouts[0] =
+				    g_strdup(layouts);
+				current_config->variants =
+				    g_new0(char *, 2);
+				current_config->variants[0] = g_strdup("");
+			}
 
-        XklDebug( 0, "New config:\n" );
-        XklConfigDump( stdout, &currentConfig );
-        if ( XklConfigActivate( &currentConfig ) )
-            XklDebug( 0, "Set the config\n" );
-        else
-            XklDebug( 0, "Could not set the config: %s\n", XklGetLastError() );
-        break;
-      case ACTION_WRITE:
-        XklConfigWriteFile( binary ? ( PACKAGE ".xkm" ) : ( PACKAGE ".xkb" ),
-                            &currentConfig, 
-                            binary );     
-        XklDebug( 0, "The file " PACKAGE "%s is written\n", 
-                  binary ? ".xkm" : ".xkb"  );
-        break;
-    }
+			if (options != NULL) {
+				if (current_config->options != NULL)
+					g_strfreev(current_config->
+						   options);
 
-    XklConfigRecDestroy( &currentConfig );
+				current_config->options =
+				    g_new0(char *, 2);
+				current_config->options[0] =
+				    g_strdup(options);
+			}
 
-    XklConfigFreeRegistry();
-    XklConfigTerm();
-    XklDebug( 0, "Xklavier registry freed\n" );
-    XklDebug( 0, "Xklavier terminating\n" );
-    XklTerm();
-  } else
-  {
-    fprintf( stderr, "Could not init Xklavier: %s\n", XklGetLastError() );
-    exit(2);
-  }
-  printf( "closing display: %p\n", dpy );
-  XCloseDisplay(dpy);
-  return 0;
+			xkl_debug(0, "New config:\n");
+			xkl_config_rec_dump(stdout, current_config);
+			if (xkl_config_rec_activate
+			    (current_config, engine))
+				xkl_debug(0, "Set the config\n");
+			else
+				xkl_debug(0,
+					  "Could not set the config: %s\n",
+					  xkl_get_last_error());
+			break;
+		case ACTION_WRITE:
+			xkl_config_rec_write_to_file(engine,
+						     binary ? (PACKAGE
+							       ".xkm")
+						     : (PACKAGE ".xkb"),
+						     current_config,
+						     binary);
+			xkl_debug(0, "The file " PACKAGE "%s is written\n",
+				  binary ? ".xkm" : ".xkb");
+			break;
+		}
+
+		g_object_unref(G_OBJECT(current_config));
+
+		xkl_config_registry_free(config);
+		g_object_unref(G_OBJECT(config));
+		xkl_debug(0, "Xklavier registry freed\n");
+		xkl_debug(0, "Xklavier terminating\n");
+		g_object_unref(G_OBJECT(engine));
+	} else {
+		fprintf(stderr, "Could not init _xklavier\n");
+		exit(2);
+	}
+	printf("closing display: %p\n", dpy);
+	XCloseDisplay(dpy);
+	return 0;
 }

@@ -1,3 +1,7 @@
+2006-03-12 svu
+	
+	* everything: branching 2.x series, merging GLIBing branch to HEAD
+
 2006-02-14 svu
 	
 	* libxklavier/xklavier.c: libxklavier/xklavier_evt.c: hopefully fixing

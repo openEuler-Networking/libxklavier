@@ -1,6 +1,6 @@
 #include <errno.h>
-#include <string.h>
 #include <locale.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/param.h>
@@ -19,37 +19,46 @@
 #define XK_XKB_KEYS
 #include <X11/keysymdef.h>
 
-void _XklXmmConfigInit( void )
+void
+xkl_xmm_init_config_registry(XklConfigRegistry * config)
 {
 }
 
-Bool _XklXmmConfigLoadRegistry( void )
+gboolean
+xkl_xmm_load_config_registry(XklConfigRegistry * config)
 {
-  struct stat statBuf;
-  char fileName[MAXPATHLEN] = "";
-  char* rf = _XklGetRulesSetName( "" );
+	struct stat stat_buf;
+	gchar file_name[MAXPATHLEN] = "";
+	XklEngine *engine = xkl_config_registry_get_engine(config);
+	gchar *rf = xkl_engine_get_ruleset_name(engine, "");
 
-  if ( rf == NULL || rf[0] == '\0' )
-    return False;
+	if (rf == NULL || rf[0] == '\0')
+		return FALSE;
 
-  snprintf( fileName, sizeof fileName, XMODMAP_BASE "/%s.xml", rf );
+	g_snprintf(file_name, sizeof file_name, XMODMAP_BASE "/%s.xml",
+		   rf);
 
-  if( stat( fileName, &statBuf ) != 0 )
-  {
-    _xklLastErrorMsg = "No rules file found";    
-    return False;
-  }
+	if (stat(file_name, &stat_buf) != 0) {
+		xkl_last_error_message = "No rules file found";
+		return FALSE;
+	}
 
-  return XklConfigLoadRegistryFromFile( fileName );
+	return xkl_config_registry_load_from_file(config, file_name);
 }
 
-Bool _XklXmmConfigActivate( const XklConfigRecPtr data )
+gboolean
+xkl_xmm_activate_config_rec(XklEngine * engine, const XklConfigRec * data)
 {
-  Bool rv;
-  rv = XklSetNamesProp( xklVTable->baseConfigAtom, 
-                        currentXmmRules, 
-                        data );
-  if( rv )
-    _XklXmmLockGroup( 0 );
-  return rv;
+	gboolean rv;
+	rv = xkl_config_rec_set_to_root_window_property(data,
+							xkl_engine_priv
+							(engine,
+							 base_config_atom),
+							xkl_engine_backend
+							(engine, XklXmm,
+							 current_rules),
+							engine);
+	if (rv)
+		xkl_xmm_lock_group(engine, 0);
+	return rv;
 }

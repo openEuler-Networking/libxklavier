@@ -3,135 +3,141 @@
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <X11/Xlibint.h>
 
 #include "xklavier_private.h"
 #include "xklavier_private_xkb.h"
 
-/**
+/*
  * XKB event handler
  */
-int _XklXkbEventHandler( XEvent *xev )
+gint
+xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 {
 #ifdef XKB_HEADERS_PRESENT
-  int i;
-  unsigned bit;
-  unsigned inds;
-  XkbEvent *kev = (XkbEvent*)xev;
+	gint i;
+	guint bit;
+	guint inds;
+	XkbEvent *kev = (XkbEvent *) xev;
 
-  if( xev->type != _xklXkbEventType )
-    return 0;
+	if (xev->type != xkl_engine_backend(engine, XklXkb, event_type))
+		return 0;
 
-  if( !( _xklListenerType &
-         ( XKLL_MANAGE_WINDOW_STATES | XKLL_TRACK_KEYBOARD_STATE ) ) )
-    return 0;
+	if (!(xkl_engine_priv(engine, listener_type) &
+	      (XKLL_MANAGE_WINDOW_STATES | XKLL_TRACK_KEYBOARD_STATE)))
+		return 0;
 
-  XklDebug( 150, "Xkb event detected\n" );
-  
-  switch ( kev->any.xkb_type )
-  {
-    /**
-     * Group is changed!
-     */
-    case XkbStateNotify:
+	xkl_debug(150, "Xkb event detected\n");
+
+	switch (kev->any.xkb_type) {
+		/*
+		 * Group is changed!
+		 */
+	case XkbStateNotify:
 #define GROUP_CHANGE_MASK \
     ( XkbGroupStateMask | XkbGroupBaseMask | XkbGroupLatchMask | XkbGroupLockMask )
 
-      XklDebug( 150,
-                "XkbStateNotify detected, changes: %X/(mask %X), new group %d\n",
-                kev->state.changed, GROUP_CHANGE_MASK,
-                kev->state.locked_group );
+		xkl_debug(150,
+			  "XkbStateNotify detected, changes: %X/(mask %X), new group %d\n",
+			  kev->state.changed, GROUP_CHANGE_MASK,
+			  kev->state.locked_group);
 
-      if( kev->state.changed & GROUP_CHANGE_MASK )
-        _XklStateModificationHandler( GROUP_CHANGED, 
-                                      kev->state.locked_group, 
-                                      0, 
-                                      False );
-      else /* ...not interested... */
-      {
-        XklDebug( 200,
-                  "This type of state notification is not regarding groups\n" );
-        if ( kev->state.locked_group != _xklCurState.group )
-          XklDebug( 0, 
-                    "ATTENTION! Currently cached group %d is not equal to the current group from the event: %d\n!",
-                    _xklCurState.group,
-                    kev->state.locked_group );
-      }
+		if (kev->state.changed & GROUP_CHANGE_MASK)
+			xkl_engine_process_state_modification(engine,
+							      GROUP_CHANGED,
+							      kev->state.
+							      locked_group,
+							      0, FALSE);
+		else {		/* ...not interested... */
 
-      break;
+			xkl_debug(200,
+				  "This type of state notification is not regarding groups\n");
+			if (kev->state.locked_group !=
+			    xkl_engine_priv(engine, curr_state).group)
+				xkl_debug(0,
+					  "ATTENTION! Currently cached group %d is not equal to the current group from the event: %d\n!",
+					  xkl_engine_priv(engine,
+							  curr_state).
+					  group, kev->state.locked_group);
+		}
 
-    /**
-     * Indicators are changed!
-     */
-    case XkbIndicatorStateNotify:
+		break;
 
-      XklDebug( 150, "XkbIndicatorStateNotify\n" );
+		/*
+		 * Indicators are changed!
+		 */
+	case XkbIndicatorStateNotify:
 
-      inds = _xklCurState.indicators;
+		xkl_debug(150, "XkbIndicatorStateNotify\n");
 
-      ForPhysIndicators( i, bit ) if( kev->indicators.changed & bit )
-      {
-        if( kev->indicators.state & bit )
-          inds |= bit;
-        else
-          inds &= ~bit;
-      }
+		inds = xkl_engine_priv(engine, curr_state).indicators;
 
-      _XklStateModificationHandler( INDICATORS_CHANGED, 
-                                    0, 
-                                    inds, 
-                                    True );
-      break;
+		ForPhysIndicators(i,
+				  bit) if (kev->indicators.changed & bit) {
+			if (kev->indicators.state & bit)
+				inds |= bit;
+			else
+				inds &= ~bit;
+		}
 
-    /**
-     * The configuration is changed!
-     */
-    case XkbIndicatorMapNotify:
-    case XkbControlsNotify:
-    case XkbNamesNotify:
+		xkl_engine_process_state_modification(engine,
+						      INDICATORS_CHANGED,
+						      0, inds, TRUE);
+		break;
+
+		/*
+		 * The configuration is changed!
+		 */
+	case XkbIndicatorMapNotify:
+	case XkbControlsNotify:
+	case XkbNamesNotify:
 #if 0
-      /* not really fair - but still better than flooding... */
-      XklDebug( 200, "warning: configuration event %s is not actually processed\n",
-                _XklXkbGetXkbEventName( kev->any.xkb_type ) );
-      break;
+		/* not really fair - but still better than flooding... */
+		XklDebug(200,
+			 "warning: configuration event %s is not actually processed\n",
+			 _XklXkbGetXkbEventName(kev->any.xkb_type));
+		break;
 #endif
-    case XkbNewKeyboardNotify:
-      XklDebug( 150, "%s\n",
-                _XklXkbGetXkbEventName( kev->any.xkb_type ) );
-      _XklResetAllInfo( "XKB event: XkbNewKeyboardNotify" );
-      break;
+	case XkbNewKeyboardNotify:
+		xkl_debug(150, "%s\n",
+			  xkl_xkb_event_get_name(kev->any.xkb_type));
+		xkl_engine_reset_all_info(engine,
+					  "XKB event: XkbNewKeyboardNotify");
+		break;
 
-    /**
-     * ...Not interested...
-     */
-    default:
-      XklDebug( 150, "Unknown XKB event %d [%s]\n", 
-                kev->any.xkb_type, _XklXkbGetXkbEventName( kev->any.xkb_type ) );
-      return 0;
-  }
-  return 1;
+		/*
+		 * ...Not interested...
+		 */
+	default:
+		xkl_debug(150, "Unknown XKB event %d [%s]\n",
+			  kev->any.xkb_type,
+			  xkl_xkb_event_get_name(kev->any.xkb_type));
+		return 0;
+	}
+	return 1;
 #else
-  return 0;
+	return 0;
 #endif
 }
 
-void _XklXkbSetIndicators( const XklState *windowState )
+void
+xkl_xkb_set_indicators(XklEngine * engine, const XklState * window_state)
 {
 #ifdef XKB_HEADERS_PRESENT
-  int i;
-  unsigned bit;
+	int i;
+	unsigned bit;
 
-  ForPhysIndicators( i,
-                     bit ) if( _xklXkb->names->indicators[i] != None )
-  {
-    Bool status;
-    status = _XklSetIndicator( i,
-                               ( windowState->indicators & bit ) != 0 );
-    XklDebug( 150, "Set indicator \"%s\"/%d to %d: %d\n",
-              _xklIndicatorNames[i],
-              _xklXkb->names->indicators[i],
-              windowState->indicators & bit,
-              status );
-  }
+	XkbDescPtr cached =
+	    xkl_engine_backend(engine, XklXkb, cached_desc);
+	ForPhysIndicators(i, bit) if (cached->names->indicators[i] != None) {
+		gboolean status;
+		status = xkl_xkb_set_indicator(engine, i,
+					       (window_state->
+						indicators & bit) != 0);
+		xkl_debug(150, "Set indicator \"%s\"/%d to %d: %d\n",
+			  xkl_engine_backend(engine, XklXkb,
+					     indicator_names)[i],
+			  cached->names->indicators[i],
+			  window_state->indicators & bit, status);
+	}
 #endif
 }
