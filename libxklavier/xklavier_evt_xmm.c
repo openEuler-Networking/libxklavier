@@ -3,190 +3,171 @@
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/Xlibint.h>
 #include <X11/keysym.h>
 
 #include "xklavier_private.h"
 #include "xklavier_private_xmm.h"
 
-static gint
-xkl_xmm_process_keypress_event(XklEngine * engine, XKeyPressedEvent * kpe)
+static int _XklXmmKeypressEventHandler( XKeyPressedEvent* kpe )
 {
-	if (xkl_engine_priv(engine, listener_type) & XKLL_MANAGE_LAYOUTS) {
-		xkl_debug(200, "Processing the KeyPress event\n");
-		gint current_shortcut = 0;
-		const XmmSwitchOption *sop =
-		    xkl_xmm_find_switch_option(engine, kpe->keycode,
-					       kpe->state,
-					       &current_shortcut);
-		if (sop != NULL) {
-			xkl_debug(150, "It is THE shortcut\n");
-			XklState state;
-			xkl_xmm_get_server_state(engine, &state);
-			if (state.group != -1) {
-				gint new_group =
-				    (state.group +
-				     sop->
-				     shortcut_steps[current_shortcut]) %
-				    g_strv_length(xkl_engine_backend
-						  (engine, XklXmm,
-						   current_config).
-						  layouts);
-				xkl_debug(150,
-					  "Setting new xmm group %d\n",
-					  new_group);
-				xkl_xmm_lock_group(engine, new_group);
-				return 1;
-			}
-		}
-	}
-	return 0;
+  if( _xklListenerType & XKLL_MANAGE_LAYOUTS )
+  {
+    int currentShortcut = 0;
+    XmmSwitchOptionPtr sop;
+    XklDebug( 200, "Processing the KeyPress event\n" );
+    sop = _XklXmmFindSwitchOption( kpe->keycode, 
+                                   kpe->state,
+                                   &currentShortcut );
+    if( sop != NULL )
+    {
+      XklState state;
+      XklDebug( 150, "It is THE shortcut\n" );
+      _XklXmmGetRealState( &state );
+      if( state.group != -1 )
+      {
+        int newGroup = ( state.group + sop->shortcutSteps[currentShortcut] ) % 
+                         currentXmmConfig.numLayouts;
+        XklDebug( 150, "Setting new xmm group %d\n", newGroup );
+        _XklXmmLockGroup( newGroup );
+        return 1;
+      }
+    }
+  }
+  return 0;
 }
 
-static gint
-xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
+static int _XklXmmPropertyEventHandler( XPropertyEvent* kpe )
 {
-	Atom state_atom = xkl_engine_backend(engine, XklXmm, state_atom);
-	xkl_debug(200, "Processing the PropertyNotify event: %d/%d\n",
-		  kpe->atom, state_atom);
-  /*
+  XklDebug( 200, "Processing the PropertyNotify event: %d/%d\n", 
+            kpe->atom, xmmStateAtom );
+  /**
    * Group is changed!
    */
-	if (kpe->atom == state_atom) {
-		XklState state;
-		xkl_xmm_get_server_state(engine, &state);
-
-		if (xkl_engine_priv(engine, listener_type) &
-		    XKLL_MANAGE_LAYOUTS) {
-			xkl_debug(150,
-				  "Current group from the root window property %d\n",
-				  state.group);
-			xkl_xmm_shortcuts_ungrab(engine);
-			xkl_xmm_actualize_group(engine, state.group);
-			xkl_xmm_shortcuts_grab(engine);
-			return 1;
-		}
-
-		if (xkl_engine_priv(engine, listener_type) &
-		    (XKLL_MANAGE_WINDOW_STATES |
-		     XKLL_TRACK_KEYBOARD_STATE)) {
-			xkl_debug(150,
-				  "XMM state changed, new 'group' %d\n",
-				  state.group);
-
-			xkl_engine_process_state_modification(engine,
-							      GROUP_CHANGED,
-							      state.group,
-							      0, False);
-		}
-	} else
-  /*
+  if( kpe->atom == xmmStateAtom )
+  {
+    XklState state;
+    _XklXmmGetRealState( &state );
+    
+    if( _xklListenerType & XKLL_MANAGE_LAYOUTS )
+    {
+      XklDebug( 150, "Current group from the root window property %d\n", state.group );
+      _XklXmmUngrabShortcuts();
+      _XklXmmActualizeGroup( state.group );
+      _XklXmmGrabShortcuts();
+      return 1;
+    }
+    
+    if( _xklListenerType &
+       ( XKLL_MANAGE_WINDOW_STATES | XKLL_TRACK_KEYBOARD_STATE ) )
+    {
+      XklDebug( 150,
+                "XMM state changed, new 'group' %d\n",
+                state.group );
+      
+      _XklStateModificationHandler( GROUP_CHANGED, 
+                                    state.group, 
+                                    0, 
+                                    False );
+    }
+  } else
+  /**
    * Configuration is changed!
    */
-	if (kpe->atom == xkl_engine_priv(engine, base_config_atom)) {
-		xkl_engine_reset_all_info(engine,
-					  "base config atom changed");
-	}
-
-	return 0;
+  if( kpe->atom == xklVTable->baseConfigAtom )
+  {
+    _XklResetAllInfo( "base config atom changed" );
+  }
+  
+  return 0;
 }
 
-/*
+/**
  * XMM event handler
  */
-gint
-xkl_xmm_process_x_event(XklEngine * engine, XEvent * xev)
+int _XklXmmEventHandler( XEvent *xev )
 {
-	switch (xev->type) {
-	case KeyPress:
-		return xkl_xmm_process_keypress_event(engine,
-						      (XKeyPressedEvent *)
-						      xev);
-	case PropertyNotify:
-		return xkl_xmm_process_property_event(engine,
-						      (XPropertyEvent *)
-						      xev);
-	}
-	return 0;
+  switch( xev->type )
+  {
+    case KeyPress:
+      return _XklXmmKeypressEventHandler( (XKeyPressedEvent*)xev );
+    case PropertyNotify:
+      return _XklXmmPropertyEventHandler( (XPropertyEvent*)xev );
+  }
+  return 0;
 }
 
-/*
+/**
  * We have to find which of Shift/Lock/Control/ModX masks
  * belong to Caps/Num/Scroll lock
  */
-static void
-xkl_xmm_init_xmm_indicators_map(XklEngine * engine,
-				guint * p_caps_lock_mask,
-				guint * p_num_lock_mask,
-				guint * p_scroll_lock_mask)
+static void _XklXmmInitXmmIndicatorsMap( int* pCapsLockMask,
+                                      int* pNumLockMask,
+                                      int* pScrollLockMask )
 {
-	XModifierKeymap *xmkm = NULL;
-	KeyCode *kcmap, nlkc, clkc, slkc;
-	int m, k, mask;
+  XModifierKeymap *xmkm = NULL;
+  KeyCode *kcmap, nlkc, clkc, slkc;
+  int m, k, mask;
 
-	Display *display = xkl_engine_get_display(engine);
-	xmkm = XGetModifierMapping(display);
-	if (xmkm) {
-		clkc = XKeysymToKeycode(display, XK_Num_Lock);
-		nlkc = XKeysymToKeycode(display, XK_Caps_Lock);
-		slkc = XKeysymToKeycode(display, XK_Scroll_Lock);
+  xmkm = XGetModifierMapping( _xklDpy );
+  if( xmkm )
+  {
+    clkc = XKeysymToKeycode( _xklDpy, XK_Num_Lock );
+    nlkc = XKeysymToKeycode( _xklDpy, XK_Caps_Lock );
+    slkc = XKeysymToKeycode( _xklDpy, XK_Scroll_Lock );
 
-		kcmap = xmkm->modifiermap;
-		mask = 1;
-		for (m = 8; --m >= 0; mask <<= 1)
-			for (k = xmkm->max_keypermod; --k >= 0; kcmap++) {
-				if (*kcmap == clkc)
-					*p_caps_lock_mask = mask;
-				if (*kcmap == slkc)
-					*p_scroll_lock_mask = mask;
-				if (*kcmap == nlkc)
-					*p_num_lock_mask = mask;
-			}
-		XFreeModifiermap(xmkm);
-	}
+    kcmap = xmkm->modifiermap;
+    mask = 1;
+    for( m = 8; --m >= 0; mask <<= 1 )
+      for( k = xmkm->max_keypermod; --k >= 0; kcmap++ )
+      {
+        if( *kcmap == clkc )
+          *pCapsLockMask = mask;
+        if( *kcmap == slkc )
+          *pScrollLockMask = mask;
+        if( *kcmap == nlkc )
+          *pNumLockMask = mask;
+      }
+    XFreeModifiermap( xmkm );
+  }
 }
 
-void
-xkl_xmm_grab_ignoring_indicators(XklEngine * engine, gint keycode,
-				 guint modifiers)
+void _XklXmmGrabIgnoringIndicators( int keycode, int modifiers )
 {
-	guint caps_lock_mask = 0, num_lock_mask = 0, scroll_lock_mask = 0;
-
-	xkl_xmm_init_xmm_indicators_map(engine, &caps_lock_mask,
-					&num_lock_mask, &scroll_lock_mask);
+  int CapsLockMask = 0, NumLockMask = 0, ScrollLockMask = 0;
+  
+  _XklXmmInitXmmIndicatorsMap( &CapsLockMask, &NumLockMask, &ScrollLockMask );
 
 #define GRAB(mods) \
-  xkl_engine_grab_key(engine, keycode, modifiers|(mods))
-
-	GRAB(0);
-	GRAB(caps_lock_mask);
-	GRAB(num_lock_mask);
-	GRAB(scroll_lock_mask);
-	GRAB(caps_lock_mask | num_lock_mask);
-	GRAB(caps_lock_mask | scroll_lock_mask);
-	GRAB(num_lock_mask | scroll_lock_mask);
-	GRAB(caps_lock_mask | num_lock_mask | scroll_lock_mask);
+  XklGrabKey( keycode, modifiers|(mods) )
+  
+  GRAB( 0 );
+  GRAB( CapsLockMask );
+  GRAB( NumLockMask );
+  GRAB( ScrollLockMask );
+  GRAB( CapsLockMask | NumLockMask );
+  GRAB( CapsLockMask | ScrollLockMask );
+  GRAB( NumLockMask | ScrollLockMask );
+  GRAB( CapsLockMask | NumLockMask | ScrollLockMask );
 #undef GRAB
 }
 
-void
-xkl_xmm_ungrab_ignoring_indicators(XklEngine * engine, gint keycode,
-				   guint modifiers)
+void _XklXmmUngrabIgnoringIndicators( int keycode, int modifiers )
 {
-	guint caps_lock_mask = 0, num_lock_mask = 0, scroll_lock_mask = 0;
+  int CapsLockMask = 0, NumLockMask = 0, ScrollLockMask = 0;
 
-	xkl_xmm_init_xmm_indicators_map(engine, &caps_lock_mask,
-					&num_lock_mask, &scroll_lock_mask);
-
+  _XklXmmInitXmmIndicatorsMap( &CapsLockMask, &NumLockMask, &ScrollLockMask );
+  
 #define UNGRAB(mods) \
-  xkl_engine_ungrab_key(engine, keycode, modifiers|(mods))
-
-	UNGRAB(0);
-	UNGRAB(caps_lock_mask);
-	UNGRAB(num_lock_mask);
-	UNGRAB(scroll_lock_mask);
-	UNGRAB(caps_lock_mask | num_lock_mask);
-	UNGRAB(caps_lock_mask | scroll_lock_mask);
-	UNGRAB(num_lock_mask | scroll_lock_mask);
-	UNGRAB(caps_lock_mask | num_lock_mask | scroll_lock_mask);
+  XklUngrabKey( keycode, modifiers|(mods) )
+  
+  UNGRAB( 0 );
+  UNGRAB( CapsLockMask );
+  UNGRAB( NumLockMask );
+  UNGRAB( ScrollLockMask );
+  UNGRAB( CapsLockMask | NumLockMask );
+  UNGRAB( CapsLockMask | ScrollLockMask );
+  UNGRAB( NumLockMask | ScrollLockMask );
+  UNGRAB( CapsLockMask | NumLockMask | ScrollLockMask );
 #undef UNGRAB
 }

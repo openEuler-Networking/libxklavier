@@ -1,10 +1,11 @@
-2006-03-12 svu
+2006-02-16 svu
 	
-	* everything: branching 2.x series, merging GLIBing branch to HEAD
+	* libxklavier/xklavier_evt_xmm.c: fixing GCC 2.95 compilation,
+	thanks to Jens Granseuer
 
 2006-02-14 svu
 	
-	* libxklavier/xklavier.c: libxklavier/xklavier_evt.c: hopefully fixing
+	* libxklavier/xklavier.c, libxklavier/xklavier_evt.c: hopefully fixing
 	the crash on SetTransparent
 
 2006-01-16 svu
