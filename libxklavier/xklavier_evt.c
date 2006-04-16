@@ -318,7 +318,7 @@ xkl_engine_process_focus_out_evt(XklEngine * engine,
 		  fev->window, xkl_get_debug_window_title(engine,
 							  fev->window));
 
-	if (xkl_engine_is_window_transparent(engine, fev->window)) {
+	if (xkl_engine_is_toplevel_window_transparent(engine, fev->window)) {
 		xkl_debug(150, "Leaving transparent window!\n");
 /* 
  * If we are leaving the transparent window - we skip the restore operation.

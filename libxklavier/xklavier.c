@@ -283,8 +283,8 @@ xkl_engine_get_current_window_group(XklEngine * engine)
 }
 
 void
-xkl_engine_set_transparent(XklEngine * engine, Window win,
-			   gboolean transparent)
+xkl_engine_set_window_transparent(XklEngine * engine, Window win,
+				  gboolean transparent)
 {
 	Window toplevel_win;
 	xkl_debug(150,
@@ -509,7 +509,7 @@ xkl_engine_reset_all_info(XklEngine * engine, const gchar reason[])
  * Calling through vtable
  */
 const gchar **
-xkl_engine_groups_get_names(XklEngine * engine)
+xkl_engine_get_groups_names(XklEngine * engine)
 {
 	xkl_engine_ensure_vtable_inited(engine);
 	return xkl_engine_vcall(engine, get_groups_names) (engine);

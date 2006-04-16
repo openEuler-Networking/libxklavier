@@ -356,7 +356,8 @@ extern "C" {
  * Sets the "transparent" flag. It means focus switching onto 
  * this window will never change the state.
  */
-	extern void xkl_engine_set_window_transparent(XklEngine * engine,
+	extern void xkl_engine_set_window_transparent(XklEngine *
+						      engine,
 						      Window win,
 						      gboolean
 						      transparent);
@@ -368,8 +369,8 @@ extern "C" {
  *
  * Returns: TRUE if the window is "transparent"
  */
-	extern gboolean xkl_engine_is_window_transparent(XklEngine *
-							 engine,
+	extern gboolean xkl_engine_is_window_transparent(XklEngine
+							 * engine,
 							 Window win);
 
 /**
@@ -520,18 +521,18 @@ extern "C" {
 							  engine);
 
 /**
- * xkl_engine_group_set_default:
+ * xkl_engine_set_default_group:
  * @engine: the engine
  * @group: default group
  *
  * Configures the default group set on window creation.
  * If -1, no default group is used
  */
-	extern void xkl_engine_group_set_default(XklEngine * engine,
+	extern void xkl_engine_set_default_group(XklEngine * engine,
 						 gint group);
 
 /**
- * xkl_engine_group_get_default:
+ * xkl_engine_get_default_group:
  * @engine: the engine
  *
  * Returns the default group set on window creation
@@ -539,7 +540,7 @@ extern "C" {
  *
  * Returns: the default group
  */
-	extern gint xkl_engine_group_get_default(XklEngine * engine);
+	extern gint xkl_engine_get_default_group(XklEngine * engine);
 
 #ifdef __cplusplus
 }
