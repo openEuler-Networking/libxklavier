@@ -393,8 +393,15 @@ xkl_config_rec_set_to_root_window_property(const XklConfigRec * data,
 	len += (all_layouts ? strlen(all_layouts) : 0);
 	len += (all_variants ? strlen(all_variants) : 0);
 	len += (all_options ? strlen(all_options) : 0);
-	if (len < 1)
+	if (len < 1) {
+		if (all_layouts)
+			g_free(all_layouts);
+		if (all_variants)
+			g_free(all_variants);
+		if (all_options)
+			g_free(all_options);
 		return TRUE;
+	}
 
 	len += 5;		/* trailing NULs */
 

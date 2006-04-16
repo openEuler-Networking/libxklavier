@@ -12,15 +12,15 @@ static gint
 xkl_xmm_process_keypress_event(XklEngine * engine, XKeyPressedEvent * kpe)
 {
 	if (xkl_engine_priv(engine, listener_type) & XKLL_MANAGE_LAYOUTS) {
-		xkl_debug(200, "Processing the KeyPress event\n");
 		gint current_shortcut = 0;
-		const XmmSwitchOption *sop =
-		    xkl_xmm_find_switch_option(engine, kpe->keycode,
+		const XmmSwitchOption *sop;
+		xkl_debug(200, "Processing the KeyPress event\n");
+		sop = xkl_xmm_find_switch_option(engine, kpe->keycode,
 					       kpe->state,
 					       &current_shortcut);
 		if (sop != NULL) {
-			xkl_debug(150, "It is THE shortcut\n");
 			XklState state;
+			xkl_debug(150, "It is THE shortcut\n");
 			xkl_xmm_get_server_state(engine, &state);
 			if (state.group != -1) {
 				gint new_group =

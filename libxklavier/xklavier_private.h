@@ -41,6 +41,8 @@ struct _XklEnginePrivate {
 
 	XklState curr_state;
 
+	gboolean criticalSection;
+
 	Atom atoms[TOTAL_ATOMS];
 
 	Display *display;

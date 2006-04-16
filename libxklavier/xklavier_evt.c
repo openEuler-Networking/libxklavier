@@ -468,8 +468,7 @@ xkl_process_error(Display * dpy, XErrorEvent * evt)
 	case BadAccess:
 		{
 			XGetErrorText(xkl_engine_get_display(engine),
-				      evt->error_code, buf,
-				      sizeof(buf));
+				      evt->error_code, buf, sizeof(buf));
 			/* in most cases this means we are late:) */
 			xkl_debug(200,
 				  "ERROR: %p, " WINID_FORMAT ", %d [%s], "
@@ -481,8 +480,16 @@ xkl_process_error(Display * dpy, XErrorEvent * evt)
 			break;
 		}
 	default:
-		(*xkl_engine_priv(engine, default_error_handler)) (dpy,
-								   evt);
+		xkl_debug(200,
+			  "Unexpected by libxklavier X ERROR: %p, "
+			  WINID_FORMAT ", %d [%s], "
+			  "X11 request: %d, minor code: %d\n", dpy,
+			  (unsigned long) evt->resourceid,
+			  (int) evt->error_code, buf,
+			  (int) evt->request_code, (int) evt->minor_code);
+		if (!xkl_engine_priv(engine, criticalSection))
+			(*xkl_engine_priv(engine, default_error_handler))
+			    (dpy, evt);
 	}
 }
 

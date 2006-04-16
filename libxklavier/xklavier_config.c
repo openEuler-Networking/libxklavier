@@ -500,7 +500,7 @@ gboolean
 xkl_config_registry_find_option_group(XklConfigRegistry * config,
 				      XklConfigItem * pitem /* in/out */ )
 {
-	xmlNodePtr node;
+	xmlNodePtr node = NULL;
 	gboolean rv = xkl_config_registry_find_object(config,
 						      "/xkbConfigRegistry/optionList/group[configItem/name = '%s%s']",
 						      "",

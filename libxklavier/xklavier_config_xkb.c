@@ -238,6 +238,10 @@ xkl_config_get_keyboard(XklEngine * engine,
 				  component_names_ptr->symbols,
 				  component_names_ptr->geometry);
 
+			XSync(display, False);
+			/* From this point, ALL errors should be intercepted only by libxklavier */
+			xkl_engine_priv(engine, criticalSection) = TRUE;
+
 			cpid = fork();
 			switch (cpid) {
 			case -1:
@@ -350,6 +354,10 @@ xkl_config_get_keyboard(XklEngine * engine,
 							True);
 				break;
 			}
+			XSync(display, False);
+			/* Return to normal X error processing */
+			xkl_engine_priv(engine, criticalSection) = FALSE;
+
 			xkl_debug(160,
 				  "Unlinking the temporary xkb file %s\n",
 				  xkb_fn);
