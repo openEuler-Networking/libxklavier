@@ -174,7 +174,7 @@ extern "C" {
 								   engine);
 
 /**
- * xkl_backup_names_prop:
+ * xkl_engine_backup_names_prop:
  * @engine: the engine
  *
  * Backups current XKB configuration into some property - 
@@ -182,7 +182,7 @@ extern "C" {
  *
  * Returns: TRUE on success
  */
-	extern gboolean xkl_backup_names_prop(XklEngine * engine);
+	extern gboolean xkl_engine_backup_names_prop(XklEngine * engine);
 
 /**
  * xkl_restore_names_prop:

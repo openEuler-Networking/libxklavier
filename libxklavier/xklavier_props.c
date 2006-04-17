@@ -185,7 +185,7 @@ xkl_config_rec_get_from_backup(XklConfigRec * data, XklEngine * engine)
 }
 
 gboolean
-xkl_backup_names_prop(XklEngine * engine)
+xkl_engine_backup_names_prop(XklEngine * engine)
 {
 	gboolean rv = TRUE;
 	gchar *rf = NULL;
