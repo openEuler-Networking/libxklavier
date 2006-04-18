@@ -1,3 +1,4 @@
+2.91	Absolutely new API based on glib.
 2.2	Bugfixes. XML processing improved. Better compatibility with
 	modular X.org filesystem layout
 2.1	Bugfixes. GCC 4.x compatibility patches.

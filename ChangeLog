@@ -1,5 +1,9 @@
-2006-03-12 svu
-	
+2006-04-18 svu
+
+	* NEWS: preparing 2.91
+
+2006-04-12 svu
+
 	* libxklavier/xklavier_config.c,
 	libxklavier/xklavier_config_xkb.c,
 	libxklavier/xklavier_evt.c,
