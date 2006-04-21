@@ -37,6 +37,7 @@ main(int argc, char *argv[])
 	int debug_level = -1;
 	XkbEvent ev;
 	Display *dpy;
+	XklEngine *engine;
 	int listener_type = 0, lt;
 	int listener_types[] = { XKLL_MANAGE_LAYOUTS,
 		XKLL_MANAGE_WINDOW_STATES,
@@ -81,12 +82,13 @@ main(int argc, char *argv[])
 	}
 	if (debug_level != -1)
 		xkl_set_debug_level(debug_level);
-	XklEngine *engine = xkl_engine_get_instance(dpy);
+	engine = xkl_engine_get_instance(dpy);
 	if (engine != NULL) {
 		XklConfigRec *current_config;
+		XklConfigRegistry *config;
+
 		xkl_debug(0, "Xklavier initialized\n");
-		XklConfigRegistry *config =
-		    xkl_config_registry_get_instance(engine);
+		config = xkl_config_registry_get_instance(engine);
 		xkl_config_registry_load(config);
 		xkl_debug(0, "Xklavier registry loaded\n");
 

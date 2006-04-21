@@ -387,6 +387,7 @@ xkl_config_rec_set_to_root_window_property(const XklConfigRec * data,
 	gchar *all_layouts = xkl_config_rec_merge_layouts(data);
 	gchar *all_variants = xkl_config_rec_merge_variants(data);
 	gchar *all_options = xkl_config_rec_merge_options(data);
+	Display *display;
 
 	len = (rules_file ? strlen(rules_file) : 0);
 	len += (data->model ? strlen(data->model) : 0);
@@ -455,7 +456,7 @@ xkl_config_rec_set_to_root_window_property(const XklConfigRec * data,
 		return FALSE;
 	}
 
-	Display *display = xkl_engine_get_display(engine);
+	display = xkl_engine_get_display(engine);
 	rv = XChangeProperty(display, xkl_engine_priv(engine, root_window),
 			     rules_atom, XA_STRING, 8, PropModeReplace,
 			     (unsigned char *) pval, len);

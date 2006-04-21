@@ -254,13 +254,14 @@ void
 xkl_xmm_lock_group(XklEngine * engine, gint group)
 {
 	CARD32 propval;
+	Display *display;
 
 	if (xkl_xmm_get_num_groups(engine) < group)
 		return;
 
 	/* updating the status property */
 	propval = group;
-	Display *display = xkl_engine_get_display(engine);
+	display = xkl_engine_get_display(engine);
 	XChangeProperty(display, xkl_engine_priv(engine, root_window),
 			xkl_engine_backend(engine, XklXmm, state_atom),
 			XA_INTEGER, 32, PropModeReplace,
@@ -277,6 +278,8 @@ xkl_xmm_set_indicators(XklEngine * engine, const XklState * window_state)
 gint
 xkl_xmm_init(XklEngine * engine)
 {
+	Display *display;
+
 	xkl_engine_priv(engine, backend_id) = "xmodmap";
 	xkl_engine_priv(engine, features) =
 	    XKLF_MULTIPLE_LAYOUTS_SUPPORTED |
@@ -311,7 +314,7 @@ xkl_xmm_init(XklEngine * engine)
 	if (getenv("XKL_XMODMAP_DISABLE") != NULL)
 		return -1;
 
-	Display *display = xkl_engine_get_display(engine);
+	display = xkl_engine_get_display(engine);
 	xkl_engine_priv(engine, base_config_atom) =
 	    XInternAtom(display, "_XMM_NAMES", False);
 	xkl_engine_priv(engine, backup_config_atom) =

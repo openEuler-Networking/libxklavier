@@ -329,13 +329,15 @@ xkl_engine_get_ruleset_name(XklEngine * engine,
 XklConfigRegistry *
 xkl_config_registry_get_instance(XklEngine * engine)
 {
+	XklConfigRegistry *config;
+
 	if (!engine) {
 		xkl_debug(10,
 			  "xkl_config_registry_get_instance : engine is NULL ?\n");
 		return NULL;
 	}
 
-	XklConfigRegistry *config =
+	config =
 	    XKL_CONFIG_REGISTRY(g_object_new
 				(xkl_config_registry_get_type(), "engine",
 				 engine, NULL));
@@ -548,8 +550,10 @@ xkl_config_rec_activate(const XklConfigRec * data, XklEngine * engine)
 gboolean
 xkl_config_registry_load(XklConfigRegistry * config)
 {
+	XklEngine *engine;
+
 	xkl_config_registry_free(config);
-	XklEngine *engine = xkl_config_registry_get_engine(config);
+	engine = xkl_config_registry_get_engine(config);
 	xkl_engine_ensure_vtable_inited(engine);
 	return xkl_engine_vcall(engine, load_config_registry) (config);
 }
@@ -585,8 +589,8 @@ xkl_config_rec_dump(FILE * file, XklConfigRec * data)
 	fprintf(file, "  layouts:\n");
 #define OUTPUT_ARRZ(arrz) \
   { \
-    fprintf( file, "  " #arrz ":\n" ); \
     gchar **p = data->arrz; \
+    fprintf( file, "  " #arrz ":\n" ); \
     if ( p != NULL ) \
       for( j = 0; *p != NULL; ) \
         fprintf( file, "  %d: [%s]\n", j++, *p++ ); \
@@ -606,6 +610,8 @@ xkl_config_registry_constructor(GType type,
 				construct_properties)
 {
 	GObject *obj;
+	XklConfigRegistry *config;
+	XklEngine *engine;
 
 	{
 		/* Invoke parent constructor. */
@@ -618,11 +624,10 @@ xkl_config_registry_constructor(GType type,
 					      construct_properties);
 	}
 
-	XklConfigRegistry *config = XKL_CONFIG_REGISTRY(obj);
+	config = XKL_CONFIG_REGISTRY(obj);
 
-	XklEngine *engine =
-	    XKL_ENGINE(g_value_peek_pointer
-		       (construct_properties[0].value));
+	engine = XKL_ENGINE(g_value_peek_pointer
+			    (construct_properties[0].value));
 	xkl_config_registry_get_engine(config) = engine;
 
 	xkl_engine_ensure_vtable_inited(engine);
@@ -699,6 +704,7 @@ static void
 xkl_config_registry_class_init(XklConfigRegistryClass * klass)
 {
 	GObjectClass *object_class;
+	GParamSpec *engine_param_spec;
 
 	object_class = (GObjectClass *) klass;
 	parent_class = g_type_class_peek_parent(object_class);
@@ -707,13 +713,13 @@ xkl_config_registry_class_init(XklConfigRegistryClass * klass)
 	object_class->set_property = xkl_config_registry_set_property;
 	object_class->get_property = xkl_config_registry_get_property;
 
-	GParamSpec *engine_param_spec = g_param_spec_object("engine",
-							    "Engine",
-							    "XklEngine",
-							    XKL_TYPE_ENGINE,
-							    G_PARAM_CONSTRUCT_ONLY
-							    |
-							    G_PARAM_READWRITE);
+	engine_param_spec = g_param_spec_object("engine",
+						"Engine",
+						"XklEngine",
+						XKL_TYPE_ENGINE,
+						G_PARAM_CONSTRUCT_ONLY
+						|
+						G_PARAM_READWRITE);
 
 	g_object_class_install_property(object_class,
 					PROP_ENGINE, engine_param_spec);

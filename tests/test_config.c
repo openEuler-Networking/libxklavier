@@ -98,6 +98,7 @@ main(int argc, char *const argv[])
 	int debug_level = -1;
 	int binary = 0;
 	Display *dpy;
+	XklEngine *engine;
 
 	g_type_init_with_debug_flags(G_TYPE_DEBUG_OBJECTS |
 				     G_TYPE_DEBUG_SIGNALS);
@@ -161,12 +162,13 @@ main(int argc, char *const argv[])
 	}
 	if (debug_level != -1)
 		xkl_set_debug_level(debug_level);
-	XklEngine *engine = xkl_engine_get_instance(dpy);
+	engine = xkl_engine_get_instance(dpy);
 	if (engine != NULL) {
 		XklConfigRec *current_config, *r2;
+		XklConfigRegistry *config;
+
 		xkl_debug(0, "Xklavier initialized\n");
-		XklConfigRegistry *config =
-		    xkl_config_registry_get_instance(engine);
+		config = xkl_config_registry_get_instance(engine);
 		xkl_config_registry_load(config);
 		xkl_debug(0, "Xklavier registry loaded\n");
 		xkl_debug(0, "Backend: [%s]\n",

@@ -579,6 +579,10 @@ xkl_engine_constructor(GType type,
 		       GObjectConstructParam * construct_properties)
 {
 	GObject *obj;
+	XklEngine *engine;
+	Display *display;
+	int scr;
+	gint rv;
 
 	{
 		/* Invoke parent constructor. */
@@ -590,15 +594,13 @@ xkl_engine_constructor(GType type,
 					      construct_properties);
 	}
 
-	XklEngine *engine = XKL_ENGINE(obj);
+	engine = XKL_ENGINE(obj);
 
-	Display *display =
+	display =
 	    (Display *) g_value_peek_pointer(construct_properties[0].
 					     value);
 
 	xkl_engine_priv(engine, display) = display;
-
-	int scr;
 
 	xkl_engine_priv(engine, default_error_handler) =
 	    XSetErrorHandler((XErrorHandler) xkl_process_error);
@@ -624,7 +626,7 @@ xkl_engine_constructor(GType type,
 
 	xkl_engine_one_switch_to_secondary_group_performed(engine);
 
-	gint rv = -1;
+	rv = -1;
 	xkl_debug(150, "Trying all backends:\n");
 #ifdef ENABLE_XKB_SUPPORT
 	xkl_debug(150, "Trying XKB backend\n");
@@ -719,6 +721,7 @@ static void
 xkl_engine_finalize(GObject * obj)
 {
 	XklEngine *engine = (XklEngine *) obj;
+	gpointer backend;
 
 	XSetErrorHandler((XErrorHandler)
 			 xkl_engine_priv(engine, default_error_handler));
@@ -728,7 +731,7 @@ xkl_engine_finalize(GObject * obj)
 
 	xkl_engine_vcall(engine, finalize) (engine);
 
-	gpointer backend = xkl_engine_priv(engine, backend);
+	backend = xkl_engine_priv(engine, backend);
 	if (backend != NULL)
 		g_free(backend);
 	g_free(engine->priv);
@@ -759,6 +762,18 @@ xkl_engine_class_init(XklEngineClass * klass)
 	};
 
 	GObjectClass *object_class;
+	GParamSpec *display_param_spec;
+	GParamSpec *backend_name_param_spec;
+	GParamSpec *features_param_spec;
+	GParamSpec *max_num_groups_param_spec;
+	GParamSpec *num_groups_param_spec;
+	GParamSpec *default_group_param_spec;
+	GParamSpec *secondary_groups_mask_param_spec;
+	GParamSpec *indicators_handling_param_spec;
+	GType features_type;
+	GType state_change_type;
+
+	const gchar *sdl;
 
 	object_class = (GObjectClass *) klass;
 	parent_class = g_type_class_peek_parent(object_class);
@@ -768,61 +783,58 @@ xkl_engine_class_init(XklEngineClass * klass)
 	object_class->set_property = xkl_engine_set_property;
 	object_class->get_property = xkl_engine_get_property;
 
-	GParamSpec *display_param_spec = g_param_spec_pointer("display",
-							      "Display",
-							      "X Display pointer",
-							      G_PARAM_CONSTRUCT_ONLY
-							      |
-							      G_PARAM_READWRITE);
+	display_param_spec = g_param_spec_pointer("display",
+						  "Display",
+						  "X Display pointer",
+						  G_PARAM_CONSTRUCT_ONLY
+						  |
+						  G_PARAM_READWRITE);
 
-	GParamSpec *backend_name_param_spec =
-	    g_param_spec_string("backendName",
-				"backendName",
-				"Backend name",
-				NULL,
-				G_PARAM_READABLE);
+	backend_name_param_spec = g_param_spec_string("backendName",
+						      "backendName",
+						      "Backend name",
+						      NULL,
+						      G_PARAM_READABLE);
 
-	GType features_type = g_flags_register_static("XklEngineFeatures",
-						      feature_flags);
+	features_type = g_flags_register_static("XklEngineFeatures",
+						feature_flags);
 
-	GType state_change_type =
+	state_change_type =
 	    g_enum_register_static("XklEngineStateChangeType",
 				   state_change_values);
 
-	GParamSpec *features_param_spec = g_param_spec_flags("features",
-							     "Features",
-							     "Backend features",
-							     features_type,
-							     0,
-							     G_PARAM_READABLE);
-	GParamSpec *max_num_groups_param_spec =
-	    g_param_spec_uint("max-num-groups",
-			      "maxNumGroups",
-			      "Max number of groups",
-			      0, 0x100, 0,
-			      G_PARAM_READABLE);
+	features_param_spec = g_param_spec_flags("features",
+						 "Features",
+						 "Backend features",
+					 	 features_type,
+						 0,
+						 G_PARAM_READABLE);
+	max_num_groups_param_spec = g_param_spec_uint("max-num-groups",
+						      "maxNumGroups",
+						      "Max number of groups",
+						      0, 0x100, 0,
+						      G_PARAM_READABLE);
 
-	GParamSpec *num_groups_param_spec = g_param_spec_uint("num-groups",
-							      "numGroups",
-							      "Current number of groups",
-							      0, 0x100, 0,
-							      G_PARAM_READABLE);
+	num_groups_param_spec = g_param_spec_uint("num-groups",
+						  "numGroups",
+						  "Current number of groups",
+						  0, 0x100, 0,
+						  G_PARAM_READABLE);
 
-	GParamSpec *default_group_param_spec =
-	    g_param_spec_uint("default-group",
-			      "defaultGroup",
-			      "Default group",
-			      0, 0x100, 0,
-			      G_PARAM_READABLE);
+	default_group_param_spec = g_param_spec_uint("default-group",
+						     "defaultGroup",
+						     "Default group",
+						     0, 0x100, 0,
+						     G_PARAM_READABLE);
 
-	GParamSpec *secondary_groups_mask_param_spec =
+	secondary_groups_mask_param_spec =
 	    g_param_spec_uint("secondary-groups-mask",
 			      "secondaryGroupsMask",
 			      "Secondary groups mask",
 			      0, 0x100, 0,
 			      G_PARAM_READABLE);
 
-	GParamSpec *indicators_handling_param_spec =
+	indicators_handling_param_spec =
 	    g_param_spec_boolean("indicators-handling",
 				 "indicatorsHandling",
 				 "Whether engine should handle indicators",
@@ -872,7 +884,7 @@ xkl_engine_class_init(XklEngineClass * klass)
 	/* 2 Windows passed */
 	/* static stuff initialized */
 
-	const gchar *sdl = g_getenv("XKL_DEBUG");
+	sdl = g_getenv("XKL_DEBUG");
 
 	if (sdl != NULL) {
 		xkl_set_debug_level(atoi(sdl));

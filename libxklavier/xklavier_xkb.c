@@ -96,12 +96,14 @@ xkl_xkb_free_all_info(XklEngine * engine)
 {
 	gint i;
 	gchar **pi = xkl_engine_backend(engine, XklXkb, indicator_names);
+	XkbDescPtr desc;
+
 	for (i = 0; i < XkbNumIndicators; i++, pi++) {
 		/* only free non-empty ones */
 		if (*pi && **pi)
 			XFree(*pi);
 	}
-	XkbDescPtr desc = xkl_engine_backend(engine, XklXkb, cached_desc);
+	desc = xkl_engine_backend(engine, XklXkb, cached_desc);
 	if (desc != NULL) {
 		int i;
 		char **group_name =
@@ -219,6 +221,7 @@ xkl_xkb_load_all_info(XklEngine * engine)
 	Display *display = xkl_engine_get_display(engine);
 	XkbDescPtr actual =
 	    xkl_engine_backend(engine, XklXkb, actual_desc);
+	XkbDescPtr cached;
 
 	if (actual == NULL)
 		if (!xkl_xkb_load_actual_desc(engine)) {
@@ -227,8 +230,7 @@ xkl_xkb_load_all_info(XklEngine * engine)
 		}
 
 	/* take it from the cache (in most cases LoadAll is called from ResetAll which in turn ...) */
-	XkbDescPtr cached = actual =
-	    xkl_engine_backend(engine, XklXkb, actual_desc);
+	cached = actual = xkl_engine_backend(engine, XklXkb, actual_desc);
 	xkl_engine_backend(engine, XklXkb, cached_desc) =
 	    xkl_engine_backend(engine, XklXkb, actual_desc);
 	xkl_engine_backend(engine, XklXkb, actual_desc) = NULL;
