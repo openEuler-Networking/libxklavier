@@ -129,14 +129,20 @@ do
 	echo "Running autoheader..."
 	autoheader 
       fi
-      echo "Running automake --gnu $am_opt ..."
-      automake --add-missing --gnu $am_opt
-      echo "Running autoconf ..."
-      autoconf
 
       echo "Running gtkdocize ..."
       gtkdocize || exit 1
+
+      echo "Running automake --gnu $am_opt ..."
+      automake --add-missing --gnu $am_opt || exit 1
+      echo "Running autoconf ..."
+      autoconf || exit 1
     )
+    # if the subshell ran into trouble, we should stop here
+    if test x$? = x1; then
+      echo "Error setting up build, cannot run configure."
+      exit 1
+    fi
   fi
 done
 
