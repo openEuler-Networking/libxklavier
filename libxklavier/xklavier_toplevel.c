@@ -76,7 +76,7 @@ xkl_engine_add_toplevel_window(XklEngine * engine, Window toplevel_win,
 		}
 	}
 
-	g_signal_emit_by_name(engine, "new-toplevel_window", toplevel_win,
+	g_signal_emit_by_name(engine, "new-toplevel-window", toplevel_win,
 			      parent, &default_group_to_use);
 
 	if (default_group_to_use == -1)
