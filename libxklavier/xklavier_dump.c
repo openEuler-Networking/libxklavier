@@ -19,7 +19,7 @@
 #include "xklavier_private.h"
 #include "xklavier_private_xkb.h"
 
-#ifdef XKB_HEADERS_PRESENT
+#ifdef LIBXKBFILE_PRESENT
 #if 0
 static void
 _XkbModsRecDump(FILE * fs, XkbModsRec * mods)

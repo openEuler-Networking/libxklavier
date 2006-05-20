@@ -8,7 +8,7 @@
 #include "xklavier_private.h"
 #include "xklavier_private_xkb.h"
 
-#ifdef XKB_HEADERS_PRESENT
+#ifdef LIBXKBFILE_PRESENT
 
 const gchar **
 xkl_xkb_get_groups_names(XklEngine * engine)
@@ -482,7 +482,7 @@ xkl_xkb_init(XklEngine * engine)
 {
 	Display *display = xkl_engine_get_display(engine);
 
-#ifdef XKB_HEADERS_PRESENT
+#ifdef LIBXKBFILE_PRESENT
 	gint opcode;
 	gboolean xkl_xkb_ext_present;
 
@@ -573,7 +573,7 @@ xkl_xkb_term(XklEngine * engine)
 {
 }
 
-#ifdef XKB_HEADERS_PRESENT
+#ifdef LIBXKBFILE_PRESENT
 const gchar *
 xkl_xkb_event_get_name(gint xkb_type)
 {

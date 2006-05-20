@@ -1,7 +1,7 @@
 #ifndef __XKLAVIER_PRIVATE_XKB_H__
 #define __XKLAVIER_PRIVATE_XKB_H__
 
-#ifdef XKB_HEADERS_PRESENT
+#ifdef LIBXKBFILE_PRESENT
 
 #include <X11/XKBlib.h>
 #include <X11/extensions/XKBrules.h>

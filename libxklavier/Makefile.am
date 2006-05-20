@@ -1,5 +1,6 @@
-if XKB_HEADERS_PRESENT
-  XKB_HEADERS_PRESENT_CFLAG = -DXKB_HEADERS_PRESENT=1
+if LIBXKBFILE_PRESENT
+  LIBXKBFILE_PRESENT_CFLAG = -DLIBXKBFILE_PRESENT=1
+  LIBXKBFILE_PRESENT_LDFLAGS = -lxkbfile
 endif
 
 if ENABLE_XKB_SUPPORT
@@ -27,7 +28,7 @@ xkl_engine_marshal.c: xkl_engine_marshal.h
 AM_CFLAGS=-Wall -Werror -DDATA_DIR=\"$(datadir)/$(PACKAGE)\" \
   -I. -I$(includedir) -I$(x_includes) -I$(top_srcdir) \
   $(XML_CFLAGS) $(GLIB_CFLAGS) \
-  $(XKB_HEADERS_PRESENT_CFLAG) \
+  $(LIBXKBFILE_PRESENT_CFLAG) \
   $(ENABLE_XKB_SUPPORT_CFLAG) \
   $(ENABLE_XMM_SUPPORT_CFLAG)
 
@@ -45,6 +46,7 @@ libxklavier_la_SOURCES = xklavier.c xklavier_evt.c xklavier_config.c \
 	$(noinst_HEADERS) $(xklavierinc_HEADERS)
 libxklavier_la_LDFLAGS = -version-info @VERSION_INFO@ \
  $(XML_LIBS) $(GLIB_LIBS) \
- -lxkbfile -L$(x_libraries) $(LIBICONV) 
+ $(LIBXKBFILE_PRESENT_LDFLAGS) \
+ -L$(x_libraries) $(LIBICONV) 
 
 

@@ -13,7 +13,7 @@
 gint
 xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 {
-#ifdef XKB_HEADERS_PRESENT
+#ifdef LIBXKBFILE_PRESENT
 	gint i;
 	guint bit;
 	guint inds;
@@ -122,7 +122,7 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 void
 xkl_xkb_set_indicators(XklEngine * engine, const XklState * window_state)
 {
-#ifdef XKB_HEADERS_PRESENT
+#ifdef LIBXKBFILE_PRESENT
 	int i;
 	unsigned bit;
 

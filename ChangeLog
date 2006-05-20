@@ -1,3 +1,15 @@
+2006-05-20 svu
+
+	* configure.in,
+	libxklavier/Makefile.am,
+	libxklavier/xklavier_config_xkb.c,
+	libxklavier/xklavier_dump.c,
+	libxklavier/xklavier_evt_xkb.c,
+	libxklavier/xklavier_private_xkb.h,
+	libxklavier/xklavier_xkb.c: xkb_headers -> libxkbfile,
+	linking to xkbfile is also optional. 
+	Thanks to Thomas Vander Stichele
+
 2006-04-30 svu
 
 	* autogen.sh: fail on autoconf/automake errors,

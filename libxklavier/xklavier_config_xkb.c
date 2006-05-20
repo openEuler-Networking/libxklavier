@@ -16,7 +16,7 @@
 #include "xklavier_private.h"
 #include "xklavier_private_xkb.h"
 
-#ifdef XKB_HEADERS_PRESENT
+#ifdef LIBXKBFILE_PRESENT
 #include <X11/extensions/XKBfile.h>
 #include <X11/extensions/XKM.h>
 #endif
@@ -29,7 +29,7 @@
 #define XK_XKB_KEYS
 #include <X11/keysymdef.h>
 
-#ifdef XKB_HEADERS_PRESENT
+#ifdef LIBXKBFILE_PRESENT
 static XkbRF_RulesPtr xkl_rules;
 
 static XkbRF_RulesPtr
@@ -73,7 +73,7 @@ xkl_rules_set_free(void)
 void
 xkl_xkb_init_config_registry(XklConfigRegistry * config)
 {
-#ifdef XKB_HEADERS_PRESENT
+#ifdef LIBXKBFILE_PRESENT
 	XkbInitAtoms(NULL);
 #endif
 }
@@ -102,7 +102,7 @@ xkl_xkb_load_config_registry(XklConfigRegistry * config)
 	return xkl_config_registry_load_from_file(config, file_name);
 }
 
-#ifdef XKB_HEADERS_PRESENT
+#ifdef LIBXKBFILE_PRESENT
 gboolean
 xkl_xkb_config_native_prepare(XklEngine * engine,
 			      const XklConfigRec * data,
@@ -407,7 +407,7 @@ xkl_xkb_multiple_layouts_supported(XklEngine * engine)
 
 	if (support_state == UNCHECKED) {
 		XklConfigRec *data = xkl_config_rec_new();
-#ifdef XKB_HEADERS_PRESENT
+#ifdef LIBXKBFILE_PRESENT
 		XkbComponentNamesRec component_names;
 		memset(&component_names, 0, sizeof(component_names));
 #endif
@@ -419,7 +419,7 @@ xkl_xkb_multiple_layouts_supported(XklEngine * engine)
 
 		xkl_debug(100, "!!! Checking multiple layouts support\n");
 		support_state = NON_SUPPORTED;
-#ifdef XKB_HEADERS_PRESENT
+#ifdef LIBXKBFILE_PRESENT
 		if (xkl_xkb_config_native_prepare
 		    (engine, data, &component_names)) {
 			xkl_debug(100,
@@ -460,7 +460,7 @@ xkl_xkb_activate_config_rec(XklEngine * engine, const XklConfigRec * data)
 	}
 #endif
 
-#ifdef XKB_HEADERS_PRESENT
+#ifdef LIBXKBFILE_PRESENT
 	XkbComponentNamesRec component_names;
 	memset(&component_names, 0, sizeof(component_names));
 
@@ -500,7 +500,7 @@ xkl_xkb_write_config_rec_to_file(XklEngine * engine, const char *file_name,
 {
 	gboolean rv = FALSE;
 
-#ifdef XKB_HEADERS_PRESENT
+#ifdef LIBXKBFILE_PRESENT
 	XkbComponentNamesRec component_names;
 	FILE *output = fopen(file_name, "w");
 	XkbFileInfo dump_info;

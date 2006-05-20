@@ -94,11 +94,11 @@ ac_xkblib_include="\
 #include <X11/XKBlib.h>"
 
 AC_CHECK_HEADER([X11/extensions/XKBrules.h],
-                [xkb_headers_present=yes],[],$ac_xkblib_include)
+                [libxkbfile_present=yes],[],$ac_xkblib_include)
 
-AM_CONDITIONAL(XKB_HEADERS_PRESENT, test "$xkb_headers_present" = "yes")
+AM_CONDITIONAL(LIBXKBFILE_PRESENT, test "$libxkbfile_present" = "yes")
 
-AC_SUBST(xkbheaders_present)
+AC_SUBST(libxkbfile_present)
 
 CFLAGS="$save_CFLAGS"
 
@@ -116,7 +116,7 @@ AM_CONDITIONAL(ENABLE_XMM_SUPPORT, test "$enable_xmm_support" = "yes")
 
 AC_MSG_CHECKING(whether at least one libxklavier backend is enabled)
 if test \( "$enable_xkb_support" == "yes" -a \
-          "$xkb_headers_present" == "yes" \) -o \
+          "$libxkbfile_present" == "yes" \) -o \
         "$enable_xmm_support" == "yes" ; then
   AC_MSG_RESULT(yes)
 else
@@ -151,10 +151,10 @@ libxklavier.pc
 echo '**********************************************************'
 echo '  Libxklavier is configured with the following backends:'
 if test "$enable_xkb_support" == "yes" ; then
-  if test "$xkb_headers_present" == "yes" ; then
-    echo '    XKB (libxkbfile headers are present)'
+  if test "$libxkbfile_present" == "yes" ; then
+    echo '    XKB (libxkbfile is present)'
   else
-    echo '    XKB (but libxkbfile headers are NOT present)'
+    echo '    XKB (but libxkbfile is NOT present)'
   fi
 fi
 if test "$enable_xmm_support" == "yes" ; then
