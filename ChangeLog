@@ -1,3 +1,8 @@
+2006-06-04 svu
+
+	* libxklavier/xklavier_props.c: fixed default options handling,
+	the gchar** array changed from NULL to g_new0( char*, 1)
+
 2006-05-20 svu
 
 	* configure.in,

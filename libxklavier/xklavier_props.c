@@ -103,7 +103,7 @@ xkl_engine_get_default_names_prop(XklEngine * engine,
 	    g_strdup(xkl_engine_priv(engine, default_layout));
 	data->variants = g_new0(char *, 2);
 	data->variants[0] = g_strdup("");
-	data->options = NULL;
+	data->options = g_new0(char *, 1);
 	return TRUE;
 }
 
