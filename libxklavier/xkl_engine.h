@@ -18,7 +18,7 @@ extern "C" {
 #define XKL_ENGINE_CLASS(obj)       (G_TYPE_CHECK_CLASS_CAST ((obj), XKL_TYPE_ENGINE,  XklEngineClass))
 #define XKL_IS_ENGINE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), XKL_TYPE_ENGINE))
 #define XKL_IS_ENGINE_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE ((obj), XKL_TYPE_ENGINE))
-#define XKL_ENGINE_GET_CLASS        (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_ENGINE, XklEngineClass))
+#define XKL_ENGINE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_ENGINE, XklEngineClass))
 
 /**
  * The type of the keyboard state change
