@@ -30,7 +30,8 @@ xkl_xmm_load_config_registry(XklConfigRegistry * config)
 	struct stat stat_buf;
 	gchar file_name[MAXPATHLEN] = "";
 	XklEngine *engine = xkl_config_registry_get_engine(config);
-	gchar *rf = xkl_engine_get_ruleset_name(engine, "");
+	gchar *rf =
+	    xkl_engine_get_ruleset_name(engine, XMODMAP_DEFAULT_RULESET);
 
 	if (rf == NULL || rf[0] == '\0')
 		return FALSE;

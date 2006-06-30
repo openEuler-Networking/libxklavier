@@ -632,9 +632,9 @@ xkl_engine_constructor(GType type,
 	xkl_debug(150, "Trying XKB backend\n");
 	rv = xkl_xkb_init(engine);
 #endif
-#ifdef ENABLE_XMM_SUPPORT
+#ifdef ENABLE_XMODMAP_SUPPORT
 	if (rv != 0) {
-		xkl_debug(150, "Trying XMM backend\n");
+		xkl_debug(150, "Trying xmodmap backend\n");
 		rv = xkl_xmm_init(engine);
 	}
 #endif
