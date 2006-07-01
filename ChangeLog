@@ -1,3 +1,7 @@
+2006-07-01 svu
+
+	* libxklavier.pc.in: added missing Cflags, Libs
+
 2006-06-30 svu
 
 	* libxklavier/xklavier.c, libxklavier/xklavier_config_xmm.c,
