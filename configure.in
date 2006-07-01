@@ -25,7 +25,15 @@ dnl AC_ARG_PROGRAM
 AM_PROG_LIBTOOL
 AM_ICONV
 
+if test -z "$NO_GTK_DOC"; then
 GTK_DOC_CHECK(1.0)
+else
+  dnl bad hack
+  AM_CONDITIONAL(ENABLE_GTK_DOC, test -z "$NO_GTK_DOC")
+  AM_CONDITIONAL(GTK_DOC_USE_LIBTOOL, test -z "$NO_GTK_DOC")
+fi
+
+AM_CONDITIONAL(NO_GTK_DOC, test -n "$NO_GTK_DOC")
 
 dnl From Bruno Haible.
 dnl From gnoome-vfs

@@ -130,8 +130,10 @@ do
 	autoheader 
       fi
 
-      echo "Running gtkdocize ..."
-      gtkdocize || exit 1
+      if [ -z "$NO_GTK_DOC" ]; then
+        echo "Running gtkdocize ..."
+        gtkdocize || exit 1
+      fi
 
       echo "Running automake --gnu $am_opt ..."
       automake --add-missing --gnu $am_opt || exit 1
@@ -147,7 +149,11 @@ do
 done
 
 #conf_flags="--enable-maintainer-mode --enable-compile-warnings" #--enable-iso-c
-conf_flags="--enable-gtk-doc"
+if [ -z "$NO_GTK_DOC" ]; then
+  conf_flags="--enable-gtk-doc"
+else
+  conf_flags=""
+fi
 
 if test x$NOCONFIGURE = x; then
   echo Running $srcdir/configure $conf_flags "$@" ...

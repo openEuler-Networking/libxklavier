@@ -1,5 +1,10 @@
 2006-07-01 svu
 
+	* autogen.sh, configure.in, gtk-doc.make: Make life better for people
+	building without gtkdoc.
+
+2006-07-01 svu
+
 	* libxklavier.pc.in: added missing Cflags, Libs
 
 2006-06-30 svu
