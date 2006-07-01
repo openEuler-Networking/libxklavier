@@ -1,0 +1,69 @@
+<!-- ##### SECTION Title ##### -->
+XklConfigItem
+
+<!-- ##### SECTION Short_Description ##### -->
+X keyboard configuration registry item
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### MACRO XKL_MAX_CI_NAME_LENGTH ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO XKL_MAX_CI_SHORT_DESC_LENGTH ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO XKL_MAX_CI_DESC_LENGTH ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### STRUCT XklConfigItem ##### -->
+<para>
+
+</para>
+
+@parent: 
+@name: 
+@short_description: 
+@description: 
+
+<!-- ##### FUNCTION xkl_config_item_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION ConfigItemProcessFunc ##### -->
+<para>
+
+</para>
+
+@config: 
+@item: 
+@data: 
+
+

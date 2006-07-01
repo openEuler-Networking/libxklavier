@@ -1,0 +1,132 @@
+<!-- ##### SECTION Title ##### -->
+XklConfigRec
+
+<!-- ##### SECTION Short_Description ##### -->
+X keyboard configuration container
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT XklConfigRec ##### -->
+<para>
+
+</para>
+
+@parent: 
+@model: 
+@layouts: 
+@variants: 
+@options: 
+
+<!-- ##### FUNCTION xkl_config_rec_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION xkl_config_rec_activate ##### -->
+<para>
+
+</para>
+
+@data: 
+@engine: 
+@Returns: 
+
+
+<!-- ##### FUNCTION xkl_config_rec_get_from_server ##### -->
+<para>
+
+</para>
+
+@data: 
+@engine: 
+@Returns: 
+
+
+<!-- ##### FUNCTION xkl_config_rec_get_from_backup ##### -->
+<para>
+
+</para>
+
+@data: 
+@engine: 
+@Returns: 
+
+
+<!-- ##### FUNCTION xkl_config_rec_write_to_file ##### -->
+<para>
+
+</para>
+
+@engine: 
+@file_name: 
+@data: 
+@Param4: 
+@Returns: 
+
+
+<!-- ##### FUNCTION xkl_config_rec_get_from_root_window_property ##### -->
+<para>
+
+</para>
+
+@config_out: 
+@Param2: 
+@rules_file_out: 
+@engine: 
+@Returns: 
+
+
+<!-- ##### FUNCTION xkl_config_rec_set_to_root_window_property ##### -->
+<para>
+
+</para>
+
+@config: 
+@Param2: 
+@rules_file: 
+@engine: 
+@Returns: 
+
+
+<!-- ##### FUNCTION xkl_restore_names_prop ##### -->
+<para>
+
+</para>
+
+@engine: 
+@Returns: 
+
+
+<!-- ##### FUNCTION xkl_config_rec_reset ##### -->
+<para>
+
+</para>
+
+@data: 
+
+
+<!-- ##### FUNCTION xkl_config_rec_equals ##### -->
+<para>
+
+</para>
+
+@data1: 
+@data2: 
+@Returns: 
+
+

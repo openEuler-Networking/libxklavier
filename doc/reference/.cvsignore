@@ -1,10 +1,7 @@
 *.txt
 html
-sgml
-tmpl
 xml
 .libs
-*.sgml
 Makefile
 Makefile.in
 libxklavier.*

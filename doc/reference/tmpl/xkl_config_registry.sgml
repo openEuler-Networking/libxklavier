@@ -1,0 +1,147 @@
+<!-- ##### SECTION Title ##### -->
+XklConfigRegistry
+
+<!-- ##### SECTION Short_Description ##### -->
+X keyboard configuration registry
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT XklConfigRegistryPrivate ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT XklConfigRegistry ##### -->
+<para>
+
+</para>
+
+@parent: 
+@priv: 
+
+<!-- ##### FUNCTION xkl_config_registry_load ##### -->
+<para>
+
+</para>
+
+@config: 
+@Returns: 
+
+
+<!-- ##### FUNCTION xkl_config_registry_foreach_model ##### -->
+<para>
+
+</para>
+
+@config: 
+@Param2: 
+@data: 
+
+
+<!-- ##### FUNCTION xkl_config_registry_foreach_layout ##### -->
+<para>
+
+</para>
+
+@config: 
+@Param2: 
+@data: 
+
+
+<!-- ##### FUNCTION xkl_config_registry_foreach_layout_variant ##### -->
+<para>
+
+</para>
+
+@config: 
+@layout_name: 
+@Param3: 
+@data: 
+
+
+<!-- ##### FUNCTION xkl_config_registry_foreach_option_group ##### -->
+<para>
+
+</para>
+
+@config: 
+@Param2: 
+@data: 
+
+
+<!-- ##### FUNCTION xkl_config_registry_foreach_option ##### -->
+<para>
+
+</para>
+
+@config: 
+@option_group_name: 
+@Param3: 
+@data: 
+
+
+<!-- ##### FUNCTION xkl_config_registry_find_model ##### -->
+<para>
+
+</para>
+
+@config: 
+@item: 
+@Returns: 
+
+
+<!-- ##### FUNCTION xkl_config_registry_find_layout ##### -->
+<para>
+
+</para>
+
+@config: 
+@item: 
+@Returns: 
+
+
+<!-- ##### FUNCTION xkl_config_registry_find_variant ##### -->
+<para>
+
+</para>
+
+@config: 
+@layout_name: 
+@item: 
+@Returns: 
+
+
+<!-- ##### FUNCTION xkl_config_registry_find_option_group ##### -->
+<para>
+
+</para>
+
+@config: 
+@item: 
+@Returns: 
+
+
+<!-- ##### FUNCTION xkl_config_registry_find_option ##### -->
+<para>
+
+</para>
+
+@config: 
+@option_group_name: 
+@item: 
+@Returns: 
+
+
