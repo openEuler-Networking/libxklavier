@@ -275,7 +275,11 @@ xkl_config_rec_merge_options(const XklConfigRec * data)
 gchar *
 xkl_strings_concat_comma_separated(gchar ** array)
 {
-	return g_strjoinv(",", array);
+	if (array) {
+		return g_strjoinv(",", array);
+	} else {
+		return g_strdup("");
+	}
 }
 
 void

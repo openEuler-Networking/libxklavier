@@ -1,3 +1,8 @@
+2006-07-29 svu
+
+	* xkeyboard_config.c: sanity patch, fixing
+	http://bugzilla.gnome.org/show_bug.cgi?id=346980
+
 2006-07-01 svu
 
 	* autogen.sh, configure.in, gtk-doc.make: Make life better for people
@@ -30,6 +35,7 @@
 	linking to xkbfile is also optional. 
 	Thanks to Thomas Vander Stichele
 
+>>>>>>> 1.44
 2006-04-30 svu
 
 	* autogen.sh: fail on autoconf/automake errors,
