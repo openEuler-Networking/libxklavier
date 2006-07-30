@@ -1,3 +1,10 @@
+2006-07-30 svu
+
+	* libxklavier/xklavier_config_xkb.c,
+	libxklavier/xklavier_private_xkb.h: patching mismatch between
+	declarations and functions. Fixing
+	http://bugzilla.gnome.org/show_bug.cgi?id=349275
+
 2006-07-29 svu
 
 	* xkeyboard_config.c: sanity patch, fixing

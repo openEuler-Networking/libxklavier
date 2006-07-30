@@ -96,10 +96,13 @@ extern void xkl_xkb_term(XklEngine * engine);
  * VERY VERY BAD STYLE, some kind of 'protected' methods - 
  * but some programs may want to hook into them.
  */
-extern gboolean xkl_xkb_config_prepare_native(const XklConfigRec * data,
+
+extern gboolean xkl_xkb_config_native_prepare(XklEngine * engine,
+					      const XklConfigRec * data,
 					      gpointer component_names);
 
-extern void xkl_xkb_config_cleanup_native(gpointer component_names);
+extern void xkl_xkb_config_native_cleanup(XklEngine * engine,
+					 gpointer component_names);
 
 #endif
 

@@ -385,14 +385,16 @@ xkl_config_get_keyboard(XklEngine * engine,
 }
 #else				/* no XKB headers */
 gboolean
-xkl_xkb_config_native_prepare(const XklConfigRec * data,
+xkl_xkb_config_native_prepare(XklEngine * engine,
+                              const XklConfigRec * data,
 			      gpointer componentNamesPtr)
 {
 	return FALSE;
 }
 
 void
-_XklXkbConfigCleanupNative(gpointer componentNamesPtr)
+xkl_xkb_config_native_cleanup (XklEngine * engine,
+                              gpointer component_names_ptr)
 {
 }
 #endif
