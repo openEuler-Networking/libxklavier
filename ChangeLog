@@ -47,7 +47,6 @@
 	linking to xkbfile is also optional. 
 	Thanks to Thomas Vander Stichele
 
->>>>>>> 1.44
 2006-04-30 svu
 
 	* autogen.sh: fail on autoconf/automake errors,
