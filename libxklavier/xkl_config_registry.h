@@ -75,6 +75,17 @@ extern "C" {
 						 config);
 
 /**
+ * xkl_config_registry_set_custom_charset
+ * @config: the config registry
+ *
+ * Sets custom charset. This charset (if specified) overrides the local 
+ * user charset used for description strings in XklConfigItems
+ */
+	extern void
+	 xkl_config_registry_set_custom_charset(XklConfigRegistry *
+						config,
+						const gchar * charset);
+/**
  * ConfigItemProcessFunc:
  * @config: the config registry
  * @item: the item from registry

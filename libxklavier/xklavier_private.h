@@ -222,6 +222,8 @@ struct _XklConfigRegistryPrivate {
 	xmlDocPtr doc;
 
 	xmlXPathContextPtr xpath_context;
+
+	const gchar *custom_charset;
 };
 
 extern void xkl_engine_ensure_vtable_inited(XklEngine * engine);
@@ -312,8 +314,6 @@ extern void xkl_engine_try_call_state_func(XklEngine * engine,
 
 extern void xkl_i18n_init(void);
 
-extern gchar *xkl_locale_from_utf8(const gchar * utf8string);
-
 extern gint xkl_get_language_priority(const gchar * language);
 
 extern gchar *xkl_engine_get_ruleset_name(XklEngine * engine,
@@ -372,6 +372,9 @@ extern gboolean xkl_config_registry_load_from_file(XklConfigRegistry *
 						   file_name);
 
 extern void xkl_config_registry_free(XklConfigRegistry * config);
+
+extern gchar *xkl_locale_from_utf8(XklConfigRegistry * config,
+				   const gchar * utf8string);
 
 #define XKLAVIER_STATE_PROP_LENGTH 2
 

@@ -43,111 +43,21 @@ xkl_parse_LC_ALL_to_LC_MESSAGES(const gchar * lc_all)
 	return buf;
 }
 
-/* Taken from gnome-vfs */
-static gboolean
-xkl_get_charset(const gchar ** a)
+gchar *
+xkl_locale_from_utf8(XklConfigRegistry * config, const gchar * utf8string)
 {
-	static const gchar *charset = NULL;
-
-	if (charset == NULL) {
-		charset = g_getenv("CHARSET");
-
-		if (charset == NULL || charset[0] == '\0') {
-#ifdef HAVE_LANGINFO_CODESET
-			charset = nl_langinfo(CODESET);
-			if (charset == NULL || charset[0] == '\0') {
-#endif
-#ifdef HAVE_SETLOCALE
-				charset = setlocale(LC_CTYPE, NULL);
-				if (charset == NULL || charset[0] == '\0') {
-#endif
-					charset = getenv("LC_ALL");
-					if (charset == NULL
-					    || charset[0] == '\0') {
-						charset =
-						    getenv("LC_CTYPE");
-						if (charset == NULL
-						    || charset[0] == '\0')
-							charset =
-							    getenv("LANG");
-					}
-#ifdef HAVE_SETLOCALE
-				} else {
-					xkl_debug(150,
-						  "Using charset from setlocale: [%s]\n",
-						  charset);
-				}
-#endif
-#ifdef HAVE_LANGINFO_CODESET
-			} else {
-				xkl_debug(150,
-					  "Using charset from nl_langinfo: [%s]\n",
-					  charset);
-			}
-#endif
-		}
-	}
-
-	if (charset != NULL && *charset != '\0') {
-		*a = charset;
-		return (charset != NULL
-			&& g_strstr_len(charset, -1, "UTF-8") != NULL);
-	}
-	/* Assume this for compatibility at present.  */
-	*a = "US-ASCII";
-	xkl_debug(150, "Using charset fallback: [%s]\n", *a);
-
-	return FALSE;
+	const gchar *custom_charset =
+	    xkl_config_registry_priv(config, custom_charset);
+	return custom_charset ? g_convert(utf8string, -1, custom_charset,
+					  "UTF-8", NULL, NULL, NULL)
+	    : g_locale_from_utf8(utf8string, -1, NULL, NULL, NULL);
 }
 
-gchar *
-xkl_locale_from_utf8(const gchar * utf8string)
+void
+xkl_config_registry_set_custom_charset(XklConfigRegistry * config,
+				       const gchar * charset)
 {
-	size_t len;
-
-	iconv_t converter;
-	gchar converted[XKL_MAX_CI_DESC_LENGTH];
-	gchar *converted_start = converted;
-	gchar *utf_start = (char *) utf8string;
-	size_t clen = XKL_MAX_CI_DESC_LENGTH - 1;
-	const gchar *charset;
-
-	static gboolean already_warned = FALSE;
-
-	if (utf8string == NULL)
-		return NULL;
-
-	len = strlen(utf8string);
-
-	if (xkl_get_charset(&charset))
-		return g_strdup(utf8string);
-
-	converter = iconv_open(charset, "UTF-8");
-	if (converter == (iconv_t) - 1) {
-		if (!already_warned) {
-			already_warned = TRUE;
-			xkl_debug(0,
-				  "Unable to convert MIME info from UTF-8 "
-				  "to the current locale %s. "
-				  "MIME info will probably display wrong.",
-				  charset);
-		}
-		return g_strdup(utf8string);
-	}
-
-	if (iconv(converter, &utf_start, &len, &converted_start, &clen) ==
-	    -1) {
-		xkl_debug(0,
-			  "Unable to convert %s from UTF-8 to %s, "
-			  "this string will probably display wrong.",
-			  utf8string, charset);
-		return g_strdup(utf8string);
-	}
-	*converted_start = '\0';
-
-	iconv_close(converter);
-
-	return g_strdup(converted);
+	xkl_config_registry_priv(config, custom_charset) = charset;
 }
 
 /*

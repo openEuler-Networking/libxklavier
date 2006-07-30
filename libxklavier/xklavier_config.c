@@ -37,7 +37,8 @@ xkl_node_get_xml_lang_attr(xmlNodePtr nptr)
 }
 
 static gboolean
-xkl_read_config_item(xmlNodePtr iptr, XklConfigItem * item)
+xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
+		     XklConfigItem * item)
 {
 	xmlNodePtr name_element, nptr, ptr;
 	xmlNodePtr desc_element = NULL, short_desc_element = NULL;
@@ -135,7 +136,7 @@ xkl_read_config_item(xmlNodePtr iptr, XklConfigItem * item)
 
 	if (short_desc_element != NULL
 	    && short_desc_element->children != NULL) {
-		gchar *lmsg = xkl_locale_from_utf8((const gchar *)
+		gchar *lmsg = xkl_locale_from_utf8(config, (const gchar *)
 						   short_desc_element->
 						   children->content);
 		strncat(item->short_description, lmsg,
@@ -145,7 +146,8 @@ xkl_read_config_item(xmlNodePtr iptr, XklConfigItem * item)
 
 	if (desc_element != NULL && desc_element->children != NULL) {
 		gchar *lmsg =
-		    xkl_locale_from_utf8((const gchar *) desc_element->
+		    xkl_locale_from_utf8(config,
+					 (const gchar *) desc_element->
 					 children->content);
 		strncat(item->description, lmsg,
 			XKL_MAX_CI_DESC_LENGTH - 1);
@@ -165,7 +167,7 @@ xkl_config_registry_foreach_in_nodeset(XklConfigRegistry * config,
 		xmlNodePtr *pnode = nodes->nodeTab;
 		XklConfigItem *ci = xkl_config_item_new();
 		for (i = nodes->nodeNr; --i >= 0;) {
-			if (xkl_read_config_item(*pnode, ci))
+			if (xkl_read_config_item(config, *pnode, ci))
 				func(config, ci, data);
 
 			pnode++;
@@ -244,7 +246,7 @@ xkl_config_registry_find_object(XklConfigRegistry * config,
 
 	nodes = xpath_obj->nodesetval;
 	if (nodes != NULL && nodes->nodeTab != NULL) {
-		rv = xkl_read_config_item(*nodes->nodeTab, pitem);
+		rv = xkl_read_config_item(config, *nodes->nodeTab, pitem);
 		if (pnode != NULL) {
 			*pnode = *nodes->nodeTab;
 		}
@@ -427,7 +429,7 @@ xkl_config_registry_foreach_option_group(XklConfigRegistry * config,
 		XklConfigItem *ci = xkl_config_item_new();
 		for (i = nodes->nodeNr; --i >= 0;) {
 
-			if (xkl_read_config_item(*pnode, ci)) {
+			if (xkl_read_config_item(config, *pnode, ci)) {
 				gboolean allow_multisel = TRUE;
 				xmlChar *sallow_multisel =
 				    xmlGetProp(*pnode,
@@ -722,8 +724,7 @@ xkl_config_registry_class_init(XklConfigRegistryClass * klass)
 						"XklEngine",
 						XKL_TYPE_ENGINE,
 						G_PARAM_CONSTRUCT_ONLY
-						|
-						G_PARAM_READWRITE);
+						| G_PARAM_READWRITE);
 
 	g_object_class_install_property(object_class,
 					PROP_ENGINE, engine_param_spec);
