@@ -26,7 +26,7 @@ xkl_engine_marshal.c: xkl_engine_marshal.h
 	$(GLIB_GENMARSHAL) --prefix=xkl_engine marshal.list --body > xkl_engine_marshal.c
 
 AM_CFLAGS=-Wall -Werror -DDATA_DIR=\"$(datadir)/$(PACKAGE)\" \
-  -I. -I$(includedir) -I$(x_includes) -I$(top_srcdir) \
+  -I. -I$(includedir) $(X_CFLAGS) -I$(top_srcdir) \
   $(XML_CFLAGS) $(GLIB_CFLAGS) \
   $(LIBXKBFILE_PRESENT_CFLAG) \
   $(ENABLE_XKB_SUPPORT_CFLAG) \
@@ -47,6 +47,6 @@ libxklavier_la_SOURCES = xklavier.c xklavier_evt.c xklavier_config.c \
 libxklavier_la_LDFLAGS = -version-info @VERSION_INFO@ \
  $(XML_LIBS) $(GLIB_LIBS) \
  $(LIBXKBFILE_PRESENT_LDFLAGS) \
- -L$(x_libraries) $(LIBICONV) 
+ $(X_LIBS) $(LIBICONV) 
 
 

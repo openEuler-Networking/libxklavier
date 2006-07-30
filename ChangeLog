@@ -1,5 +1,10 @@
 2006-07-30 svu
 
+	* configure.in, libxklavier/Makefile.am: fixing autoconf stuff for
+	modular X
+
+2006-07-30 svu
+
 	* libxklavier/xklavier_config_xkb.c,
 	libxklavier/xklavier_private_xkb.h: patching mismatch between
 	declarations and functions. Fixing

@@ -56,7 +56,7 @@ dnl
 
 jm_LANGINFO_CODESET
 AC_CHECK_FUNCS(setlocale)
-AC_PATH_X
+AC_PATH_XTRA
 AC_SUBST(x_libraries)
 AC_SUBST(x_includes)
 AC_ARG_WITH( xkb_base,
