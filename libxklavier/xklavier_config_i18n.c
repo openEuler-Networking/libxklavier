@@ -16,7 +16,7 @@
 
 #define MAX_LOCALE_LEN 128
 
-static gchar locale_sub_strings[3][MAX_LOCALE_LEN];
+static gchar locale_substrings[3][MAX_LOCALE_LEN];
 
 /*
  *  some bad guys create LC_ALL=LC_CTYPE=ru_RU.UTF-8;LC_NUMERIC=C;LC_TIME=ru_RU.UTF-8;LC_COLLATE=ru_RU.UTF-8;LC_MONETARY=ru_RU.UTF-8;LC_MESSAGES=ru_RU.UTF-8;LC_PAPER=ru_RU.UTF-8;LC_NAME=ru_RU.UTF-8;LC_ADDRESS=ru_RU.UTF-8;LC_TELEPHONE=ru_RU.UTF-8;LC_MEASUREMENT=ru_RU.UTF-8;LC_IDENTIFICATION=ru_RU.UTF-8
@@ -71,8 +71,8 @@ xkl_i18n_init(void)
 	const gchar *locale = NULL;
 	gchar *cur_substring;
 
-	locale_sub_strings[0][0] = locale_sub_strings[1][0] =
-	    locale_sub_strings[2][0] = '\0';
+	locale_substrings[0][0] = locale_substrings[1][0] =
+	    locale_substrings[2][0] = '\0';
 
 #ifdef HAVE_SETLOCALE
 	locale = setlocale(LC_MESSAGES, NULL);
@@ -96,9 +96,9 @@ xkl_i18n_init(void)
 		return;
 	}
 
-	g_strlcpy(locale_sub_strings[0], locale, MAX_LOCALE_LEN);
+	g_strlcpy(locale_substrings[0], locale, MAX_LOCALE_LEN);
 
-	cur_substring = locale_sub_strings[1];
+	cur_substring = locale_substrings[1];
 
 	dot_pos = g_strstr_len(locale, -1, ".");
 	if (dot_pos != NULL) {
@@ -120,9 +120,9 @@ xkl_i18n_init(void)
 
 	xkl_debug(150, "Locale search order:\n");
 	/* full locale - highest priority */
-	xkl_debug(150, " 0: %s\n", locale_sub_strings[0]);
-	xkl_debug(150, " 1: %s\n", locale_sub_strings[1]);
-	xkl_debug(150, " 2: %s\n", locale_sub_strings[2]);
+	xkl_debug(150, " 0: %s\n", locale_substrings[0]);
+	xkl_debug(150, " 1: %s\n", locale_substrings[1]);
+	xkl_debug(150, " 2: %s\n", locale_substrings[2]);
 }
 
 gint
@@ -131,12 +131,12 @@ xkl_get_language_priority(const gchar * lang)
 	gint i, priority = -1;
 
 	for (i =
-	     sizeof(locale_sub_strings) / sizeof(locale_sub_strings[0]);
+	     sizeof(locale_substrings) / sizeof(locale_substrings[0]);
 	     --i >= 0;) {
-		if (locale_sub_strings[0][0] == '\0')
+		if (locale_substrings[0][0] == '\0')
 			continue;
 
-		if (!g_ascii_strcasecmp(lang, locale_sub_strings[i])) {
+		if (!g_ascii_strcasecmp(lang, locale_substrings[i])) {
 			priority = i;
 			break;
 		}
