@@ -14,6 +14,15 @@ static xmlXPathCompExprPtr models_xpath;
 static xmlXPathCompExprPtr layouts_xpath;
 static xmlXPathCompExprPtr option_groups_xpath;
 
+
+#define XKBCR_MODEL_PATH "/xkbConfigRegistry/modelList/model"
+#define XKBCR_LAYOUT_PATH "/xkbConfigRegistry/layoutList/layout"
+#define XKBCR_VARIANT_PATH XKBCR_LAYOUT_PATH "/variantList/variant"
+#define XKBCR_GROUP_PATH "/xkbConfigRegistry/optionList/group"
+#define XKBCR_OPTION_PATH XKBCR_GROUP_PATH "/option"
+
+#define LANG_ATTR "lang"
+
 enum {
 	PROP_0,
 	PROP_ENGINE,
@@ -26,7 +35,7 @@ static xmlChar *
 xkl_node_get_xml_lang_attr(xmlNodePtr nptr)
 {
 	if (nptr->properties != NULL &&
-	    !g_ascii_strcasecmp("lang", (char *) nptr->properties[0].name)
+	    !g_ascii_strcasecmp(LANG_ATTR, (char *) nptr->properties[0].name)
 	    && nptr->properties[0].ns != NULL
 	    && !g_ascii_strcasecmp("xml",
 				   (char *) nptr->properties[0].ns->prefix)
@@ -145,10 +154,10 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 	}
 
 	if (desc_element != NULL && desc_element->children != NULL) {
-		gchar *lmsg =
-		    xkl_locale_from_utf8(config,
-					 (const gchar *) desc_element->
-					 children->content);
+		gchar *lmsg = xkl_locale_from_utf8(config,
+						   (const gchar *)
+						   desc_element->children->
+						   content);
 		strncat(item->description, lmsg,
 			XKL_MAX_CI_DESC_LENGTH - 1);
 		g_free(lmsg);
@@ -351,6 +360,44 @@ xkl_config_registry_get_instance(XklEngine * engine)
 	return config;
 }
 
+static void
+xkl_config_registry_clean_languages_in_xpath(XklConfigRegistry * config,
+					     gchar * xpath_expr)
+{
+	xmlXPathObjectPtr xpath_obj =
+	    xmlXPathEval((unsigned char *) xpath_expr,
+			 xkl_config_registry_priv(config,
+						  xpath_context));
+	if (xpath_obj != NULL && xpath_obj->nodesetval != NULL) {
+		xmlNodePtr *pnode = xpath_obj->nodesetval->nodeTab;
+		gint i;
+
+		for (i = xpath_obj->nodesetval->nodeNr; --i >= 0;) {
+			/* 
+			 * TODO - drop description subnodes 
+			 * for irrelevant languages
+			 */
+			pnode++;
+		}
+		xmlXPathFreeObject(xpath_obj);
+	}
+}
+
+static void
+xkl_config_registry_clean_languages(XklConfigRegistry * config)
+{
+	xkl_config_registry_clean_languages_in_xpath(config,
+						     XKBCR_MODEL_PATH);
+	xkl_config_registry_clean_languages_in_xpath(config,
+						     XKBCR_LAYOUT_PATH);
+	xkl_config_registry_clean_languages_in_xpath(config,
+						     XKBCR_VARIANT_PATH);
+	xkl_config_registry_clean_languages_in_xpath(config,
+						     XKBCR_GROUP_PATH);
+	xkl_config_registry_clean_languages_in_xpath(config,
+						     XKBCR_OPTION_PATH);
+}
+
 gboolean
 xkl_config_registry_load_from_file(XklConfigRegistry * config,
 				   const gchar * file_name)
@@ -360,11 +407,14 @@ xkl_config_registry_load_from_file(XklConfigRegistry * config,
 		xkl_config_registry_priv(config, xpath_context) = NULL;
 		xkl_last_error_message =
 		    "Could not parse XKB configuration registry";
-	} else
-		xkl_config_registry_priv(config, xpath_context) =
-		    xmlXPathNewContext(xkl_config_registry_priv
-				       (config, doc));
-	return xkl_config_registry_is_initialized(config);
+		return FALSE;
+	}
+	xkl_config_registry_priv(config, xpath_context) =
+	    xmlXPathNewContext(xkl_config_registry_priv(config, doc));
+
+	xkl_config_registry_clean_languages(config);
+
+	return TRUE;
 }
 
 void
@@ -405,7 +455,7 @@ xkl_config_registry_foreach_layout_variant(XklConfigRegistry * config,
 {
 	xkl_config_registry_foreach_in_xpath_with_param
 	    (config,
-	     "/xkbConfigRegistry/layoutList/layout/variantList/variant[../../configItem/name = '%s']",
+	     XKBCR_VARIANT_PATH "[../../configItem/name = '%s']",
 	     layout_name, func, data);
 }
 
@@ -465,7 +515,7 @@ xkl_config_registry_foreach_option(XklConfigRegistry * config,
 {
 	xkl_config_registry_foreach_in_xpath_with_param
 	    (config,
-	     "/xkbConfigRegistry/optionList/group/option[../configItem/name = '%s']",
+	     XKBCR_OPTION_PATH "[../configItem/name = '%s']",
 	     option_group_name, func, data);
 }
 
@@ -476,7 +526,7 @@ xkl_config_registry_find_model(XklConfigRegistry * config,
 	return
 	    xkl_config_registry_find_object
 	    (config,
-	     "/xkbConfigRegistry/modelList/model[configItem/name = '%s%s']",
+	     XKBCR_MODEL_PATH "[configItem/name = '%s%s']",
 	     "", pitem, NULL);
 }
 
@@ -487,7 +537,7 @@ xkl_config_registry_find_layout(XklConfigRegistry * config,
 	return
 	    xkl_config_registry_find_object
 	    (config,
-	     "/xkbConfigRegistry/layoutList/layout[configItem/name = '%s%s']",
+	     XKBCR_LAYOUT_PATH "[configItem/name = '%s%s']",
 	     "", pitem, NULL);
 }
 
@@ -499,7 +549,7 @@ xkl_config_registry_find_variant(XklConfigRegistry * config,
 	return
 	    xkl_config_registry_find_object
 	    (config,
-	     "/xkbConfigRegistry/layoutList/layout/variantList/variant"
+	     XKBCR_VARIANT_PATH
 	     "[../../configItem/name = '%s' and configItem/name = '%s']",
 	     layout_name, pitem, NULL);
 }
@@ -510,7 +560,8 @@ xkl_config_registry_find_option_group(XklConfigRegistry * config,
 {
 	xmlNodePtr node = NULL;
 	gboolean rv = xkl_config_registry_find_object(config,
-						      "/xkbConfigRegistry/optionList/group[configItem/name = '%s%s']",
+						      XKBCR_GROUP_PATH
+						      "[configItem/name = '%s%s']",
 						      "",
 						      pitem, &node);
 
@@ -537,7 +588,7 @@ xkl_config_registry_find_option(XklConfigRegistry * config,
 {
 	return
 	    xkl_config_registry_find_object
-	    (config, "/xkbConfigRegistry/optionList/group/option"
+	    (config, XKBCR_OPTION_PATH
 	     "[../configItem/name = '%s' and configItem/name = '%s']",
 	     option_group_name, pitem, NULL);
 }
@@ -733,10 +784,10 @@ xkl_config_registry_class_init(XklConfigRegistryClass * klass)
 
 	xmlXPathInit();
 	models_xpath = xmlXPathCompile((unsigned char *)
-				       "/xkbConfigRegistry/modelList/model");
+				       XKBCR_MODEL_PATH);
 	layouts_xpath = xmlXPathCompile((unsigned char *)
-					"/xkbConfigRegistry/layoutList/layout");
+					XKBCR_LAYOUT_PATH);
 	option_groups_xpath = xmlXPathCompile((unsigned char *)
-					      "/xkbConfigRegistry/optionList/group");
+					      XKBCR_GROUP_PATH);
 	xkl_i18n_init();
 }
