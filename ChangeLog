@@ -1,3 +1,8 @@
+2006-08-02 svu
+
+	* libxklavier/xklavier_config.c: improving the XML parsing options,
+	saving at least 1M of heap.
+
 2006-07-30 svu
 
 	* libxklavier/xkl_config_registry.h, libxklavier/xklavier_config.c,

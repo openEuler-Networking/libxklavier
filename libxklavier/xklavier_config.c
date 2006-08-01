@@ -24,8 +24,6 @@ static xmlXPathCompExprPtr option_groups_xpath;
 #define XML_TAG_DESCR "description"
 #define XML_TAG_SHORT_DESCR "shortDescription"
 
-#define CLEAN_UNNEEDED_LANGUAGES
-
 enum {
 	PROP_0,
 	PROP_ENGINE,
@@ -198,9 +196,7 @@ xkl_config_registry_clean_languages_in_node(xmlNodePtr iptr)
 							      lang);
 
 				if (priority == -1) {
-#ifdef CLEAN_UNNEEDED_LANGUAGES
 					xmlNodePtr unneeded = ptr;
-#endif
 					ptr = ptr->next;
 					if (xkl_debug_level >= 100) {
 						gchar *pname = NULL;
@@ -216,10 +212,8 @@ xkl_config_registry_clean_languages_in_node(xmlNodePtr iptr)
 							  node_name, lang,
 							  pname);
 					}
-#ifdef CLEAN_UNNEEDED_LANGUAGES
 					xmlUnlinkNode(unneeded);
 					xmlFreeNode(unneeded);
-#endif
 					continue;
 				}
 				xmlFree(lang);
@@ -487,10 +481,10 @@ xkl_config_registry_load_from_file(XklConfigRegistry * config,
 	xkl_config_registry_priv(config, xpath_context) =
 	    xmlXPathNewContext(xkl_config_registry_priv(config, doc));
 
-	//xmlSaveFile("before.xml", xkl_config_registry_priv(config, doc));
+	/* xmlSaveFile("before.xml", xkl_config_registry_priv(config, doc)); */
 	xkl_debug(100, "Cleaning unneeded languages\n");
 	xkl_config_registry_clean_languages(config);
-	//xmlSaveFile("after.xml", xkl_config_registry_priv(config, doc));
+	/* xmlSaveFile("after.xml", xkl_config_registry_priv(config, doc)); */
 
 	return TRUE;
 }
