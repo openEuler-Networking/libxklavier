@@ -21,7 +21,10 @@ static xmlXPathCompExprPtr option_groups_xpath;
 #define XKBCR_GROUP_PATH "/xkbConfigRegistry/optionList/group"
 #define XKBCR_OPTION_PATH XKBCR_GROUP_PATH "/option"
 
-#define LANG_ATTR "lang"
+#define XML_TAG_DESCR "description"
+#define XML_TAG_SHORT_DESCR "shortDescription"
+
+#define CLEAN_UNNEEDED_LANGUAGES
 
 enum {
 	PROP_0,
@@ -31,27 +34,40 @@ enum {
 #define xkl_config_registry_is_initialized(config) \
   ( xkl_config_registry_priv(config,xpath_context) != NULL )
 
-static xmlChar *
-xkl_node_get_xml_lang_attr(xmlNodePtr nptr)
+static gboolean
+xkl_xml_find_config_item_child(xmlNodePtr iptr, xmlNodePtr * ptr)
 {
-	if (nptr->properties != NULL &&
-	    !g_ascii_strcasecmp(LANG_ATTR, (char *) nptr->properties[0].name)
-	    && nptr->properties[0].ns != NULL
-	    && !g_ascii_strcasecmp("xml",
-				   (char *) nptr->properties[0].ns->prefix)
-	    && nptr->properties[0].children != NULL)
-		return nptr->properties[0].children->content;
-	else
-		return NULL;
+	/* 
+	 * Walking through the 1st level children of iptr
+	 * looking for the configItem
+	 */
+	if (iptr->type != XML_ELEMENT_NODE)
+		return FALSE;
+	*ptr = iptr->children;
+	while (*ptr != NULL) {
+		switch ((*ptr)->type) {
+		case XML_ELEMENT_NODE:
+			return !g_ascii_strcasecmp
+			    ((char *) (*ptr)->name, "configItem");
+		case XML_TEXT_NODE:
+		case XML_COMMENT_NODE:
+			(*ptr) = (*ptr)->next;
+			continue;
+		default:
+			return FALSE;
+		}
+		break;
+	}
+	return FALSE;
 }
 
 static gboolean
 xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 		     XklConfigItem * item)
 {
-	xmlNodePtr name_element, nptr, ptr;
+	xmlNodePtr name_element, ptr;
 	xmlNodePtr desc_element = NULL, short_desc_element = NULL;
-	xmlNodePtr nt_desc_element = NULL, nt_short_desc_element = NULL;
+	xmlNodePtr def_desc_element = NULL, def_short_desc_element = NULL;
 
 	gint max_desc_priority = -1;
 	gint max_short_desc_priority = -1;
@@ -59,39 +75,24 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 	*item->name = 0;
 	*item->short_description = 0;
 	*item->description = 0;
-	if (iptr->type != XML_ELEMENT_NODE)
+
+	if (!xkl_xml_find_config_item_child(iptr, &ptr))
 		return FALSE;
-	ptr = iptr->children;
+
+	ptr = ptr->children;
+
+	if (ptr->type == XML_TEXT_NODE)
+		ptr = ptr->next;
+	name_element = ptr;
+	ptr = ptr->next;
+
+	/*
+	 * Look for descriptions with maximum language priorities
+	 */
 	while (ptr != NULL) {
-		switch (ptr->type) {
-		case XML_ELEMENT_NODE:
-			if (!g_ascii_strcasecmp
-			    ((char *) ptr->name, "configItem"))
-				break;
-			return FALSE;
-		case XML_TEXT_NODE:
-		case XML_COMMENT_NODE:
-			ptr = ptr->next;
-			continue;
-		default:
-			return FALSE;
-		}
-		break;
-	}
-	if (ptr == NULL)
-		return FALSE;
-
-	nptr = ptr->children;
-
-	if (nptr->type == XML_TEXT_NODE)
-		nptr = nptr->next;
-	name_element = nptr;
-	nptr = nptr->next;
-
-	while (nptr != NULL) {
-		char *node_name = (char *) nptr->name;
-		if (nptr->type != XML_TEXT_NODE) {
-			xmlChar *lang = xkl_node_get_xml_lang_attr(nptr);
+		char *node_name = (char *) ptr->name;
+		if (ptr->type != XML_TEXT_NODE) {
+			xmlChar *lang = xmlNodeGetLang(ptr);
 
 			if (lang != NULL) {
 				gint priority =
@@ -102,42 +103,45 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 				 * Find desc/shortdesc with highest priority
 				 */
 				if (!g_ascii_strcasecmp(node_name,
-							"description") &&
+							XML_TAG_DESCR) &&
 				    (priority > max_desc_priority)) {
-					desc_element = nptr;
+					desc_element = ptr;
 					max_desc_priority = priority;
 				} else if (!g_ascii_strcasecmp(node_name,
-							       "shortDescription")
+							       XML_TAG_SHORT_DESCR)
 					   && (priority >
 					       max_short_desc_priority)) {
-					short_desc_element = nptr;
+					short_desc_element = ptr;
 					max_short_desc_priority = priority;
 				}
-			} else	// no language specified!
-			{
+				xmlFree(lang);
+			} else {	/* No language specified for the description */
+
 				if (!g_ascii_strcasecmp
-				    (node_name, "description"))
-					nt_desc_element = nptr;
+				    (node_name, XML_TAG_DESCR))
+					def_desc_element = ptr;
 				else if (!g_ascii_strcasecmp
-					 (node_name, "shortDescription"))
-					nt_short_desc_element = nptr;
+					 (node_name, XML_TAG_SHORT_DESCR))
+					def_short_desc_element = ptr;
 			}
 		}
-		nptr = nptr->next;
+		ptr = ptr->next;
 	}
 
-	/* if no language-specific description found - use the ones without lang */
+	/*
+	 * If no language-specific descriptions found - 
+	 * use the ones without lang
+	 */
 	if (desc_element == NULL)
-		desc_element = nt_desc_element;
+		desc_element = def_desc_element;
 
 	if (short_desc_element == NULL)
-		short_desc_element = nt_short_desc_element;
+		short_desc_element = def_short_desc_element;
 
 	/*
 	 * Actually, here we should have some code to find 
 	 * the correct localized description...
 	 */
-
 	if (name_element != NULL && name_element->children != NULL)
 		strncat(item->name,
 			(char *) name_element->children->content,
@@ -166,6 +170,66 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 }
 
 static void
+xkl_config_registry_clean_languages_in_node(xmlNodePtr iptr)
+{
+	xmlNodePtr name_element, ptr;
+
+	if (!xkl_xml_find_config_item_child(iptr, &ptr))
+		return;
+
+	ptr = ptr->children;
+
+	if (ptr->type == XML_TEXT_NODE)
+		ptr = ptr->next;
+	name_element = ptr;
+	ptr = ptr->next;
+
+	/*
+	 * Look for descriptions with maximum language priorities
+	 */
+	while (ptr != NULL) {
+		char *node_name = (char *) ptr->name;
+		if (ptr->type != XML_TEXT_NODE) {
+			xmlChar *lang = xmlNodeGetLang(ptr);
+
+			if (lang != NULL) {
+				gint priority =
+				    xkl_get_language_priority((gchar *)
+							      lang);
+
+				if (priority == -1) {
+#ifdef CLEAN_UNNEEDED_LANGUAGES
+					xmlNodePtr unneeded = ptr;
+#endif
+					ptr = ptr->next;
+					if (xkl_debug_level >= 100) {
+						gchar *pname = NULL;
+						if (name_element != NULL
+						    && name_element->
+						    children != NULL)
+							pname = (gchar *)
+							    name_element->
+							    children->
+							    content;
+						xkl_debug(100,
+							  "Cleaning %s for the language %s, id %s\n",
+							  node_name, lang,
+							  pname);
+					}
+#ifdef CLEAN_UNNEEDED_LANGUAGES
+					xmlUnlinkNode(unneeded);
+					xmlFreeNode(unneeded);
+#endif
+					continue;
+				}
+				xmlFree(lang);
+			}
+		}
+		ptr = ptr->next;
+	}
+}
+
+static void
 xkl_config_registry_foreach_in_nodeset(XklConfigRegistry * config,
 				       xmlNodeSetPtr nodes,
 				       ConfigItemProcessFunc func,
@@ -187,7 +251,8 @@ xkl_config_registry_foreach_in_nodeset(XklConfigRegistry * config,
 
 static void
 xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
-				     xmlXPathCompExprPtr xpath_comp_expr,
+				     xmlXPathCompExprPtr
+				     xpath_comp_expr,
 				     ConfigItemProcessFunc func,
 				     gpointer data)
 {
@@ -196,23 +261,26 @@ xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
 	if (!xkl_config_registry_is_initialized(config))
 		return;
 	xpath_obj = xmlXPathCompiledEval(xpath_comp_expr,
-					 xkl_config_registry_priv(config,
-								  xpath_context));
+					 xkl_config_registry_priv
+					 (config, xpath_context));
 	if (xpath_obj != NULL) {
 		xkl_config_registry_foreach_in_nodeset(config,
 						       xpath_obj->
-						       nodesetval, func,
-						       data);
+						       nodesetval,
+						       func, data);
 		xmlXPathFreeObject(xpath_obj);
 	}
 }
 
 static void
-xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry * config,
-						const gchar * format,
-						const gchar * value,
-						ConfigItemProcessFunc func,
-						gpointer data)
+xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry
+						* config,
+						const gchar *
+						format,
+						const gchar *
+						value,
+						ConfigItemProcessFunc
+						func, gpointer data)
 {
 	char xpath_expr[1024];
 	xmlXPathObjectPtr xpath_obj;
@@ -226,15 +294,16 @@ xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry * config,
 	if (xpath_obj != NULL) {
 		xkl_config_registry_foreach_in_nodeset(config,
 						       xpath_obj->
-						       nodesetval, func,
-						       data);
+						       nodesetval,
+						       func, data);
 		xmlXPathFreeObject(xpath_obj);
 	}
 }
 
 static gboolean
 xkl_config_registry_find_object(XklConfigRegistry * config,
-				const gchar * format, const gchar * arg1,
+				const gchar * format,
+				const gchar * arg1,
 				XklConfigItem * pitem /* in/out */ ,
 				xmlNodePtr * pnode /* out */ )
 {
@@ -247,9 +316,9 @@ xkl_config_registry_find_object(XklConfigRegistry * config,
 		return FALSE;
 
 	snprintf(xpath_expr, sizeof xpath_expr, format, arg1, pitem->name);
-	xpath_obj = xmlXPathEval((unsigned char *) xpath_expr,
-				 xkl_config_registry_priv(config,
-							  xpath_context));
+	xpath_obj =
+	    xmlXPathEval((unsigned char *) xpath_expr,
+			 xkl_config_registry_priv(config, xpath_context));
 	if (xpath_obj == NULL)
 		return FALSE;
 
@@ -326,11 +395,13 @@ xkl_engine_get_ruleset_name(XklEngine * engine,
 		/* first call */
 		gchar *rf = NULL;
 		if (!xkl_config_rec_get_from_root_window_property
-		    (NULL, xkl_engine_priv(engine, base_config_atom), &rf,
-		     engine) || (rf == NULL)) {
+		    (NULL,
+		     xkl_engine_priv(engine, base_config_atom),
+		     &rf, engine) || (rf == NULL)) {
 			g_strlcpy(rules_set_name, default_ruleset,
 				  sizeof rules_set_name);
-			xkl_debug(100, "Using default rules set: [%s]\n",
+			xkl_debug(100,
+				  "Using default rules set: [%s]\n",
 				  rules_set_name);
 			return rules_set_name;
 		}
@@ -354,15 +425,15 @@ xkl_config_registry_get_instance(XklEngine * engine)
 
 	config =
 	    XKL_CONFIG_REGISTRY(g_object_new
-				(xkl_config_registry_get_type(), "engine",
-				 engine, NULL));
+				(xkl_config_registry_get_type(),
+				 "engine", engine, NULL));
 
 	return config;
 }
 
 static void
-xkl_config_registry_clean_languages_in_xpath(XklConfigRegistry * config,
-					     gchar * xpath_expr)
+xkl_config_registry_clean_languages_in_xpath(XklConfigRegistry *
+					     config, gchar * xpath_expr)
 {
 	xmlXPathObjectPtr xpath_obj =
 	    xmlXPathEval((unsigned char *) xpath_expr,
@@ -373,10 +444,8 @@ xkl_config_registry_clean_languages_in_xpath(XklConfigRegistry * config,
 		gint i;
 
 		for (i = xpath_obj->nodesetval->nodeNr; --i >= 0;) {
-			/* 
-			 * TODO - drop description subnodes 
-			 * for irrelevant languages
-			 */
+			xkl_config_registry_clean_languages_in_node
+			    (*pnode);
 			pnode++;
 		}
 		xmlXPathFreeObject(xpath_obj);
@@ -396,13 +465,19 @@ xkl_config_registry_clean_languages(XklConfigRegistry * config)
 						     XKBCR_GROUP_PATH);
 	xkl_config_registry_clean_languages_in_xpath(config,
 						     XKBCR_OPTION_PATH);
+	xkl_debug(100, "XML memory allocated: %d\n", xmlMemUsed());
 }
 
 gboolean
 xkl_config_registry_load_from_file(XklConfigRegistry * config,
 				   const gchar * file_name)
 {
-	xkl_config_registry_priv(config, doc) = xmlParseFile(file_name);
+	xmlParserCtxtPtr ctxt = xmlNewParserCtxt();
+	xkl_debug(100, "Loading XML registry from file %s\n", file_name);
+	xkl_config_registry_priv(config, doc) =
+	    xmlCtxtReadFile(ctxt, file_name, NULL, XML_PARSE_NOBLANKS);
+	xmlFreeParserCtxt(ctxt);
+
 	if (xkl_config_registry_priv(config, doc) == NULL) {
 		xkl_config_registry_priv(config, xpath_context) = NULL;
 		xkl_last_error_message =
@@ -412,7 +487,10 @@ xkl_config_registry_load_from_file(XklConfigRegistry * config,
 	xkl_config_registry_priv(config, xpath_context) =
 	    xmlXPathNewContext(xkl_config_registry_priv(config, doc));
 
+	//xmlSaveFile("before.xml", xkl_config_registry_priv(config, doc));
+	xkl_debug(100, "Cleaning unneeded languages\n");
 	xkl_config_registry_clean_languages(config);
+	//xmlSaveFile("after.xml", xkl_config_registry_priv(config, doc));
 
 	return TRUE;
 }
@@ -434,8 +512,8 @@ xkl_config_registry_foreach_model(XklConfigRegistry * config,
 				  ConfigItemProcessFunc func,
 				  gpointer data)
 {
-	xkl_config_registry_foreach_in_xpath(config, models_xpath, func,
-					     data);
+	xkl_config_registry_foreach_in_xpath(config, models_xpath,
+					     func, data);
 }
 
 void
@@ -443,26 +521,30 @@ xkl_config_registry_foreach_layout(XklConfigRegistry * config,
 				   ConfigItemProcessFunc func,
 				   gpointer data)
 {
-	xkl_config_registry_foreach_in_xpath(config, layouts_xpath, func,
-					     data);
+	xkl_config_registry_foreach_in_xpath(config, layouts_xpath,
+					     func, data);
 }
 
 void
-xkl_config_registry_foreach_layout_variant(XklConfigRegistry * config,
-					   const gchar * layout_name,
-					   ConfigItemProcessFunc func,
-					   gpointer data)
+xkl_config_registry_foreach_layout_variant(XklConfigRegistry *
+					   config,
+					   const gchar *
+					   layout_name,
+					   ConfigItemProcessFunc
+					   func, gpointer data)
 {
-	xkl_config_registry_foreach_in_xpath_with_param
-	    (config,
-	     XKBCR_VARIANT_PATH "[../../configItem/name = '%s']",
-	     layout_name, func, data);
+	xkl_config_registry_foreach_in_xpath_with_param(config,
+							XKBCR_VARIANT_PATH
+							"[../../configItem/name = '%s']",
+							layout_name,
+							func, data);
 }
 
 void
-xkl_config_registry_foreach_option_group(XklConfigRegistry * config,
-					 ConfigItemProcessFunc func,
-					 gpointer data)
+xkl_config_registry_foreach_option_group(XklConfigRegistry *
+					 config,
+					 ConfigItemProcessFunc
+					 func, gpointer data)
 {
 	xmlXPathObjectPtr xpath_obj;
 	gint i;
@@ -487,11 +569,12 @@ xkl_config_registry_foreach_option_group(XklConfigRegistry * config,
 					       XCI_PROP_ALLOW_MULTIPLE_SELECTION);
 				if (sallow_multisel != NULL) {
 					allow_multisel =
-					    !g_ascii_strcasecmp("true",
-								(char *)
-								sallow_multisel);
+					    !g_ascii_strcasecmp
+					    ("true", (char *)
+					     sallow_multisel);
 					xmlFree(sallow_multisel);
-					g_object_set_data(G_OBJECT(ci),
+					g_object_set_data(G_OBJECT
+							  (ci),
 							  XCI_PROP_ALLOW_MULTIPLE_SELECTION,
 							  GINT_TO_POINTER
 							  (allow_multisel));
@@ -509,36 +592,36 @@ xkl_config_registry_foreach_option_group(XklConfigRegistry * config,
 
 void
 xkl_config_registry_foreach_option(XklConfigRegistry * config,
-				   const gchar * option_group_name,
+				   const gchar *
+				   option_group_name,
 				   ConfigItemProcessFunc func,
 				   gpointer data)
 {
-	xkl_config_registry_foreach_in_xpath_with_param
-	    (config,
-	     XKBCR_OPTION_PATH "[../configItem/name = '%s']",
-	     option_group_name, func, data);
+	xkl_config_registry_foreach_in_xpath_with_param(config,
+							XKBCR_OPTION_PATH
+							"[../configItem/name = '%s']",
+							option_group_name,
+							func, data);
 }
 
 gboolean
 xkl_config_registry_find_model(XklConfigRegistry * config,
 			       XklConfigItem * pitem /* in/out */ )
 {
-	return
-	    xkl_config_registry_find_object
-	    (config,
-	     XKBCR_MODEL_PATH "[configItem/name = '%s%s']",
-	     "", pitem, NULL);
+	return xkl_config_registry_find_object(config,
+					       XKBCR_MODEL_PATH
+					       "[configItem/name = '%s%s']",
+					       "", pitem, NULL);
 }
 
 gboolean
 xkl_config_registry_find_layout(XklConfigRegistry * config,
 				XklConfigItem * pitem /* in/out */ )
 {
-	return
-	    xkl_config_registry_find_object
-	    (config,
-	     XKBCR_LAYOUT_PATH "[configItem/name = '%s%s']",
-	     "", pitem, NULL);
+	return xkl_config_registry_find_object(config,
+					       XKBCR_LAYOUT_PATH
+					       "[configItem/name = '%s%s']",
+					       "", pitem, NULL);
 }
 
 gboolean
@@ -546,16 +629,15 @@ xkl_config_registry_find_variant(XklConfigRegistry * config,
 				 const char *layout_name,
 				 XklConfigItem * pitem /* in/out */ )
 {
-	return
-	    xkl_config_registry_find_object
-	    (config,
-	     XKBCR_VARIANT_PATH
-	     "[../../configItem/name = '%s' and configItem/name = '%s']",
-	     layout_name, pitem, NULL);
+	return xkl_config_registry_find_object(config,
+					       XKBCR_VARIANT_PATH
+					       "[../../configItem/name = '%s' and configItem/name = '%s']",
+					       layout_name, pitem, NULL);
 }
 
 gboolean
-xkl_config_registry_find_option_group(XklConfigRegistry * config,
+xkl_config_registry_find_option_group(XklConfigRegistry *
+				      config,
 				      XklConfigItem * pitem /* in/out */ )
 {
 	xmlNodePtr node = NULL;
@@ -563,7 +645,8 @@ xkl_config_registry_find_option_group(XklConfigRegistry * config,
 						      XKBCR_GROUP_PATH
 						      "[configItem/name = '%s%s']",
 						      "",
-						      pitem, &node);
+						      pitem,
+						      &node);
 
 	if (rv) {
 		xmlChar *val = xmlGetProp(node,
@@ -571,7 +654,8 @@ xkl_config_registry_find_option_group(XklConfigRegistry * config,
 					  XCI_PROP_ALLOW_MULTIPLE_SELECTION);
 		if (val != NULL) {
 			gboolean allow_multisel =
-			    !g_ascii_strcasecmp("true", (char *) val);
+			    !g_ascii_strcasecmp("true",
+						(char *) val);
 			g_object_set_data(G_OBJECT(pitem),
 					  XCI_PROP_ALLOW_MULTIPLE_SELECTION,
 					  GINT_TO_POINTER(allow_multisel));
@@ -586,11 +670,11 @@ xkl_config_registry_find_option(XklConfigRegistry * config,
 				const char *option_group_name,
 				XklConfigItem * pitem /* in/out */ )
 {
-	return
-	    xkl_config_registry_find_object
-	    (config, XKBCR_OPTION_PATH
-	     "[../configItem/name = '%s' and configItem/name = '%s']",
-	     option_group_name, pitem, NULL);
+	return xkl_config_registry_find_object(config,
+					       XKBCR_OPTION_PATH
+					       "[../configItem/name = '%s' and configItem/name = '%s']",
+					       option_group_name,
+					       pitem, NULL);
 }
 
 /*
@@ -600,8 +684,8 @@ gboolean
 xkl_config_rec_activate(const XklConfigRec * data, XklEngine * engine)
 {
 	xkl_engine_ensure_vtable_inited(engine);
-	return xkl_engine_vcall(engine, activate_config_rec) (engine,
-							      data);
+	return xkl_engine_vcall(engine,
+				activate_config_rec) (engine, data);
 }
 
 gboolean
@@ -616,13 +700,14 @@ xkl_config_registry_load(XklConfigRegistry * config)
 }
 
 gboolean
-xkl_config_rec_write_to_file(XklEngine * engine, const gchar * file_name,
+xkl_config_rec_write_to_file(XklEngine * engine,
+			     const gchar * file_name,
 			     const XklConfigRec * data,
 			     const gboolean binary)
 {
-	if ((!binary &&
-	     !(xkl_engine_priv(engine, features) &
-	       XKLF_CAN_OUTPUT_CONFIG_AS_ASCII))
+	if ((!binary
+	     && !(xkl_engine_priv(engine, features) &
+		  XKLF_CAN_OUTPUT_CONFIG_AS_ASCII))
 	    || (binary
 		&& !(xkl_engine_priv(engine, features) &
 		     XKLF_CAN_OUTPUT_CONFIG_AS_BINARY))) {
@@ -631,10 +716,10 @@ xkl_config_rec_write_to_file(XklEngine * engine, const gchar * file_name,
 		return FALSE;
 	}
 	xkl_engine_ensure_vtable_inited(engine);
-	return xkl_engine_vcall(engine, write_config_rec_to_file) (engine,
-								   file_name,
-								   data,
-								   binary);
+	return xkl_engine_vcall(engine,
+				write_config_rec_to_file) (engine,
+							   file_name,
+							   data, binary);
 }
 
 void
@@ -663,8 +748,8 @@ static GObject *
 xkl_config_registry_constructor(GType type,
 				guint
 				n_construct_properties,
-				GObjectConstructParam *
-				construct_properties)
+				GObjectConstructParam
+				* construct_properties)
 {
 	GObject *obj;
 	XklConfigRegistry *config;
@@ -677,7 +762,8 @@ xkl_config_registry_constructor(GType type,
 		    XKL_CONFIG_REGISTRY_CLASS(g_type_class_peek
 					      (XKL_TYPE_CONFIG_REGISTRY));
 		obj =
-		    parent_class->constructor(type, n_construct_properties,
+		    parent_class->constructor(type,
+					      n_construct_properties,
 					      construct_properties);
 	}
 
