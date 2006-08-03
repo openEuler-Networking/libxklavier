@@ -1,3 +1,9 @@
+2006-08-03 svu
+
+	* libxklavier/xklavier_config.c: Loading with custom SAX handler
+	(inherited from the existing default DOM builder). Now, loaded XML
+	takes only 500K (for us locale). Hurray! 
+
 2006-08-02 svu
 
 	* libxklavier/xklavier_config.c: improving the XML parsing options,

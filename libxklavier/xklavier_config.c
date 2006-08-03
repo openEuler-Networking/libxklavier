@@ -168,62 +168,6 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 }
 
 static void
-xkl_config_registry_clean_languages_in_node(xmlNodePtr iptr)
-{
-	xmlNodePtr name_element, ptr;
-
-	if (!xkl_xml_find_config_item_child(iptr, &ptr))
-		return;
-
-	ptr = ptr->children;
-
-	if (ptr->type == XML_TEXT_NODE)
-		ptr = ptr->next;
-	name_element = ptr;
-	ptr = ptr->next;
-
-	/*
-	 * Look for descriptions with maximum language priorities
-	 */
-	while (ptr != NULL) {
-		char *node_name = (char *) ptr->name;
-		if (ptr->type != XML_TEXT_NODE) {
-			xmlChar *lang = xmlNodeGetLang(ptr);
-
-			if (lang != NULL) {
-				gint priority =
-				    xkl_get_language_priority((gchar *)
-							      lang);
-
-				if (priority == -1) {
-					xmlNodePtr unneeded = ptr;
-					ptr = ptr->next;
-					if (xkl_debug_level >= 100) {
-						gchar *pname = NULL;
-						if (name_element != NULL
-						    && name_element->
-						    children != NULL)
-							pname = (gchar *)
-							    name_element->
-							    children->
-							    content;
-						xkl_debug(100,
-							  "Cleaning %s for the language %s, id %s\n",
-							  node_name, lang,
-							  pname);
-					}
-					xmlUnlinkNode(unneeded);
-					xmlFreeNode(unneeded);
-					continue;
-				}
-				xmlFree(lang);
-			}
-		}
-		ptr = ptr->next;
-	}
-}
-
-static void
 xkl_config_registry_foreach_in_nodeset(XklConfigRegistry * config,
 				       xmlNodeSetPtr nodes,
 				       ConfigItemProcessFunc func,
@@ -425,41 +369,63 @@ xkl_config_registry_get_instance(XklEngine * engine)
 	return config;
 }
 
-static void
-xkl_config_registry_clean_languages_in_xpath(XklConfigRegistry *
-					     config, gchar * xpath_expr)
-{
-	xmlXPathObjectPtr xpath_obj =
-	    xmlXPathEval((unsigned char *) xpath_expr,
-			 xkl_config_registry_priv(config,
-						  xpath_context));
-	if (xpath_obj != NULL && xpath_obj->nodesetval != NULL) {
-		xmlNodePtr *pnode = xpath_obj->nodesetval->nodeTab;
-		gint i;
+/* We process descriptions as "leaf" elements - this is ok for base.xml*/
+static gboolean skipping_tag = FALSE;
 
-		for (i = xpath_obj->nodesetval->nodeNr; --i >= 0;) {
-			xkl_config_registry_clean_languages_in_node
-			    (*pnode);
-			pnode++;
+static void
+xkl_xml_sax_start_element_ns(void *ctx,
+			     const xmlChar * localname,
+			     const xmlChar * prefix,
+			     const xmlChar * URI,
+			     int nb_namespaces,
+			     const xmlChar ** namespaces,
+			     int nb_attributes,
+			     int nb_defaulted, const xmlChar ** attributes)
+{
+	int i;
+	gchar *lang = NULL;
+	for (i = 0; i < nb_attributes * 5; i += 5) {
+		int len = attributes[i + 4] - attributes[i + 3];
+		gchar *value = g_new0(gchar, len + 1);
+		memcpy(value, attributes[i + 3], len);
+		if (!g_ascii_strcasecmp((gchar *) attributes[i], "lang")
+		    /* && ... */ ) {
+			lang = value;
+			break;
 		}
-		xmlXPathFreeObject(xpath_obj);
+		g_free(value);
+	}
+	if (lang != NULL) {
+		gint priority = xkl_get_language_priority((gchar *) lang);
+		g_free(lang);
+		if (priority == -1) {
+			skipping_tag = TRUE;
+			return;
+		}
+	}
+	xmlSAX2StartElementNs(ctx, localname, prefix, URI,
+			      nb_namespaces, namespaces, nb_attributes,
+			      nb_defaulted, attributes);
+}
+
+static void
+xkl_xml_sax_characters(void *ctx, const xmlChar * ch, int len)
+{
+	if (!skipping_tag) {
+		xmlSAX2Characters(ctx, ch, len);
 	}
 }
 
 static void
-xkl_config_registry_clean_languages(XklConfigRegistry * config)
+xkl_xml_sax_end_element_ns(void *ctx,
+			   const xmlChar * localname,
+			   const xmlChar * prefix, const xmlChar * URI)
 {
-	xkl_config_registry_clean_languages_in_xpath(config,
-						     XKBCR_MODEL_PATH);
-	xkl_config_registry_clean_languages_in_xpath(config,
-						     XKBCR_LAYOUT_PATH);
-	xkl_config_registry_clean_languages_in_xpath(config,
-						     XKBCR_VARIANT_PATH);
-	xkl_config_registry_clean_languages_in_xpath(config,
-						     XKBCR_GROUP_PATH);
-	xkl_config_registry_clean_languages_in_xpath(config,
-						     XKBCR_OPTION_PATH);
-	xkl_debug(100, "XML memory allocated: %d\n", xmlMemUsed());
+	if (skipping_tag) {
+		skipping_tag = FALSE;
+	} else {
+		xmlSAX2EndElementNs(ctx, localname, prefix, URI);
+	}
 }
 
 gboolean
@@ -467,7 +433,16 @@ xkl_config_registry_load_from_file(XklConfigRegistry * config,
 				   const gchar * file_name)
 {
 	xmlParserCtxtPtr ctxt = xmlNewParserCtxt();
+	xmlSAXHandler *saxh = g_new0(xmlSAXHandler, 1);
 	xkl_debug(100, "Loading XML registry from file %s\n", file_name);
+
+	/* Filter out all unneeded languages! */
+	xmlSAX2InitDefaultSAXHandler(saxh, TRUE);
+	saxh->startElementNs = xkl_xml_sax_start_element_ns;
+	saxh->endElementNs = xkl_xml_sax_end_element_ns;
+	saxh->characters = xkl_xml_sax_characters;
+	ctxt->sax = saxh;
+
 	xkl_config_registry_priv(config, doc) =
 	    xmlCtxtReadFile(ctxt, file_name, NULL, XML_PARSE_NOBLANKS);
 	xmlFreeParserCtxt(ctxt);
@@ -480,11 +455,6 @@ xkl_config_registry_load_from_file(XklConfigRegistry * config,
 	}
 	xkl_config_registry_priv(config, xpath_context) =
 	    xmlXPathNewContext(xkl_config_registry_priv(config, doc));
-
-	/* xmlSaveFile("before.xml", xkl_config_registry_priv(config, doc)); */
-	xkl_debug(100, "Cleaning unneeded languages\n");
-	xkl_config_registry_clean_languages(config);
-	/* xmlSaveFile("after.xml", xkl_config_registry_priv(config, doc)); */
 
 	return TRUE;
 }
