@@ -107,7 +107,7 @@ xkl_xmm_find_switch_option(XklEngine * engine, gint keycode,
 	const XmmSwitchOption *rv = xkl_xmm_shortcut_get_current(engine);
 
 	if (rv != NULL) {
-		XmmShortcut *sc = rv->shortcuts;
+		const XmmShortcut *sc = rv->shortcuts;
 		while (sc->keysym != XK_VoidSymbol) {
 			if ((XKeysymToKeycode
 			     (xkl_engine_get_display(engine),
