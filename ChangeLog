@@ -1,3 +1,7 @@
+2006-08-30 svu
+
+	* configure.in, NEWS: preparing release 3.0
+
 2006-08-03 svu
 
 	* libxklavier/xklavier_config.c: Loading with custom SAX handler
