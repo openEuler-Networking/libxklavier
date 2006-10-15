@@ -5,6 +5,8 @@
 	libxklavier/xklavier_private.h: more correct processing of the root
 	window property defining the configuration. Apps listening for
 	XKLL_TRACK_KEYBOARD_STATE should be notified as well.
+	* libxklavier/xklavier_props.c: fixing splitting variant out of
+	layout, like in "ru(winkeys)"
 
 2006-10-07 svu
 

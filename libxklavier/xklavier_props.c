@@ -356,7 +356,7 @@ xkl_config_rec_get_from_root_window_property(XklConfigRec * data,
 		/* take variants from layouts like ru(winkeys) */
 		layout = data->layouts;
 		variant = data->variants;
-		while (*layout != NULL && *variant != NULL) {
+		while (*layout != NULL && *variant == NULL) {
 			gchar *varstart = g_strstr_len(*layout, -1, "(");
 			if (varstart != NULL) {
 				gchar *varend =
