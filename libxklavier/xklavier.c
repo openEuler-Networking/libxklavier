@@ -510,12 +510,12 @@ xkl_engine_get_features(XklEngine * engine)
 }
 
 void
-xkl_engine_reset_all_info(XklEngine * engine, const gchar reason[])
+xkl_engine_reset_all_info(XklEngine * engine, gboolean force, const gchar reason[])
 {
 	xkl_debug(150, "Resetting all the cached info, reason: [%s]\n",
 		  reason);
 	xkl_engine_ensure_vtable_inited(engine);
-	if (!xkl_engine_vcall(engine, if_cached_info_equals_actual)
+	if (force || !xkl_engine_vcall(engine, if_cached_info_equals_actual)
 	    (engine)) {
 		xkl_engine_vcall(engine, free_all_info) (engine);
 		xkl_engine_vcall(engine, load_all_info) (engine);

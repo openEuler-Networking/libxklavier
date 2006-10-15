@@ -1,3 +1,11 @@
+2006-10-15 svu
+
+	* libxklavier/xklavier.c, libxklavier/xklavier_evt.c,
+	libxklavier/xklavier_evt_xkb.c, libxklavier/xklavier_evt_xmm.c,
+	libxklavier/xklavier_private.h: more correct processing of the root
+	window property defining the configuration. Apps listening for
+	XKLL_TRACK_KEYBOARD_STATE should be notified as well.
+
 2006-10-07 svu
 
 	* *.h,*.c: added copyright statements, as requested by debian folks

@@ -119,7 +119,7 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 	case XkbNewKeyboardNotify:
 		xkl_debug(150, "%s\n",
 			  xkl_xkb_event_get_name(kev->any.xkb_type));
-		xkl_engine_reset_all_info(engine,
+		xkl_engine_reset_all_info(engine, FALSE,
 					  "XKB event: XkbNewKeyboardNotify");
 		break;
 

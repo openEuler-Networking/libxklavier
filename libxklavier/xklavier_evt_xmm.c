@@ -72,10 +72,11 @@ xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
    */
 	if (kpe->atom == state_atom) {
 		XklState state;
+		guint listener_type = xkl_engine_priv(engine, listener_type);
+
 		xkl_xmm_get_server_state(engine, &state);
 
-		if (xkl_engine_priv(engine, listener_type) &
-		    XKLL_MANAGE_LAYOUTS) {
+		if (listener_type & XKLL_MANAGE_LAYOUTS) {
 			xkl_debug(150,
 				  "Current group from the root window property %d\n",
 				  state.group);
@@ -85,8 +86,7 @@ xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
 			return 1;
 		}
 
-		if (xkl_engine_priv(engine, listener_type) &
-		    (XKLL_MANAGE_WINDOW_STATES |
+		if (listener_type & (XKLL_MANAGE_WINDOW_STATES |
 		     XKLL_TRACK_KEYBOARD_STATE)) {
 			xkl_debug(150,
 				  "XMM state changed, new 'group' %d\n",
@@ -102,7 +102,7 @@ xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
    * Configuration is changed!
    */
 	if (kpe->atom == xkl_engine_priv(engine, base_config_atom)) {
-		xkl_engine_reset_all_info(engine,
+		xkl_engine_reset_all_info(engine, TRUE,
 					  "base config atom changed");
 	}
 

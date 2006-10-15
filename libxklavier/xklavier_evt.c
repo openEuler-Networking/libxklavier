@@ -77,7 +77,7 @@ xkl_engine_filter_events(XklEngine * engine, XEvent * xev)
 		case MappingNotify:
 			xkl_debug(200, "%s\n",
 				  xkl_event_get_name(xev->type));
-			xkl_engine_reset_all_info(engine,
+			xkl_engine_reset_all_info(engine, FALSE,
 						  "X event: MappingNotify");
 			break;
 		default:
@@ -359,10 +359,13 @@ xkl_engine_process_focus_out_evt(XklEngine * engine,
  *  + for XKLL_MANAGE_WINDOW_STATES
  *    - WM_STATE property for all windows
  *    - Configuration property of the root window
+ *  + for XKLL_TRACK_KEYBOARD_STATE
+ *    - Configuration property of the root window
  */
 void
 xkl_engine_process_property_evt(XklEngine * engine, XPropertyEvent * pev)
 {
+	guint listener_type = xkl_engine_priv(engine, listener_type);
 	if (400 <= xkl_debug_level) {
 		char *atom_name =
 		    XGetAtomName(xkl_engine_get_display(engine),
@@ -380,9 +383,8 @@ xkl_engine_process_property_evt(XklEngine * engine, XPropertyEvent * pev)
 		}
 	}
 
-	if (xkl_engine_priv(engine, listener_type) &
-	    XKLL_MANAGE_WINDOW_STATES) {
-		if (pev->atom == xkl_engine_priv(engine, atoms)[WM_STATE]) {
+	if (pev->atom == xkl_engine_priv(engine, atoms)[WM_STATE]) {
+		if (listener_type & XKLL_MANAGE_WINDOW_STATES) {
 			gboolean has_xkl_state =
 			    xkl_engine_get_state(engine, pev->window,
 						 NULL);
@@ -412,20 +414,21 @@ xkl_engine_process_property_evt(XklEngine * engine, XPropertyEvent * pev)
 								window);
 				}
 			}
-		} else
-		    if (pev->atom ==
-			xkl_engine_priv(engine, base_config_atom)
-			&& pev->window == xkl_engine_priv(engine,
-							  root_window)) {
+		}		/* XKLL_MANAGE_WINDOW_STATES */
+	} else if (pev->atom == xkl_engine_priv(engine, base_config_atom)
+		   && pev->window == xkl_engine_priv(engine, root_window)) {
+		if (listener_type &
+		    (XKLL_MANAGE_WINDOW_STATES |
+		     XKLL_TRACK_KEYBOARD_STATE)) {
 			if (pev->state == PropertyNewValue) {
 				/* If root window got new *_NAMES_PROP_ATOM -
 				   it most probably means new keyboard config is loaded by somebody */
 				xkl_engine_reset_all_info
-				    (engine,
+				    (engine, TRUE,
 				     "New value of *_NAMES_PROP_ATOM on root window");
 			}
-		}
-	}			/* XKLL_MANAGE_WINDOW_STATES */
+		}		/* XKLL_MANAGE_WINDOW_STATES | XKLL_TRACK_KEYBOARD_STATE */
+	}
 }
 
 /*

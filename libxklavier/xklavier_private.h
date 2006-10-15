@@ -266,7 +266,7 @@ extern void xkl_engine_process_state_modification(XklEngine * engine,
 
 extern Window xkl_engine_get_registered_parent(XklEngine * engine,
 					       Window win);
-extern void xkl_engine_reset_all_info(XklEngine * engine,
+extern void xkl_engine_reset_all_info(XklEngine * engine, gboolean force,
 				      const gchar reason[]);
 extern gboolean xkl_engine_load_window_tree(XklEngine * engine);
 extern gboolean xkl_engine_load_subtree(XklEngine * engine, Window window,
