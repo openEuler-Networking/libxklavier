@@ -510,12 +510,14 @@ xkl_engine_get_features(XklEngine * engine)
 }
 
 void
-xkl_engine_reset_all_info(XklEngine * engine, gboolean force, const gchar reason[])
+xkl_engine_reset_all_info(XklEngine * engine, gboolean force,
+			  const gchar reason[])
 {
 	xkl_debug(150, "Resetting all the cached info, reason: [%s]\n",
 		  reason);
 	xkl_engine_ensure_vtable_inited(engine);
-	if (force || !xkl_engine_vcall(engine, if_cached_info_equals_actual)
+	if (force
+	    || !xkl_engine_vcall(engine, if_cached_info_equals_actual)
 	    (engine)) {
 		xkl_engine_vcall(engine, free_all_info) (engine);
 		xkl_engine_vcall(engine, load_all_info) (engine);
@@ -806,8 +808,7 @@ xkl_engine_class_init(XklEngineClass * klass)
 						  "Display",
 						  "X Display pointer",
 						  G_PARAM_CONSTRUCT_ONLY
-						  |
-						  G_PARAM_READWRITE);
+						  | G_PARAM_READWRITE);
 
 	backend_name_param_spec = g_param_spec_string("backendName",
 						      "backendName",
@@ -825,9 +826,8 @@ xkl_engine_class_init(XklEngineClass * klass)
 	features_param_spec = g_param_spec_flags("features",
 						 "Features",
 						 "Backend features",
-					 	 features_type,
-						 0,
-						 G_PARAM_READABLE);
+						 features_type,
+						 0, G_PARAM_READABLE);
 	max_num_groups_param_spec = g_param_spec_uint("max-num-groups",
 						      "maxNumGroups",
 						      "Max number of groups",
@@ -850,15 +850,13 @@ xkl_engine_class_init(XklEngineClass * klass)
 	    g_param_spec_uint("secondary-groups-mask",
 			      "secondaryGroupsMask",
 			      "Secondary groups mask",
-			      0, 0x100, 0,
-			      G_PARAM_READABLE);
+			      0, 0x100, 0, G_PARAM_READABLE);
 
 	indicators_handling_param_spec =
 	    g_param_spec_boolean("indicators-handling",
 				 "indicatorsHandling",
 				 "Whether engine should handle indicators",
-				 FALSE,
-				 G_PARAM_READABLE);
+				 FALSE, G_PARAM_READABLE);
 
 	g_object_class_install_property(object_class,
 					PROP_DISPLAY, display_param_spec);

@@ -35,8 +35,8 @@ xkl_xmm_process_keypress_event(XklEngine * engine, XKeyPressedEvent * kpe)
 		const XmmSwitchOption *sop;
 		xkl_debug(200, "Processing the KeyPress event\n");
 		sop = xkl_xmm_find_switch_option(engine, kpe->keycode,
-					       kpe->state,
-					       &current_shortcut);
+						 kpe->state,
+						 &current_shortcut);
 		if (sop != NULL) {
 			XklState state;
 			xkl_debug(150, "It is THE shortcut\n");
@@ -67,12 +67,13 @@ xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
 	Atom state_atom = xkl_engine_backend(engine, XklXmm, state_atom);
 	xkl_debug(200, "Processing the PropertyNotify event: %d/%d\n",
 		  kpe->atom, state_atom);
-  /*
-   * Group is changed!
-   */
+	/*
+	 * Group is changed!
+	 */
 	if (kpe->atom == state_atom) {
 		XklState state;
-		guint listener_type = xkl_engine_priv(engine, listener_type);
+		guint listener_type =
+		    xkl_engine_priv(engine, listener_type);
 
 		xkl_xmm_get_server_state(engine, &state);
 
@@ -87,7 +88,7 @@ xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
 		}
 
 		if (listener_type & (XKLL_MANAGE_WINDOW_STATES |
-		     XKLL_TRACK_KEYBOARD_STATE)) {
+				     XKLL_TRACK_KEYBOARD_STATE)) {
 			xkl_debug(150,
 				  "XMM state changed, new 'group' %d\n",
 				  state.group);
@@ -98,9 +99,9 @@ xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
 							      0, False);
 		}
 	} else
-  /*
-   * Configuration is changed!
-   */
+		/*
+		 * Configuration is changed!
+		 */
 	if (kpe->atom == xkl_engine_priv(engine, base_config_atom)) {
 		xkl_engine_reset_all_info(engine, TRUE,
 					  "base config atom changed");
