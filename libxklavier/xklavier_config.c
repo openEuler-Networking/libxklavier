@@ -213,7 +213,7 @@ static Bool _XklConfigFindObject( const char *format,
     return False;
 
   nodes = xpathObj->nodesetval;
-  if( nodes != NULL && nodes->nodeTab != NULL )
+  if( nodes != NULL && nodes->nodeTab != NULL && nodes->nodeNr > 0 )
   {
     rv = _XklReadConfigItem( *nodes->nodeTab, ptr );
     if( nodePtr != NULL )

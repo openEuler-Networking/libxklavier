@@ -1,3 +1,8 @@
+2006-11-03 svu
+	
+	* libxklavier/xklavier_config.c: more accurate dealing with empty
+	nodeset
+
 2006-04-01 svu
 	
 	* libxklavier/xklavier_props.c: 
