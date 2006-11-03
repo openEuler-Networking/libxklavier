@@ -280,8 +280,8 @@ xkl_config_registry_find_object(XklConfigRegistry * config,
 		return FALSE;
 
 	nodes = xpath_obj->nodesetval;
-	if (nodes != NULL && nodes->nodeTab != NULL) {
-		rv = xkl_read_config_item(config, *nodes->nodeTab, pitem);
+	if (nodes != NULL && nodes->nodeTab != NULL && nodes->nodeNr > 0) {
+		rv = xkl_read_config_item(config, nodes->nodeTab[0], pitem);
 		if (pnode != NULL) {
 			*pnode = *nodes->nodeTab;
 		}

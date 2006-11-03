@@ -1,3 +1,9 @@
+2006-11-03 svu
+
+	* libxklavier/xklavier_config.c: more accurate dealing with empty
+	nodeset, hopefully fixing
+	http://bugzilla.gnome.org/show_bug.cgi?id=370038
+
 2006-10-16 svu
 
 	* configure.in, NEWS: preparing release 3.1
