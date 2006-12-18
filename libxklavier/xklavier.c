@@ -413,7 +413,7 @@ xkl_default_log_appender(const gchar file[], const gchar function[],
 			 gint level, const gchar format[], va_list args)
 {
 	time_t now = time(NULL);
-	fprintf(stdout, "[%08ld,%03d,%s:%s/] \t", now, level, file,
+	fprintf(stdout, "[%08ld,%03d,%s:%s/] \t", (long)now, level, file,
 		function);
 	vfprintf(stdout, format, args);
 }
