@@ -57,12 +57,14 @@ dnl
 jm_LANGINFO_CODESET
 AC_CHECK_FUNCS(setlocale)
 AC_PATH_XTRA
-AC_SUBST(x_libraries)
-AC_SUBST(x_includes)
 AC_ARG_WITH( xkb_base,
              [  --with-xkb-base=DIR        XKB base path (by default it is /usr/X11R6/lib/X11/xkb)],
              xkb_base="$withval", 
-             xkb_base="$x_libraries/X11/xkb" )
+             if test -z "$x_libraries" ; then 
+               xkb_base="/usr/lib/X11/xkb"
+             else
+               xkb_base="$x_libraries/X11/xkb"
+             fi )
 
 AC_DEFINE_UNQUOTED(XKB_BASE,"${xkb_base}",Base for XKB configuration)
 
