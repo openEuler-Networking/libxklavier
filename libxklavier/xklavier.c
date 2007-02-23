@@ -85,7 +85,7 @@ xkl_engine_is_group_per_toplevel_window(XklEngine * engine)
 static void
 xkl_engine_set_switch_to_secondary_group(XklEngine * engine, gboolean val)
 {
-	CARD32 propval = (CARD32) val;
+	gulong propval = (gulong) val == TRUE;
 	Display *dpy = xkl_engine_get_display(engine);
 	XChangeProperty(dpy,
 			xkl_engine_priv(engine, root_window),

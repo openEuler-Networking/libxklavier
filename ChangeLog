@@ -1,3 +1,8 @@
+2007-02-23 svu
+
+	* libxklavier/xklavier.c: workaround for xlib ambiguous behavior.
+	http://bugzilla.gnome.org/show_bug.cgi?id=392853
+
 2007-02-11 svu
 
 	* configure.in: process empty x_libraries correctly, fixing
