@@ -18,6 +18,7 @@
  */
 
 #include <time.h>
+#include <string.h>
 
 #include <X11/Xmd.h>
 #include <X11/Xatom.h>
@@ -70,6 +71,9 @@ xkl_engine_add_toplevel_window(XklEngine * engine, Window toplevel_win,
 {
 	XklState state = *init_state;
 	gint default_group_to_use = -1;
+	GValue params[3];
+	GValue rv;
+	guint signal_id;
 
 	if (toplevel_win == xkl_engine_priv(engine, root_window))
 		xkl_debug(150, "??? root app win ???\n");
@@ -94,9 +98,22 @@ xkl_engine_add_toplevel_window(XklEngine * engine, Window toplevel_win,
 			return;
 		}
 	}
+	memset(params, 0, sizeof(params));
+	g_value_init(params, XKL_TYPE_ENGINE);
+	g_value_set_object(params, engine);
+	g_value_init(params + 1, G_TYPE_LONG);
+	g_value_set_long(params + 1, toplevel_win);
+	g_value_init(params + 2, G_TYPE_LONG);
+	g_value_set_long(params + 2, parent);
 
-	g_signal_emit_by_name(engine, "new-toplevel-window", toplevel_win,
-			      parent, &default_group_to_use);
+	memset(&rv, 0, sizeof(rv));
+	g_value_init(&rv, G_TYPE_INT);
+	g_value_set_int(&rv, default_group_to_use);
+
+	signal_id =
+	    g_signal_lookup("new-toplevel-window", xkl_engine_get_type());
+	g_signal_emitv(params, signal_id, 0, &rv);
+	default_group_to_use = g_value_get_int(&rv);
 
 	if (default_group_to_use == -1)
 		default_group_to_use =
