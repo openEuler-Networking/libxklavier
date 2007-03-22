@@ -2,7 +2,7 @@ AC_INIT(libxklavier/xklavier.c)
 
 PACKAGE=libxklavier
 MAJOR_VERSION=3
-MINOR_VERSION=1
+MINOR_VERSION=2
 VERSION=$MAJOR_VERSION.$MINOR_VERSION
 VERSION_INFO=11:0:0
 
@@ -58,20 +58,26 @@ jm_LANGINFO_CODESET
 AC_CHECK_FUNCS(setlocale)
 AC_PATH_XTRA
 AC_ARG_WITH( xkb_base,
-             [  --with-xkb-base=DIR        XKB base path (by default it is /usr/X11R6/lib/X11/xkb)],
+             [  --with-xkb-base=DIR        XKB base path (by default it is /usr/share/X11/xkb)],
              xkb_base="$withval", 
              if test -z "$x_libraries" ; then 
-               xkb_base="/usr/lib/X11/xkb"
+               xkb_base="/usr/share/X11/xkb"
              else
                xkb_base="$x_libraries/X11/xkb"
              fi )
 
 AC_DEFINE_UNQUOTED(XKB_BASE,"${xkb_base}",Base for XKB configuration)
 
+AC_PATH_PROG(XKBCOMP, xkbcomp, ,$PATH:/usr/X11R6/bin:/usr/bin/X11)
+
 AC_ARG_WITH( xkb_bin_base,
              [  --with-xkb-bin-base=DIR        XKB executables base path],
              xkb_bin_base="$withval", 
-             xkb_bin_base="$xkb_base" )
+             if test -z "$XKBCOMP" ; then 
+               xkb_bin_base="${xkb_base}"
+             else
+               xkb_bin_base="`dirname $XKBCOMP`"
+             fi )
 			 
 AC_DEFINE_UNQUOTED(XKB_BIN_BASE,"${xkb_bin_base}",Base for XKB executables)
 
@@ -169,6 +175,7 @@ if test "$enable_xkb_support" == "yes" ; then
     echo "    XKB, libxkbfile is present"
     echo "         default ruleset: $xkb_default_ruleset"
     echo "         base: $xkb_base"
+    echo "         xkbcomp is used from: $xkb_bin_base"
   else
     echo "    XKB, libxkbfile is NOT present"
   fi

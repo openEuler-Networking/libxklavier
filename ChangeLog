@@ -1,3 +1,8 @@
+2007-03-22 svu
+
+	* configure.in: make build process a bit smarter (in relation to
+	xkbcomp), preparing 3.2
+
 2007-03-19 svu
 
 	* libxklavier/xklavier_toplevel.c: fixing the default group processing.
