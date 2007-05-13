@@ -85,6 +85,11 @@ extern "C" {
 #define XCI_PROP_ALLOW_MULTIPLE_SELECTION "allowMultipleSelection"
 
 /**
+ * Extra property for the XklConfigItem, defining the vendor (used for models)
+ */
+#define XCI_PROP_VENDOR "vendor"
+
+/**
  * The XklConfigItem class, derived from GObject
  */
 	struct _XklConfigItemClass {

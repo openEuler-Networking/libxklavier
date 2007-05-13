@@ -1,3 +1,8 @@
+2007-05-13 svu
+
+	* libxklavier/xkl_config_item.h, libxklavier/xklavier_config.c,
+	tests/test_config.c: processing "vendor" element, if specified
+
 2007-03-22 svu
 
 	* configure.in: make build process a bit smarter (in relation to

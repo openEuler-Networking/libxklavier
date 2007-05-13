@@ -42,6 +42,7 @@ static xmlXPathCompExprPtr option_groups_xpath;
 
 #define XML_TAG_DESCR "description"
 #define XML_TAG_SHORT_DESCR "shortDescription"
+#define XML_TAG_VENDOR "vendor"
 
 enum {
 	PROP_0,
@@ -132,7 +133,7 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 					max_short_desc_priority = priority;
 				}
 				xmlFree(lang);
-			} else {	/* No language specified for the description */
+			} else {	/* No language specified */
 
 				if (!g_ascii_strcasecmp
 				    (node_name, XML_TAG_DESCR))
@@ -140,6 +141,20 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 				else if (!g_ascii_strcasecmp
 					 (node_name, XML_TAG_SHORT_DESCR))
 					def_short_desc_element = ptr;
+				else if (!g_ascii_strcasecmp(node_name,
+							     XML_TAG_VENDOR))
+				{
+					/* Vendor is not localized */
+					if (ptr->children != NULL)
+						g_object_set_data_full
+						    (G_OBJECT(item),
+						     XCI_PROP_VENDOR,
+						     g_strdup((const gchar
+							       *) ptr->
+							      children->
+							      content),
+						     g_free);
+				}
 			}
 		}
 		ptr = ptr->next;
@@ -281,7 +296,8 @@ xkl_config_registry_find_object(XklConfigRegistry * config,
 
 	nodes = xpath_obj->nodesetval;
 	if (nodes != NULL && nodes->nodeTab != NULL && nodes->nodeNr > 0) {
-		rv = xkl_read_config_item(config, nodes->nodeTab[0], pitem);
+		rv = xkl_read_config_item(config, nodes->nodeTab[0],
+					  pitem);
 		if (pnode != NULL) {
 			*pnode = *nodes->nodeTab;
 		}
@@ -408,7 +424,8 @@ xkl_xml_sax_start_element_ns(void *ctx,
 		gchar *value = g_new0(gchar, len + 1);
 		memcpy(value, attributes[i + 3], len);
 		if (!g_ascii_strcasecmp((gchar *) attributes[i], "lang")
-		    /* && ... */ ) {
+		    /* && ... */
+		    ) {
 			lang = value;
 			break;
 		}

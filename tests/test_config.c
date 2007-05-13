@@ -85,8 +85,11 @@ static void
 print_model(XklConfigRegistry * config, const XklConfigItem * item,
 	    gpointer data)
 {
-	printf("[%s][%s][%s]\n", item->name, item->description,
-	       item->short_description);
+	gchar *vendor =
+	    (gchar *) g_object_get_data(G_OBJECT(item), XCI_PROP_VENDOR);
+	printf("[%s][%s][%s] by %s\n", item->name, item->description,
+	       item->short_description,
+	       vendor == NULL ? "unknown" : vendor);
 }
 
 static void
