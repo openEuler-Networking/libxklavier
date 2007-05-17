@@ -79,32 +79,40 @@ xkl_xml_find_config_item_child(xmlNodePtr iptr, xmlNodePtr * ptr)
 	return FALSE;
 }
 
-static gboolean
-xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
-		     XklConfigItem * item)
+static gchar *
+xkl_find_nonlocalized_element(xmlNodePtr ptr, const gchar * tag_name)
 {
-	xmlNodePtr name_element, ptr;
-	xmlNodePtr desc_element = NULL, short_desc_element = NULL;
-	xmlNodePtr def_desc_element = NULL, def_short_desc_element = NULL;
+	/* TODO: change to XPath */
+	gchar *rv = NULL;
 
-	gint max_desc_priority = -1;
-	gint max_short_desc_priority = -1;
+	while (ptr != NULL) {
+		char *node_name = (char *) ptr->name;
+		if (ptr->type != XML_TEXT_NODE) {
+			xmlChar *lang = xmlNodeGetLang(ptr);
 
-	*item->name = 0;
-	*item->short_description = 0;
-	*item->description = 0;
-
-	g_object_set_data(G_OBJECT(item), XCI_PROP_VENDOR, NULL);
-
-	if (!xkl_xml_find_config_item_child(iptr, &ptr))
-		return FALSE;
-
-	ptr = ptr->children;
-
-	if (ptr->type == XML_TEXT_NODE)
+			if (lang != NULL) {
+				xmlFree(lang);
+			} else {	/* No language specified */
+				if (!g_ascii_strcasecmp(node_name,
+							tag_name)) {
+					if (ptr->children != NULL) {
+						rv = (gchar *) ptr->
+						    children->content;
+						break;
+					}
+				}
+			}
+		}
 		ptr = ptr->next;
-	name_element = ptr;
-	ptr = ptr->next;
+	}
+	return rv;
+}
+
+static xmlNodePtr
+xkl_find_localized_element(xmlNodePtr ptr, const gchar * tag_name)
+{
+	xmlNodePtr def_element = NULL, found_element = NULL;
+	gint max_priority = -1;
 
 	/*
 	 * Look for descriptions with maximum language priorities
@@ -123,56 +131,65 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 				 * Find desc/shortdesc with highest priority
 				 */
 				if (!g_ascii_strcasecmp(node_name,
-							XML_TAG_DESCR) &&
-				    (priority > max_desc_priority)) {
-					desc_element = ptr;
-					max_desc_priority = priority;
-				} else if (!g_ascii_strcasecmp(node_name,
-							       XML_TAG_SHORT_DESCR)
-					   && (priority >
-					       max_short_desc_priority)) {
-					short_desc_element = ptr;
-					max_short_desc_priority = priority;
+							tag_name) &&
+				    (priority > max_priority)) {
+					found_element = ptr;
+					max_priority = priority;
 				}
 				xmlFree(lang);
 			} else {	/* No language specified */
 
 				if (!g_ascii_strcasecmp
-				    (node_name, XML_TAG_DESCR))
-					def_desc_element = ptr;
-				else if (!g_ascii_strcasecmp
-					 (node_name, XML_TAG_SHORT_DESCR))
-					def_short_desc_element = ptr;
-				else if (!g_ascii_strcasecmp(node_name,
-							     XML_TAG_VENDOR))
-				{
-					/* Vendor is not localized */
-					if (ptr->children != NULL) {
-						gchar *vendor =
-						    g_strdup((const gchar
-							      *) ptr->
-							     children->
-							     content);
-						g_object_set_data_full
-						    (G_OBJECT(item),
-						     XCI_PROP_VENDOR,
-						     vendor, g_free);
-					}
-				}
+				    (node_name, tag_name))
+					def_element = ptr;
 			}
 		}
 		ptr = ptr->next;
 	}
-
 	/*
 	 * If no language-specific descriptions found - 
 	 * use the ones without lang
 	 */
-	if (desc_element == NULL)
-		desc_element = def_desc_element;
+	if (found_element == NULL)
+		found_element = def_element;
 
-	if (short_desc_element == NULL)
-		short_desc_element = def_short_desc_element;
+	return found_element;
+}
+
+static gboolean
+xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
+		     XklConfigItem * item)
+{
+	xmlNodePtr name_element, ptr;
+	xmlNodePtr desc_element = NULL, short_desc_element = NULL;
+	gchar *vendor = NULL;
+
+	*item->name = 0;
+	*item->short_description = 0;
+	*item->description = 0;
+
+	g_object_set_data(G_OBJECT(item), XCI_PROP_VENDOR, NULL);
+
+	if (!xkl_xml_find_config_item_child(iptr, &ptr))
+		return FALSE;
+
+	ptr = ptr->children;
+
+	if (ptr->type == XML_TEXT_NODE)
+		ptr = ptr->next;
+	name_element = ptr;
+	ptr = ptr->next;
+
+	short_desc_element =
+	    xkl_find_localized_element(ptr, XML_TAG_SHORT_DESCR);
+	desc_element = xkl_find_localized_element(ptr, XML_TAG_DESCR);
+	vendor = xkl_find_nonlocalized_element(ptr, XML_TAG_VENDOR);
+
+	if (vendor != NULL) {
+		vendor = g_strdup(vendor);
+		g_object_set_data_full(G_OBJECT(item), XCI_PROP_VENDOR,
+				       vendor, g_free);
+	}
 
 	/*
 	 * Actually, here we should have some code to find 
