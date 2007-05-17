@@ -94,6 +94,8 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 	*item->short_description = 0;
 	*item->description = 0;
 
+	g_object_set_data(G_OBJECT(item), XCI_PROP_VENDOR, NULL);
+
 	if (!xkl_xml_find_config_item_child(iptr, &ptr))
 		return FALSE;
 
@@ -145,15 +147,17 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 							     XML_TAG_VENDOR))
 				{
 					/* Vendor is not localized */
-					if (ptr->children != NULL)
+					if (ptr->children != NULL) {
+						gchar *vendor =
+						    g_strdup((const gchar
+							      *) ptr->
+							     children->
+							     content);
 						g_object_set_data_full
 						    (G_OBJECT(item),
 						     XCI_PROP_VENDOR,
-						     g_strdup((const gchar
-							       *) ptr->
-							      children->
-							      content),
-						     g_free);
+						     vendor, g_free);
+					}
 				}
 			}
 		}
