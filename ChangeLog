@@ -1,3 +1,10 @@
+2007-05-20 svu
+
+	* libxklavier/xklavier.c, libxklavier/xklavier_private.h,
+	libxklavier/xklavier_xkb.c, libxklavier/xklavier_xmm.c,
+	tests/test_monitor.c: added missing indicator names function (thanks
+	to Andriy Rysin for spotting)
+
 2007-05-16 svu
 
 	* configure.in: incrementing the version

@@ -36,6 +36,13 @@ xkl_xkb_get_groups_names(XklEngine * engine)
 						   group_names);
 }
 
+const gchar **
+xkl_xkb_get_indicators_names(XklEngine * engine)
+{
+	return (const gchar **) xkl_engine_backend(engine, XklXkb,
+						   indicator_names);
+}
+
 gint
 xkl_xkb_pause_listen(XklEngine * engine)
 {
@@ -519,6 +526,8 @@ xkl_xkb_init(XklEngine * engine)
 	    xkl_xkb_write_config_rec_to_file;
 	xkl_engine_priv(engine, get_groups_names) =
 	    xkl_xkb_get_groups_names;
+	xkl_engine_priv(engine, get_indicators_names) =
+	    xkl_xkb_get_indicators_names;
 	xkl_engine_priv(engine, get_max_num_groups) =
 	    xkl_xkb_get_max_num_groups;
 	xkl_engine_priv(engine, get_num_groups) = xkl_xkb_get_num_groups;

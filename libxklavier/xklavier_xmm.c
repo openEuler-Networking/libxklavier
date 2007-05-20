@@ -41,6 +41,12 @@ xkl_xmm_get_groups_names(XklEngine * engine)
 						   current_config).layouts;
 }
 
+const gchar **
+xkl_xmm_get_indicators_names(XklEngine * engine)
+{
+	return NULL;
+}
+
 void
 xkl_xmm_shortcuts_grab(XklEngine * engine)
 {
@@ -313,6 +319,8 @@ xkl_xmm_init(XklEngine * engine)
 
 	xkl_engine_priv(engine, get_groups_names) =
 	    xkl_xmm_get_groups_names;
+	xkl_engine_priv(engine, get_indicators_names) =
+	    xkl_xmm_get_indicators_names;
 	xkl_engine_priv(engine, get_max_num_groups) =
 	    xkl_xmm_get_max_num_groups;
 	xkl_engine_priv(engine, get_num_groups) = xkl_xmm_get_num_groups;

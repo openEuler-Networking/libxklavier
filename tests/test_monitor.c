@@ -105,6 +105,7 @@ main(int argc, char *argv[])
 	if (engine != NULL) {
 		XklConfigRec *current_config;
 		XklConfigRegistry *config;
+		const gchar** names;
 
 		xkl_debug(0, "Xklavier initialized\n");
 		config = xkl_config_registry_get_instance(engine);
@@ -113,6 +114,14 @@ main(int argc, char *argv[])
 
 		current_config = xkl_config_rec_new();
 		xkl_config_rec_get_from_server(current_config, engine);
+
+		names = xkl_engine_get_groups_names(engine);
+		while (names != NULL && *names != NULL && **names != 0)
+			xkl_debug(0,"Group: [%s]\n", *names++);
+
+		names = xkl_engine_get_indicators_names(engine);
+		while (names != NULL && *names != NULL && **names != 0)
+			xkl_debug(0,"Indicator: [%s]\n", *names++);
 
 		g_signal_connect(engine, "X-state-changed",
 				 G_CALLBACK(state_changed), NULL);

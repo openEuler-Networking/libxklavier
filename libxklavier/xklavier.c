@@ -536,6 +536,13 @@ xkl_engine_get_groups_names(XklEngine * engine)
 	return xkl_engine_vcall(engine, get_groups_names) (engine);
 }
 
+const gchar **
+xkl_engine_get_indicators_names(XklEngine * engine)
+{
+	xkl_engine_ensure_vtable_inited(engine);
+	return xkl_engine_vcall(engine, get_indicators_names) (engine);
+}
+
 guint
 xkl_engine_get_num_groups(XklEngine * engine)
 {

@@ -118,6 +118,13 @@ struct _XklEnginePrivate {
 	const gchar **(*get_groups_names) (XklEngine * engine);
 
 	/*
+	 * Get the list of the indicators names
+	 * xkb: return cached list of the indicators names
+	 * xmodmap: return NULL
+	 */
+	const gchar **(*get_indicators_names) (XklEngine * engine);
+
+	/*
 	 * Get the maximum number of loaded groups
 	 * xkb: returns 1 or XkbNumKbdGroups
 	 * xmodmap: return 0
