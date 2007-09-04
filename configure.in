@@ -184,4 +184,10 @@ if test "$enable_xmodmap_support" == "yes" ; then
   echo "    xmodmap, default ruleset: $xmodmap_default_ruleset"
   echo "             base: $xmodmap_base"
 fi
+
+if test "$enable_gtk_doc" == "yes" ; then
+  echo "  gtk-doc enabled"
+else
+  echo "  gtk-doc disabled"
+fi
 echo '**********************************************************'

@@ -1,3 +1,7 @@
+2007-09-04 svu
+
+	* configure.in: indicate gtkdoc enabling
+
 2007-05-20 svu
 
 	* libxklavier/xklavier.c, libxklavier/xklavier_private.h,
