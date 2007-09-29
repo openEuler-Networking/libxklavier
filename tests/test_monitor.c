@@ -42,11 +42,22 @@ print_usage()
 }
 
 void
-state_changed(XklEngine * engine, XklEngineStateChange type, gint new_group,
-	      gboolean restore)
+state_changed(XklEngine * engine, XklEngineStateChange type,
+	      gint new_group, gboolean restore)
 {
 	xkl_debug(0, "State changed: %d,%d,%d\n", type, new_group,
 		  restore);
+}
+
+void
+config_changed(XklEngine * engine)
+{
+	xkl_debug(0, "Config changed\n");
+	const gchar **gn = xkl_engine_get_groups_names(engine);
+	gint gt = xkl_engine_get_num_groups(engine);
+	gint i;
+	for (i = 0; i < gt; i++)
+		xkl_debug(0, "group[%d]: [%s]\n", i, gn[i]);
 }
 
 int
@@ -105,7 +116,7 @@ main(int argc, char *argv[])
 	if (engine != NULL) {
 		XklConfigRec *current_config;
 		XklConfigRegistry *config;
-		const gchar** names;
+		const gchar **names;
 
 		xkl_debug(0, "Xklavier initialized\n");
 		config = xkl_config_registry_get_instance(engine);
@@ -117,14 +128,16 @@ main(int argc, char *argv[])
 
 		names = xkl_engine_get_groups_names(engine);
 		while (names != NULL && *names != NULL && **names != 0)
-			xkl_debug(0,"Group: [%s]\n", *names++);
+			xkl_debug(0, "Group: [%s]\n", *names++);
 
 		names = xkl_engine_get_indicators_names(engine);
 		while (names != NULL && *names != NULL && **names != 0)
-			xkl_debug(0,"Indicator: [%s]\n", *names++);
+			xkl_debug(0, "Indicator: [%s]\n", *names++);
 
 		g_signal_connect(engine, "X-state-changed",
 				 G_CALLBACK(state_changed), NULL);
+		g_signal_connect(engine, "X-config-changed",
+				 G_CALLBACK(config_changed), NULL);
 
 		xkl_debug(0, "Now, listening: %X...\n", listener_type);
 		xkl_engine_start_listen(engine, listener_type);
