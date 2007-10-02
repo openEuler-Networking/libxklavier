@@ -1,3 +1,8 @@
+2007-10-03 svu
+
+	* libxklavier/xklavier_config.c: using xkeyboard-config domain for
+	translation, dealing with lowfat base.xml
+
 2007-09-29 svu
 
 	* tests/test_monitor.c: tracking the config

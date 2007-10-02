@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include <locale.h>
+#include <libintl.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -43,6 +44,9 @@ static xmlXPathCompExprPtr option_groups_xpath;
 #define XML_TAG_DESCR "description"
 #define XML_TAG_SHORT_DESCR "shortDescription"
 #define XML_TAG_VENDOR "vendor"
+
+// gettext domain for translations
+#define XKB_DOMAIN "xkeyboard-config"
 
 enum {
 	PROP_0,
@@ -205,7 +209,8 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 		gchar *lmsg = xkl_locale_from_utf8(config, (const gchar *)
 						   short_desc_element->
 						   children->content);
-		strncat(item->short_description, lmsg,
+		strncat(item->short_description,
+			dgettext(XKB_DOMAIN, lmsg),
 			XKL_MAX_CI_SHORT_DESC_LENGTH - 1);
 		g_free(lmsg);
 	}
@@ -215,7 +220,7 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 						   (const gchar *)
 						   desc_element->children->
 						   content);
-		strncat(item->description, lmsg,
+		strncat(item->description, dgettext(XKB_DOMAIN, lmsg),
 			XKL_MAX_CI_DESC_LENGTH - 1);
 		g_free(lmsg);
 	}
