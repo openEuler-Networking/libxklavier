@@ -338,10 +338,6 @@ extern void xkl_engine_try_call_state_func(XklEngine * engine,
 					   change_type,
 					   XklState * old_state);
 
-extern void xkl_i18n_init(void);
-
-extern gint xkl_get_language_priority(const gchar * language);
-
 extern gchar *xkl_engine_get_ruleset_name(XklEngine * engine,
 					  const gchar default_ruleset[]);
 

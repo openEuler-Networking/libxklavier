@@ -83,80 +83,24 @@ xkl_xml_find_config_item_child(xmlNodePtr iptr, xmlNodePtr * ptr)
 	return FALSE;
 }
 
-static gchar *
+static xmlNodePtr
 xkl_find_nonlocalized_element(xmlNodePtr ptr, const gchar * tag_name)
 {
-	/* TODO: change to XPath */
-	gchar *rv = NULL;
+	xmlNodePtr found_element = NULL;
 
 	while (ptr != NULL) {
 		char *node_name = (char *) ptr->name;
 		if (ptr->type != XML_TEXT_NODE) {
 			xmlChar *lang = xmlNodeGetLang(ptr);
 
-			if (lang != NULL) {
-				xmlFree(lang);
-			} else {	/* No language specified */
-				if (!g_ascii_strcasecmp(node_name,
-							tag_name)) {
-					if (ptr->children != NULL) {
-						rv = (gchar *) ptr->
-						    children->content;
-						break;
-					}
-				}
-			}
-		}
-		ptr = ptr->next;
-	}
-	return rv;
-}
-
-static xmlNodePtr
-xkl_find_localized_element(xmlNodePtr ptr, const gchar * tag_name)
-{
-	xmlNodePtr def_element = NULL, found_element = NULL;
-	gint max_priority = -1;
-
-	/*
-	 * Look for descriptions with maximum language priorities
-	 */
-	while (ptr != NULL) {
-		char *node_name = (char *) ptr->name;
-		if (ptr->type != XML_TEXT_NODE) {
-			xmlChar *lang = xmlNodeGetLang(ptr);
-
-			if (lang != NULL) {
-				gint priority =
-				    xkl_get_language_priority((gchar *)
-							      lang);
-
-				/*
-				 * Find desc/shortdesc with highest priority
-				 */
-				if (!g_ascii_strcasecmp(node_name,
-							tag_name) &&
-				    (priority > max_priority)) {
-					found_element = ptr;
-					max_priority = priority;
-				}
-				xmlFree(lang);
-			} else {	/* No language specified */
-
+			if (lang == NULL) {	/* No language specified */
 				if (!g_ascii_strcasecmp
 				    (node_name, tag_name))
-					def_element = ptr;
+					found_element = ptr;
 			}
 		}
 		ptr = ptr->next;
 	}
-	/*
-	 * If no language-specific descriptions found - 
-	 * use the ones without lang
-	 */
-	if (found_element == NULL)
-		found_element = def_element;
-
 	return found_element;
 }
 
@@ -165,7 +109,8 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 		     XklConfigItem * item)
 {
 	xmlNodePtr name_element, ptr;
-	xmlNodePtr desc_element = NULL, short_desc_element = NULL;
+	xmlNodePtr desc_element = NULL, short_desc_element =
+	    NULL, vendor_element = NULL;
 	gchar *vendor = NULL;
 
 	*item->name = 0;
@@ -185,12 +130,15 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 	ptr = ptr->next;
 
 	short_desc_element =
-	    xkl_find_localized_element(ptr, XML_TAG_SHORT_DESCR);
-	desc_element = xkl_find_localized_element(ptr, XML_TAG_DESCR);
-	vendor = xkl_find_nonlocalized_element(ptr, XML_TAG_VENDOR);
+	    xkl_find_nonlocalized_element(ptr, XML_TAG_SHORT_DESCR);
+	desc_element = xkl_find_nonlocalized_element(ptr, XML_TAG_DESCR);
+	vendor_element =
+	    xkl_find_nonlocalized_element(ptr, XML_TAG_VENDOR);
 
-	if (vendor != NULL) {
-		vendor = g_strdup(vendor);
+	if (vendor_element != NULL && vendor_element->children != NULL) {
+		vendor =
+		    g_strdup((const char *) vendor_element->children->
+			     content);
 		g_object_set_data_full(G_OBJECT(item), XCI_PROP_VENDOR,
 				       vendor, g_free);
 	}
@@ -206,23 +154,18 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 
 	if (short_desc_element != NULL
 	    && short_desc_element->children != NULL) {
-		gchar *lmsg = xkl_locale_from_utf8(config, (const gchar *)
-						   short_desc_element->
-						   children->content);
 		strncat(item->short_description,
-			dgettext(XKB_DOMAIN, lmsg),
+			dgettext(XKB_DOMAIN,
+				 (const char *) short_desc_element->
+				 children->content),
 			XKL_MAX_CI_SHORT_DESC_LENGTH - 1);
-		g_free(lmsg);
 	}
 
 	if (desc_element != NULL && desc_element->children != NULL) {
-		gchar *lmsg = xkl_locale_from_utf8(config,
-						   (const gchar *)
-						   desc_element->children->
-						   content);
-		strncat(item->description, dgettext(XKB_DOMAIN, lmsg),
-			XKL_MAX_CI_DESC_LENGTH - 1);
-		g_free(lmsg);
+		strncat(item->description,
+			dgettext(XKB_DOMAIN,
+				 (const char *) desc_element->children->
+				 content), XKL_MAX_CI_DESC_LENGTH - 1);
 	}
 	return TRUE;
 }
@@ -458,12 +401,9 @@ xkl_xml_sax_start_element_ns(void *ctx,
 		g_free(value);
 	}
 	if (lang != NULL) {
-		gint priority = xkl_get_language_priority((gchar *) lang);
 		g_free(lang);
-		if (priority == -1) {
-			skipping_tag = TRUE;
-			return;
-		}
+		skipping_tag = TRUE;
+		return;
 	}
 	xmlSAX2StartElementNs(ctx, localname, prefix, URI,
 			      nb_namespaces, namespaces, nb_attributes,
@@ -901,5 +841,4 @@ xkl_config_registry_class_init(XklConfigRegistryClass * klass)
 					XKBCR_LAYOUT_PATH);
 	option_groups_xpath = xmlXPathCompile((unsigned char *)
 					      XKBCR_GROUP_PATH);
-	xkl_i18n_init();
 }

@@ -40,7 +40,7 @@ static void
 print_usage(void)
 {
 	printf
-	    ("Usage: test_config (-g)|(-s -m <model> -l <layouts> -o <options>)|(-h)|(-ws)|(-wb)(-d <debugLevel>)(-c charset)\n");
+	    ("Usage: test_config (-g)|(-s -m <model> -l <layouts> -o <options>)|(-h)|(-ws)|(-wb)(-d <debugLevel>)\n");
 	printf("Options:\n");
 	printf("         -al - list all available layouts and variants\n");
 	printf("         -am - list all available models\n");
@@ -55,7 +55,6 @@ print_usage(void)
 	printf("         -wb - Write the source XKB config file (" PACKAGE
 	       ".xkb)\n");
 	printf("         -d - Set the debug level (by default, 0)\n");
-	printf("         -c - Set the custom charset\n");
 	printf("         -h - Show this help\n");
 }
 
@@ -118,7 +117,6 @@ main(int argc, char *const argv[])
 	const gchar *model = NULL;
 	const gchar *layouts = NULL;
 	const gchar *options = NULL;
-	const gchar *charset = NULL;
 	int debug_level = -1;
 	int binary = 0;
 	Display *dpy;
@@ -160,9 +158,6 @@ main(int argc, char *const argv[])
 		case 'd':
 			debug_level = atoi(optarg);
 			break;
-		case 'c':
-			charset = optarg;
-			break;
 		case 'w':
 			action = ACTION_WRITE;
 			binary = ('b' == optarg[0]);
@@ -197,10 +192,6 @@ main(int argc, char *const argv[])
 		xkl_debug(0, "Xklavier initialized\n");
 		config = xkl_config_registry_get_instance(engine);
 		xkl_config_registry_load(config);
-
-		if (charset != NULL)
-			xkl_config_registry_set_custom_charset(config,
-							       charset);
 
 		xkl_debug(0, "Xklavier registry loaded\n");
 		xkl_debug(0, "Backend: [%s]\n",
