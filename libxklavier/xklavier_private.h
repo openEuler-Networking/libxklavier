@@ -248,8 +248,6 @@ struct _XklConfigRegistryPrivate {
 	xmlDocPtr doc;
 
 	xmlXPathContextPtr xpath_context;
-
-	const gchar *custom_charset;
 };
 
 extern void xkl_engine_ensure_vtable_inited(XklEngine * engine);

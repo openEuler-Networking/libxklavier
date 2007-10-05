@@ -1,9 +1,9 @@
 2007-10-06 svu
 
 	* libxklavier/Makefile.am, libxklavier/xklavier_config.c,
-	libxklavier/xklavier_config_i18n.c, libxklavier/xklavier_private.h:
-	now, only gettext is doing string translation. No more hackish code in
-	that area.
+	libxklavier/xklavier_config_i18n.c, libxklavier/xklavier_private.h,
+	xkl_config_registry.h, xklavier_private.h: now, only gettext is doing
+	string translation. No more hackish code in that area.
 
 2007-10-03 svu
 
