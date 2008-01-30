@@ -1,3 +1,7 @@
+2008-01-30 svu
+
+	* NEWS: preparing 3.4
+
 2007-10-06 svu
 
 	* libxklavier/Makefile.am, libxklavier/xklavier_config.c,
