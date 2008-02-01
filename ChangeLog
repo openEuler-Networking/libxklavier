@@ -1,3 +1,7 @@
+2008-02-01 svu
+
+	* tests/test_monitor.c: C99 fix, by Jens
+
 2008-01-30 svu
 
 	* NEWS: preparing 3.4

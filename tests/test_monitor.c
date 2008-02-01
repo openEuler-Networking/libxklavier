@@ -52,10 +52,14 @@ state_changed(XklEngine * engine, XklEngineStateChange type,
 void
 config_changed(XklEngine * engine)
 {
-	xkl_debug(0, "Config changed\n");
-	const gchar **gn = xkl_engine_get_groups_names(engine);
-	gint gt = xkl_engine_get_num_groups(engine);
+	const gchar **gn;
+	gint gt;
 	gint i;
+
+	xkl_debug(0, "Config changed\n");
+
+	gn = xkl_engine_get_groups_names(engine);
+	gt = xkl_engine_get_num_groups(engine);
 	for (i = 0; i < gt; i++)
 		xkl_debug(0, "group[%d]: [%s]\n", i, gn[i]);
 }
