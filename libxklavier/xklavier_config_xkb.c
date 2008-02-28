@@ -21,8 +21,8 @@
 #include <locale.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/stat.h>
 #include <sys/param.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 
 #include <sys/types.h>
@@ -39,9 +39,6 @@
 #include <X11/extensions/XKBfile.h>
 #include <X11/extensions/XKM.h>
 #endif
-
-/* For "bad" X servers we hold our own copy */
-#define XML_CFG_FALLBACK_PATH ( DATA_DIR "/xfree86.xml" )
 
 #define XKBCOMP ( XKB_BIN_BASE "/xkbcomp" )
 
@@ -100,25 +97,9 @@ xkl_xkb_init_config_registry(XklConfigRegistry * config)
 gboolean
 xkl_xkb_load_config_registry(XklConfigRegistry * config)
 {
-	struct stat stat_buf;
-	char file_name[MAXPATHLEN] = "";
-	char *rf =
-	    xkl_engine_get_ruleset_name(xkl_config_registry_get_engine
-					(config),
-					XKB_DEFAULT_RULESET);
-
-	if (rf == NULL)
-		return FALSE;
-
-	snprintf(file_name, sizeof file_name, XKB_BASE "/rules/%s.xml",
-		 rf);
-
-	if (stat(file_name, &stat_buf) != 0) {
-		g_strlcpy(file_name, XML_CFG_FALLBACK_PATH,
-			  sizeof file_name);
-	}
-
-	return xkl_config_registry_load_from_file(config, file_name);
+	return xkl_config_registry_load_helper(config,
+					       XKB_DEFAULT_RULESET,
+					       XKB_BASE "/rules");
 }
 
 #ifdef LIBXKBFILE_PRESENT
@@ -405,15 +386,15 @@ xkl_config_get_keyboard(XklEngine * engine,
 #else				/* no XKB headers */
 gboolean
 xkl_xkb_config_native_prepare(XklEngine * engine,
-                              const XklConfigRec * data,
+			      const XklConfigRec * data,
 			      gpointer componentNamesPtr)
 {
 	return FALSE;
 }
 
 void
-xkl_xkb_config_native_cleanup (XklEngine * engine,
-                              gpointer component_names_ptr)
+xkl_xkb_config_native_cleanup(XklEngine * engine,
+			      gpointer component_names_ptr)
 {
 }
 #endif

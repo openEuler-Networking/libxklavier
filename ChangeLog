@@ -2,6 +2,11 @@
 
 	* libxklavier/xklavier_util.c: fix by Jens for Xnest issue,
 	http://bugzilla.gnome.org/show_bug.cgi?id=516318
+	* Makefile.am, configure.in, xfree86.xml,
+	libxklavier/xklavier_config.c, libxklavier/xklavier_config_xkb.c,
+	libxklavier/xklavier_config_xmm.c, libxklavier/xklavier_private.h:
+	getting rid of xfree86.xml, end of support for XFree 4.2, generalizing
+	some registry loading code
 
 2008-02-01 svu
 

@@ -396,6 +396,10 @@ extern void xkl_config_registry_free(XklConfigRegistry * config);
 extern gchar *xkl_locale_from_utf8(XklConfigRegistry * config,
 				   const gchar * utf8string);
 
+extern gboolean xkl_config_registry_load_helper(XklConfigRegistry * config,
+					 const char default_ruleset[],
+					 const char base_dir[]);
+
 #define XKLAVIER_STATE_PROP_LENGTH 2
 
 /* taken from XFree86 maprules.c */

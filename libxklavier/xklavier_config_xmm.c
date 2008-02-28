@@ -46,24 +46,9 @@ xkl_xmm_init_config_registry(XklConfigRegistry * config)
 gboolean
 xkl_xmm_load_config_registry(XklConfigRegistry * config)
 {
-	struct stat stat_buf;
-	gchar file_name[MAXPATHLEN] = "";
-	XklEngine *engine = xkl_config_registry_get_engine(config);
-	gchar *rf =
-	    xkl_engine_get_ruleset_name(engine, XMODMAP_DEFAULT_RULESET);
-
-	if (rf == NULL || rf[0] == '\0')
-		return FALSE;
-
-	g_snprintf(file_name, sizeof file_name, XMODMAP_BASE "/%s.xml",
-		   rf);
-
-	if (stat(file_name, &stat_buf) != 0) {
-		xkl_last_error_message = "No rules file found";
-		return FALSE;
-	}
-
-	return xkl_config_registry_load_from_file(config, file_name);
+	return xkl_config_registry_load_helper(config,
+					       XMODMAP_DEFAULT_RULESET,
+					       XMODMAP_BASE);
 }
 
 gboolean

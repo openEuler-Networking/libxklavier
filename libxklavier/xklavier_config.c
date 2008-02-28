@@ -22,6 +22,7 @@
 #include <libintl.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/param.h>
 #include <sys/stat.h>
 
 #include "config.h"
@@ -459,6 +460,30 @@ xkl_config_registry_load_from_file(XklConfigRegistry * config,
 	    xmlXPathNewContext(xkl_config_registry_priv(config, doc));
 
 	return TRUE;
+}
+
+gboolean
+xkl_config_registry_load_helper(XklConfigRegistry * config,
+				const char default_ruleset[],
+				const char base_dir[])
+{
+	struct stat stat_buf;
+	gchar file_name[MAXPATHLEN] = "";
+	XklEngine *engine = xkl_config_registry_get_engine(config);
+	gchar *rf = xkl_engine_get_ruleset_name(engine, default_ruleset);
+
+	if (rf == NULL || rf[0] == '\0')
+		return FALSE;
+
+	g_snprintf(file_name, sizeof file_name, "%s/%s.xml", base_dir, rf);
+
+	if (stat(file_name, &stat_buf) != 0) {
+		xkl_debug(0, "Missing registry file %s\n", file_name);
+		xkl_last_error_message = "Missing registry file";
+		return FALSE;
+	}
+
+	return xkl_config_registry_load_from_file(config, file_name);
 }
 
 void
