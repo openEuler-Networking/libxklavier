@@ -46,6 +46,9 @@ xkl_engine_get_window_title(XklEngine * engine, Window w)
 	unsigned long nitems, rest;
 	unsigned char *prop;
 
+	if (w == xkl_engine_priv(engine, root_window))
+		return g_strdup("ROOT");
+
 	if (Success ==
 	    XGetWindowProperty(xkl_engine_get_display(engine), w,
 			       xkl_engine_priv(engine, atoms)[WM_NAME], 0L,

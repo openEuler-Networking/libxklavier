@@ -1,3 +1,8 @@
+2008-02-28 svu
+
+	* libxklavier/xklavier_util.c: fix by Jens for Xnest issue,
+	http://bugzilla.gnome.org/show_bug.cgi?id=516318
+
 2008-02-01 svu
 
 	* tests/test_monitor.c: C99 fix, by Jens
