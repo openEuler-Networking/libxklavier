@@ -46,7 +46,8 @@ xkl_engine_get_window_title(XklEngine * engine, Window w)
 	unsigned long nitems, rest;
 	unsigned char *prop;
 
-	if (w == xkl_engine_priv(engine, root_window))
+	if ((w == xkl_engine_priv(engine, root_window))
+	    || (w == PointerRoot))
 		return g_strdup("ROOT");
 
 	if (Success ==

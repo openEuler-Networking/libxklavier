@@ -1,3 +1,9 @@
+2008-03-01 svu
+
+	* libxklavier/xklavier_util.c, libxklavier/xklavier_toplevel.c:
+	properly managing PointerRoot, another attempt to fix
+	http://bugzilla.gnome.org/show_bug.cgi?id=516318
+
 2008-02-28 svu
 
 	* libxklavier/xklavier_util.c: fix by Jens for Xnest issue,

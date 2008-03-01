@@ -205,6 +205,7 @@ xkl_engine_find_toplevel_window(XklEngine * engine, Window win,
 	gboolean rv;
 
 	if (win == (Window) NULL
+	    || win == PointerRoot
 	    || win == xkl_engine_priv(engine, root_window)) {
 		*toplevel_win_out = (Window) NULL;
 		xkl_last_error_message = "The window is either 0 or root";
