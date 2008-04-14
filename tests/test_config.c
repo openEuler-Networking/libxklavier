@@ -92,21 +92,37 @@ print_model(XklConfigRegistry * config, const XklConfigItem * item,
 }
 
 static void
+print_xci(XklConfigRegistry * config, const XklConfigItem * item,
+	  gint indent)
+{
+	gchar **countries = (gchar **) g_object_get_data(G_OBJECT(item),
+							 XCI_PROP_COUNTRY_LIST);
+	gint i;
+	printf("%*s[%s][%s][%s]\n", indent, "", item->name,
+	       item->description, item->short_description);
+	if (countries != NULL)
+		for (i = 0; i < g_strv_length(countries); i++)
+			printf("%*s  country: [%s]\n", indent, "",
+			       countries[i]);
+}
+
+static void
 print_variant(XklConfigRegistry * config, const XklConfigItem * item,
 	      gpointer data)
 {
-	printf("  [%s][%s][%s]\n", item->name,
-	       item->description, item->short_description);
+	print_xci(config, item, 2);
 }
+
 static void
 print_layout(XklConfigRegistry * config, const XklConfigItem * item,
 	     gpointer data)
 {
-	printf("[%s][%s][%s]\n", item->name, item->description,
-	       item->short_description);
+	print_xci(config, item, 0);
+
 	xkl_config_registry_foreach_layout_variant(config, item->name,
 						   print_variant, data);
 }
+
 
 int
 main(int argc, char *const argv[])

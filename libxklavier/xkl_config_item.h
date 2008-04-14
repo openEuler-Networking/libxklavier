@@ -90,6 +90,11 @@ extern "C" {
 #define XCI_PROP_VENDOR "vendor"
 
 /**
+ * Extra property for the XklConfigItem, defining the list of countryes (used for layouts/variants)
+ */
+#define XCI_PROP_COUNTRY_LIST "countryList"
+
+/**
  * The XklConfigItem class, derived from GObject
  */
 	struct _XklConfigItemClass {

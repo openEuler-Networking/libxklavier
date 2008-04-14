@@ -45,6 +45,8 @@ static xmlXPathCompExprPtr option_groups_xpath;
 #define XML_TAG_DESCR "description"
 #define XML_TAG_SHORT_DESCR "shortDescription"
 #define XML_TAG_VENDOR "vendor"
+#define XML_TAG_COUNTRY_LIST "countryList"
+#define XML_TAG_ISO3166ID "iso3166Id"
 
 // gettext domain for translations
 #define XKB_DOMAIN "xkeyboard-config"
@@ -89,6 +91,7 @@ xkl_find_nonlocalized_element(xmlNodePtr ptr, const gchar * tag_name)
 {
 	xmlNodePtr found_element = NULL;
 
+	/* Look through all siblings, trying to find a node with proper name */
 	while (ptr != NULL) {
 		char *node_name = (char *) ptr->name;
 		if (ptr->type != XML_TEXT_NODE) {
@@ -111,14 +114,18 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 {
 	xmlNodePtr name_element, ptr;
 	xmlNodePtr desc_element = NULL, short_desc_element =
-	    NULL, vendor_element = NULL;
+	    NULL, vendor_element = NULL, country_list_element =
+	    NULL, country_ptr = NULL;
 	gchar *vendor = NULL;
+	gchar **countries = NULL;
+	gint n_countries, idx = 0;
 
 	*item->name = 0;
 	*item->short_description = 0;
 	*item->description = 0;
 
 	g_object_set_data(G_OBJECT(item), XCI_PROP_VENDOR, NULL);
+	g_object_set_data(G_OBJECT(item), XCI_PROP_COUNTRY_LIST, NULL);
 
 	if (!xkl_xml_find_config_item_child(iptr, &ptr))
 		return FALSE;
@@ -135,19 +142,9 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 	desc_element = xkl_find_nonlocalized_element(ptr, XML_TAG_DESCR);
 	vendor_element =
 	    xkl_find_nonlocalized_element(ptr, XML_TAG_VENDOR);
+	country_list_element =
+	    xkl_find_nonlocalized_element(ptr, XML_TAG_COUNTRY_LIST);
 
-	if (vendor_element != NULL && vendor_element->children != NULL) {
-		vendor =
-		    g_strdup((const char *) vendor_element->children->
-			     content);
-		g_object_set_data_full(G_OBJECT(item), XCI_PROP_VENDOR,
-				       vendor, g_free);
-	}
-
-	/*
-	 * Actually, here we should have some code to find 
-	 * the correct localized description...
-	 */
 	if (name_element != NULL && name_element->children != NULL)
 		strncat(item->name,
 			(char *) name_element->children->content,
@@ -168,6 +165,50 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 				 (const char *) desc_element->children->
 				 content), XKL_MAX_CI_DESC_LENGTH - 1);
 	}
+
+	if (vendor_element != NULL && vendor_element->children != NULL) {
+		vendor =
+		    g_strdup((const char *) vendor_element->children->
+			     content);
+		g_object_set_data_full(G_OBJECT(item), XCI_PROP_VENDOR,
+				       vendor, g_free);
+	}
+
+	if (country_list_element != NULL
+	    && country_list_element->children != NULL) {
+		n_countries = 0;
+
+		/* First, count countries */
+		country_ptr = country_list_element->children;
+		while (NULL !=
+		       (country_ptr =
+			xkl_find_nonlocalized_element(country_ptr,
+						      XML_TAG_ISO3166ID)))
+		{
+			n_countries++;
+			country_ptr = country_ptr->next;
+		}
+
+		if (n_countries != 0) {
+			countries = g_new0(gchar *, n_countries);
+			/* Then, actually, populate the list */
+			country_ptr = country_list_element->children;
+			for (idx = 0;
+			     NULL != (country_ptr =
+				      xkl_find_nonlocalized_element
+				      (country_ptr, XML_TAG_ISO3166ID));
+			     country_ptr = country_ptr->next, idx++) {
+				countries[idx] =
+				    g_strdup((const char *) country_ptr->
+					     children->content);
+			}
+			g_object_set_data_full(G_OBJECT(item),
+					       XCI_PROP_COUNTRY_LIST,
+					       countries, (GDestroyNotify)
+					       g_strfreev);
+		}
+	}
+
 	return TRUE;
 }
 
