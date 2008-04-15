@@ -97,6 +97,8 @@ print_xci(XklConfigRegistry * config, const XklConfigItem * item,
 {
 	gchar **countries = (gchar **) g_object_get_data(G_OBJECT(item),
 							 XCI_PROP_COUNTRY_LIST);
+	gchar **languages = (gchar **) g_object_get_data(G_OBJECT(item),
+							 XCI_PROP_LANGUAGE_LIST);
 	gint i;
 	printf("%*s[%s][%s][%s]\n", indent, "", item->name,
 	       item->description, item->short_description);
@@ -104,6 +106,10 @@ print_xci(XklConfigRegistry * config, const XklConfigItem * item,
 		for (i = 0; i < g_strv_length(countries); i++)
 			printf("%*s  country: [%s]\n", indent, "",
 			       countries[i]);
+	if (languages != NULL)
+		for (i = 0; i < g_strv_length(languages); i++)
+			printf("%*s  language: [%s]\n", indent, "",
+			       languages[i]);
 }
 
 static void

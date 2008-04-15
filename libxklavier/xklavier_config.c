@@ -46,7 +46,9 @@ static xmlXPathCompExprPtr option_groups_xpath;
 #define XML_TAG_SHORT_DESCR "shortDescription"
 #define XML_TAG_VENDOR "vendor"
 #define XML_TAG_COUNTRY_LIST "countryList"
+#define XML_TAG_LANGUAGE_LIST "languageList"
 #define XML_TAG_ISO3166ID "iso3166Id"
+#define XML_TAG_ISO639ID "iso639Id"
 
 // gettext domain for translations
 #define XKB_DOMAIN "xkeyboard-config"
@@ -109,16 +111,61 @@ xkl_find_nonlocalized_element(xmlNodePtr ptr, const gchar * tag_name)
 }
 
 static gboolean
+xkl_item_populate_optional_array(XklConfigItem * item, xmlNodePtr ptr,
+				 const gchar list_tag[],
+				 const gchar element_tag[],
+				 const gchar property_name[])
+{
+	xmlNodePtr top_list_element =
+	    xkl_find_nonlocalized_element(ptr, list_tag), element_ptr;
+	gint n_elements, idx;
+	gchar **elements = NULL;
+
+	if (top_list_element == NULL || top_list_element->children == NULL)
+		return FALSE;
+
+	n_elements = 0;
+
+	/* First, count countries */
+	element_ptr = top_list_element->children;
+	while (NULL !=
+	       (element_ptr =
+		xkl_find_nonlocalized_element(element_ptr, element_tag))) {
+		n_elements++;
+		element_ptr = element_ptr->next;
+	}
+
+	if (n_elements == 0)
+		return FALSE;
+
+	elements = g_new0(gchar *, n_elements);
+	/* Then, actually, populate the list */
+	element_ptr = top_list_element->children;
+	for (idx = 0;
+	     NULL != (element_ptr =
+		      xkl_find_nonlocalized_element
+		      (element_ptr, element_tag));
+	     element_ptr = element_ptr->next, idx++) {
+		elements[idx] =
+		    g_strdup((const char *) element_ptr->
+			     children->content);
+	}
+
+	g_object_set_data_full(G_OBJECT(item),
+			       property_name, elements, (GDestroyNotify)
+			       g_strfreev);
+	return TRUE;
+}
+
+static gboolean
 xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 		     XklConfigItem * item)
 {
 	xmlNodePtr name_element, ptr;
 	xmlNodePtr desc_element = NULL, short_desc_element =
-	    NULL, vendor_element = NULL, country_list_element =
-	    NULL, country_ptr = NULL;
+	    NULL, vendor_element = NULL;
+
 	gchar *vendor = NULL;
-	gchar **countries = NULL;
-	gint n_countries, idx = 0;
 
 	*item->name = 0;
 	*item->short_description = 0;
@@ -126,6 +173,7 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 
 	g_object_set_data(G_OBJECT(item), XCI_PROP_VENDOR, NULL);
 	g_object_set_data(G_OBJECT(item), XCI_PROP_COUNTRY_LIST, NULL);
+	g_object_set_data(G_OBJECT(item), XCI_PROP_LANGUAGE_LIST, NULL);
 
 	if (!xkl_xml_find_config_item_child(iptr, &ptr))
 		return FALSE;
@@ -142,8 +190,6 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 	desc_element = xkl_find_nonlocalized_element(ptr, XML_TAG_DESCR);
 	vendor_element =
 	    xkl_find_nonlocalized_element(ptr, XML_TAG_VENDOR);
-	country_list_element =
-	    xkl_find_nonlocalized_element(ptr, XML_TAG_COUNTRY_LIST);
 
 	if (name_element != NULL && name_element->children != NULL)
 		strncat(item->name,
@@ -174,40 +220,12 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 				       vendor, g_free);
 	}
 
-	if (country_list_element != NULL
-	    && country_list_element->children != NULL) {
-		n_countries = 0;
-
-		/* First, count countries */
-		country_ptr = country_list_element->children;
-		while (NULL !=
-		       (country_ptr =
-			xkl_find_nonlocalized_element(country_ptr,
-						      XML_TAG_ISO3166ID)))
-		{
-			n_countries++;
-			country_ptr = country_ptr->next;
-		}
-
-		if (n_countries != 0) {
-			countries = g_new0(gchar *, n_countries);
-			/* Then, actually, populate the list */
-			country_ptr = country_list_element->children;
-			for (idx = 0;
-			     NULL != (country_ptr =
-				      xkl_find_nonlocalized_element
-				      (country_ptr, XML_TAG_ISO3166ID));
-			     country_ptr = country_ptr->next, idx++) {
-				countries[idx] =
-				    g_strdup((const char *) country_ptr->
-					     children->content);
-			}
-			g_object_set_data_full(G_OBJECT(item),
-					       XCI_PROP_COUNTRY_LIST,
-					       countries, (GDestroyNotify)
-					       g_strfreev);
-		}
-	}
+	xkl_item_populate_optional_array(item, ptr, XML_TAG_COUNTRY_LIST,
+					 XML_TAG_ISO3166ID,
+					 XCI_PROP_COUNTRY_LIST);
+	xkl_item_populate_optional_array(item, ptr, XML_TAG_LANGUAGE_LIST,
+					 XML_TAG_ISO639ID,
+					 XCI_PROP_LANGUAGE_LIST);
 
 	return TRUE;
 }
