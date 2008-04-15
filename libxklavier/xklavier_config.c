@@ -101,8 +101,10 @@ xkl_find_nonlocalized_element(xmlNodePtr ptr, const gchar * tag_name)
 
 			if (lang == NULL) {	/* No language specified */
 				if (!g_ascii_strcasecmp
-				    (node_name, tag_name))
+				    (node_name, tag_name)) {
 					found_element = ptr;
+					break;
+				}
 			}
 		}
 		ptr = ptr->next;
@@ -138,7 +140,7 @@ xkl_item_populate_optional_array(XklConfigItem * item, xmlNodePtr ptr,
 	if (n_elements == 0)
 		return FALSE;
 
-	elements = g_new0(gchar *, n_elements);
+	elements = g_new0(gchar *, n_elements + 1);
 	/* Then, actually, populate the list */
 	element_ptr = top_list_element->children;
 	for (idx = 0;
