@@ -412,8 +412,40 @@ extern gboolean xkl_config_registry_load_helper(XklConfigRegistry * config,
 #define xkl_engine_get_display(engine) (xkl_engine_priv(engine,display))
 #define xkl_engine_vcall(engine,func)  (*(engine)->priv->func)
 
+#define xkl_config_registry_is_initialized(config) \
+  ( xkl_config_registry_priv(config,xpath_context) != NULL )
+
 #define xkl_config_registry_priv(config,member)  (config)->priv->member
 #define xkl_config_registry_get_engine(config) ((config)->priv->engine)
+
+#define XKBCR_MODEL_PATH "/xkbConfigRegistry/modelList/model"
+#define XKBCR_LAYOUT_PATH "/xkbConfigRegistry/layoutList/layout"
+#define XKBCR_VARIANT_PATH XKBCR_LAYOUT_PATH "/variantList/variant"
+#define XKBCR_GROUP_PATH "/xkbConfigRegistry/optionList/group"
+#define XKBCR_OPTION_PATH XKBCR_GROUP_PATH "/option"
+
+#define XML_TAG_DESCR "description"
+#define XML_TAG_SHORT_DESCR "shortDescription"
+#define XML_TAG_VENDOR "vendor"
+#define XML_TAG_COUNTRY_LIST "countryList"
+#define XML_TAG_LANGUAGE_LIST "languageList"
+#define XML_TAG_ISO3166ID "iso3166Id"
+#define XML_TAG_ISO639ID "iso639Id"
+
+extern void xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry
+						* config,
+						const gchar *
+						format,
+						const gchar *
+						value,
+						ConfigItemProcessFunc
+						func, gpointer data);
+						
+extern void xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
+				     xmlXPathCompExprPtr
+				     xpath_comp_expr,
+				     ConfigItemProcessFunc func,
+				     gpointer data);
 
 extern gint xkl_debug_level;
 

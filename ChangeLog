@@ -1,3 +1,11 @@
+2008-04-21 svu
+
+	* configure.in, libxklavier/Makefile.am,
+	libxklavier/xkl_config_registry.h, libxklavier/xklavier_config.c,
+	libxklavier/xklavier_config_iso.c, libxklavier/xklavier_private.h,
+	tests/test_config.c: adding country/language iteration functions,
+	introducing dependency on iso-codes
+
 2008-04-15 svu
 
 	* libxklavier/xkl_config_item.h, libxklavier/xklavier_config.c,

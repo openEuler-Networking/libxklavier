@@ -46,6 +46,8 @@ print_usage(void)
 	printf("         -am - list all available models\n");
 	printf
 	    ("         -ao - list all available options groups and options\n");
+	printf("         -ac - list all available ISO country codes\n");
+	printf("         -ag - list all available ISO language codes\n");
 	printf
 	    ("         -g - Dump the current config, load original system settings and revert back\n");
 	printf
@@ -129,6 +131,19 @@ print_layout(XklConfigRegistry * config, const XklConfigItem * item,
 						   print_variant, data);
 }
 
+static void
+print_country(XklConfigRegistry * config, const XklConfigItem * item,
+	      gpointer data)
+{
+	print_xci(config, item, 0);
+}
+
+static void
+print_language(XklConfigRegistry * config, const XklConfigItem * item,
+	       gpointer data)
+{
+	print_xci(config, item, 0);
+}
 
 int
 main(int argc, char *const argv[])
@@ -242,6 +257,14 @@ main(int argc, char *const argv[])
 			case 'o':
 				xkl_config_registry_foreach_option_group
 				    (config, print_option_group, NULL);
+				break;
+			case 'c':
+				xkl_config_registry_foreach_country
+				    (config, print_country, NULL);
+				break;
+			case 'g':
+				xkl_config_registry_foreach_language
+				    (config, print_language, NULL);
 				break;
 			default:
 				printf("Unknown list: %c\n", which_list);

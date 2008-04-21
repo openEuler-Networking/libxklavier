@@ -264,6 +264,73 @@ extern "C" {
 							option_group_name,
 							XklConfigItem *
 							item);
+
+/**
+ * xkl_config_registry_foreach_country:
+ * @config: the config registry
+ * @func: callback to call for every ISO 3166 country code
+ * @data: anything which can be stored into the pointer
+ *
+ * Enumerates countries for which layouts are available,
+ * from the XML configuration registry
+ */
+	extern void xkl_config_registry_foreach_country(XklConfigRegistry *
+							config,
+							ConfigItemProcessFunc
+							func,
+							gpointer data);
+
+/**
+ * xkl_config_registry_foreach_country_variant:
+ * @config: the config registry
+ * @country_code: country ISO code for which variants will be listed
+ * @func: callback to call for every country variant
+ * @data: anything which can be stored into the pointer
+ *
+ * Enumerates keyboard layout variants for the country,
+ * from the XML configuration registry
+ */
+	extern void
+	 xkl_config_registry_foreach_country_variant(XklConfigRegistry *
+						     config,
+						     const gchar *
+						     country_code,
+						     ConfigItemProcessFunc
+						     func, gpointer data);
+
+/**
+ * xkl_config_registry_foreach_language:
+ * @config: the config registry
+ * @func: callback to call for every ISO 639-2 country code
+ * @data: anything which can be stored into the pointer
+ *
+ * Enumerates languages for which layouts are available,
+ * from the XML configuration registry
+ */
+	extern void xkl_config_registry_foreach_language(XklConfigRegistry
+							 * config,
+							 ConfigItemProcessFunc
+							 func,
+							 gpointer data);
+
+/**
+ * xkl_config_registry_foreach_language_variant:
+ * @config: the config registry
+ * @language_code: language ISO code for which variants will be listed
+ * @func: callback to call for every country variant
+ * @data: anything which can be stored into the pointer
+ *
+ * Enumerates keyboard layout variants for the language,
+ * from the XML configuration registry
+ */
+	extern void
+	 xkl_config_registry_foreach_country_variant(XklConfigRegistry *
+						     config,
+						     const gchar *
+						     language_code,
+						     ConfigItemProcessFunc
+						     func, gpointer data);
+
 #ifdef __cplusplus
 }
 #endif				/* __cplusplus */

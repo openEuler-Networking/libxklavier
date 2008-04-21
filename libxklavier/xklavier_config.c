@@ -35,21 +35,6 @@ static xmlXPathCompExprPtr models_xpath;
 static xmlXPathCompExprPtr layouts_xpath;
 static xmlXPathCompExprPtr option_groups_xpath;
 
-
-#define XKBCR_MODEL_PATH "/xkbConfigRegistry/modelList/model"
-#define XKBCR_LAYOUT_PATH "/xkbConfigRegistry/layoutList/layout"
-#define XKBCR_VARIANT_PATH XKBCR_LAYOUT_PATH "/variantList/variant"
-#define XKBCR_GROUP_PATH "/xkbConfigRegistry/optionList/group"
-#define XKBCR_OPTION_PATH XKBCR_GROUP_PATH "/option"
-
-#define XML_TAG_DESCR "description"
-#define XML_TAG_SHORT_DESCR "shortDescription"
-#define XML_TAG_VENDOR "vendor"
-#define XML_TAG_COUNTRY_LIST "countryList"
-#define XML_TAG_LANGUAGE_LIST "languageList"
-#define XML_TAG_ISO3166ID "iso3166Id"
-#define XML_TAG_ISO639ID "iso639Id"
-
 // gettext domain for translations
 #define XKB_DOMAIN "xkeyboard-config"
 
@@ -57,9 +42,6 @@ enum {
 	PROP_0,
 	PROP_ENGINE,
 };
-
-#define xkl_config_registry_is_initialized(config) \
-  ( xkl_config_registry_priv(config,xpath_context) != NULL )
 
 static gboolean
 xkl_xml_find_config_item_child(xmlNodePtr iptr, xmlNodePtr * ptr)
@@ -252,7 +234,7 @@ xkl_config_registry_foreach_in_nodeset(XklConfigRegistry * config,
 	}
 }
 
-static void
+void
 xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
 				     xmlXPathCompExprPtr
 				     xpath_comp_expr,
@@ -275,7 +257,7 @@ xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
 	}
 }
 
-static void
+void
 xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry
 						* config,
 						const gchar *

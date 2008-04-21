@@ -39,7 +39,7 @@ xklavierincdir = $(includedir)/libxklavier
 xklavierinc_HEADERS = xklavier.h xkl_config_registry.h xkl_engine.h \
                       xkl_config_rec.h xkl_config_item.h xkl_engine_marshal.h
 
-libxklavier_la_SOURCES = xklavier.c xklavier_evt.c xklavier_config.c \
+libxklavier_la_SOURCES = xklavier.c xklavier_evt.c xklavier_config.c xklavier_config_iso.c \
 	xklavier_xkb.c xklavier_evt_xkb.c xklavier_config_xkb.c xklavier_toplevel.c \
 	xklavier_xmm.c xklavier_xmm_opts.c xklavier_evt_xmm.c xklavier_config_xmm.c \
 	xklavier_util.c xklavier_props.c xklavier_dump.c xkl_engine_marshal.c \
