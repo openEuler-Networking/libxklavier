@@ -202,7 +202,7 @@ xkl_config_registry_foreach_iso_code(XklConfigRegistry * config,
 				     ConfigItemProcessFunc func,
 				     const gchar * xpath_exprs[],
 				     DescriptionGetterFunc dgf,
-				     gpointer data)
+				     gboolean to_upper, gpointer data)
 {
 	GHashTable *code_pairs;
 	GHashTableIter iter;
@@ -227,11 +227,17 @@ xkl_config_registry_foreach_iso_code(XklConfigRegistry * config,
 			if (nodes != NULL) {
 				xmlNodePtr *pnode = nodes->nodeTab;
 				for (ni = nodes->nodeNr; --ni >= 0;) {
-					const gchar *iso_code =
-					    (const gchar *) (*pnode)->
+					gchar *iso_code =
+					    (gchar *) (*pnode)->
 					    children->content;
-					const gchar *description =
-					    dgf(iso_code);
+					const gchar *description;
+					iso_code =
+					    to_upper ?
+					    g_ascii_strup(iso_code,
+							  -1) :
+					    g_strdup(iso_code);
+					description = dgf(iso_code);
+/* If there is a mapping to some ISO description - consider it as ISO code (well, it is just an assumption) */
 					if (description)
 						g_hash_table_insert
 						    (code_pairs,
@@ -239,6 +245,7 @@ xkl_config_registry_foreach_iso_code(XklConfigRegistry * config,
 						     (iso_code),
 						     g_strdup
 						     (description));
+					g_free(iso_code);
 					pnode++;
 				}
 			}
@@ -272,7 +279,8 @@ xkl_config_registry_foreach_country(XklConfigRegistry *
 	};
 
 	xkl_config_registry_foreach_iso_code(config, func, xpath_exprs,
-					     get_country_iso_code, data);
+					     get_country_iso_code, TRUE,
+					     data);
 }
 
 void
@@ -287,5 +295,72 @@ xkl_config_registry_foreach_language(XklConfigRegistry *
 	};
 
 	xkl_config_registry_foreach_iso_code(config, func, xpath_exprs,
-					     get_language_iso_code, data);
+					     get_language_iso_code, FALSE,
+					     data);
+}
+
+void
+xkl_config_registry_foreach_country_variant(XklConfigRegistry *
+					    config,
+					    const gchar *
+					    country_code,
+					    TwoConfigItemsProcessFunc
+					    func, gpointer data)
+{
+	const gchar *xpath_exprs[] = {
+		XKBCR_LAYOUT_PATH "[configItem/name = '%s']",
+		XKBCR_LAYOUT_PATH
+		    "[configItem/countryList/iso3166Id = '%s']",
+		NULL
+	};
+	const gboolean are_low_ids[] = { TRUE, FALSE };
+
+
+	xmlXPathObjectPtr xpath_obj;
+	const gchar **xpath_expr;
+	const gboolean *is_low_id = are_low_ids;
+
+	if (!xkl_config_registry_is_initialized(config))
+		return;
+
+	for (xpath_expr = xpath_exprs; *xpath_expr;
+	     xpath_expr++, is_low_id++) {
+		gchar *acc =
+		    *is_low_id ? g_ascii_strdown(country_code,
+						 -1) : g_strdup(country_code);
+		gchar *xpe = g_strdup_printf(*xpath_expr, acc);
+		g_free(acc);
+		xpath_obj =
+		    xmlXPathEval((unsigned char *) xpe,
+				 xkl_config_registry_priv(config,
+							  xpath_context));
+		if (xpath_obj != NULL) {
+			xmlNodeSetPtr nodes = xpath_obj->nodesetval;
+			if (nodes != NULL) {
+				gint ni;
+				xmlNodePtr *pnode = nodes->nodeTab;
+				XklConfigItem *ci = xkl_config_item_new();
+				for (ni = nodes->nodeNr; --ni >= 0;) {
+					if (xkl_read_config_item
+					    (config, *pnode, ci))
+						func(config, ci, NULL,
+						     data);
+					pnode++;
+				}
+				g_object_unref(G_OBJECT(ci));
+			}
+			xmlXPathFreeObject(xpath_obj);
+		}
+		g_free(xpe);
+	}
+}
+
+void
+xkl_config_registry_foreach_language_variant(XklConfigRegistry *
+					     config,
+					     const gchar *
+					     language_code,
+					     TwoConfigItemsProcessFunc
+					     func, gpointer data)
+{
 }

@@ -106,6 +106,22 @@ extern "C" {
 					       gpointer data);
 
 /**
+ * TwoConfigItemsProcessFunc:
+ * @config: the config registry
+ * @item: the item from registry
+ * @subitem: the item from registry
+ * @data: anything which can be stored into the pointer
+ *
+ * Callback type used for enumerating layouts/variants for countries/languages
+ */
+	typedef void (*TwoConfigItemsProcessFunc) (XklConfigRegistry *
+						   config,
+						   const XklConfigItem *
+						   item,
+						   const XklConfigItem *
+						   subitem, gpointer data);
+
+/**
  * xkl_config_registry_foreach_model:
  * @config: the config registry
  * @func: callback to call for every model
@@ -295,7 +311,7 @@ extern "C" {
 						     config,
 						     const gchar *
 						     country_code,
-						     ConfigItemProcessFunc
+						     TwoConfigItemsProcessFunc
 						     func, gpointer data);
 
 /**
@@ -324,12 +340,12 @@ extern "C" {
  * from the XML configuration registry
  */
 	extern void
-	 xkl_config_registry_foreach_country_variant(XklConfigRegistry *
-						     config,
-						     const gchar *
-						     language_code,
-						     ConfigItemProcessFunc
-						     func, gpointer data);
+	 xkl_config_registry_foreach_language_variant(XklConfigRegistry *
+						      config,
+						      const gchar *
+						      language_code,
+						      TwoConfigItemsProcessFunc
+						      func, gpointer data);
 
 #ifdef __cplusplus
 }

@@ -397,8 +397,9 @@ extern gchar *xkl_locale_from_utf8(XklConfigRegistry * config,
 				   const gchar * utf8string);
 
 extern gboolean xkl_config_registry_load_helper(XklConfigRegistry * config,
-					 const char default_ruleset[],
-					 const char base_dir[]);
+						const char
+						default_ruleset[],
+						const char base_dir[]);
 
 #define XKLAVIER_STATE_PROP_LENGTH 2
 
@@ -432,20 +433,23 @@ extern gboolean xkl_config_registry_load_helper(XklConfigRegistry * config,
 #define XML_TAG_ISO3166ID "iso3166Id"
 #define XML_TAG_ISO639ID "iso639Id"
 
-extern void xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry
-						* config,
-						const gchar *
-						format,
-						const gchar *
-						value,
-						ConfigItemProcessFunc
-						func, gpointer data);
-						
-extern void xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
-				     xmlXPathCompExprPtr
-				     xpath_comp_expr,
-				     ConfigItemProcessFunc func,
-				     gpointer data);
+extern void
+xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry * config,
+						const gchar * format,
+						const gchar * value,
+						ConfigItemProcessFunc func,
+						gpointer data);
+
+extern void xkl_config_registry_foreach_in_xpath(XklConfigRegistry *
+						 config,
+						 xmlXPathCompExprPtr
+						 xpath_comp_expr,
+						 ConfigItemProcessFunc
+						 func, gpointer data);
+
+extern gboolean xkl_read_config_item(XklConfigRegistry * config,
+				     xmlNodePtr iptr,
+				     XklConfigItem * item);
 
 extern gint xkl_debug_level;
 

@@ -141,7 +141,7 @@ xkl_item_populate_optional_array(XklConfigItem * item, xmlNodePtr ptr,
 	return TRUE;
 }
 
-static gboolean
+gboolean
 xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 		     XklConfigItem * item)
 {
