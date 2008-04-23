@@ -132,10 +132,24 @@ print_layout(XklConfigRegistry * config, const XklConfigItem * item,
 }
 
 static void
+print_country_variant(XklConfigRegistry * config,
+		      const XklConfigItem * item,
+		      const XklConfigItem * subitem, gpointer data)
+{
+	print_xci(config, item, 2);
+	if (subitem)
+		print_xci(config, subitem, 4);
+}
+
+static void
 print_country(XklConfigRegistry * config, const XklConfigItem * item,
 	      gpointer data)
 {
 	print_xci(config, item, 0);
+
+	xkl_config_registry_foreach_country_variant(config, item->name,
+						    print_country_variant,
+						    data);
 }
 
 static void
