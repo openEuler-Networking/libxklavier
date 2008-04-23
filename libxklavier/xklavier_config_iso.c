@@ -225,10 +225,10 @@ xkl_config_registry_foreach_iso_code(XklConfigRegistry * config,
 			gint ni;
 			xmlNodeSetPtr nodes = xpath_obj->nodesetval;
 			if (nodes != NULL) {
-				xmlNodePtr *pnode = nodes->nodeTab;
+				xmlNodePtr *node = nodes->nodeTab;
 				for (ni = nodes->nodeNr; --ni >= 0;) {
 					gchar *iso_code =
-					    (gchar *) (*pnode)->
+					    (gchar *) (*node)->
 					    children->content;
 					const gchar *description;
 					iso_code =
@@ -246,7 +246,7 @@ xkl_config_registry_foreach_iso_code(XklConfigRegistry * config,
 						     g_strdup
 						     (description));
 					g_free(iso_code);
-					pnode++;
+					node++;
 				}
 			}
 			xmlXPathFreeObject(xpath_obj);
@@ -307,13 +307,19 @@ xkl_config_registry_foreach_country_variant(XklConfigRegistry *
 					    TwoConfigItemsProcessFunc
 					    func, gpointer data)
 {
-	const gchar *xpath_exprs[] = {
+	const gchar *layout_xpath_exprs[] = {
 		XKBCR_LAYOUT_PATH "[configItem/name = '%s']",
 		XKBCR_LAYOUT_PATH
 		    "[configItem/countryList/iso3166Id = '%s']",
 		NULL
 	};
 	const gboolean are_low_ids[] = { TRUE, FALSE };
+
+	const gchar *variant_xpath_exprs[] = {
+		XKBCR_VARIANT_PATH
+		    "[configItem/countryList/iso3166Id = '%s']",
+		NULL
+	};
 
 
 	xmlXPathObjectPtr xpath_obj;
@@ -323,11 +329,11 @@ xkl_config_registry_foreach_country_variant(XklConfigRegistry *
 	if (!xkl_config_registry_is_initialized(config))
 		return;
 
-	for (xpath_expr = xpath_exprs; *xpath_expr;
+	for (xpath_expr = layout_xpath_exprs; *xpath_expr;
 	     xpath_expr++, is_low_id++) {
-		gchar *acc =
-		    *is_low_id ? g_ascii_strdown(country_code,
-						 -1) : g_strdup(country_code);
+		gchar *acc = *is_low_id ? g_ascii_strdown(country_code,
+							  -1) :
+		    g_strdup(country_code);
 		gchar *xpe = g_strdup_printf(*xpath_expr, acc);
 		g_free(acc);
 		xpath_obj =
@@ -338,15 +344,46 @@ xkl_config_registry_foreach_country_variant(XklConfigRegistry *
 			xmlNodeSetPtr nodes = xpath_obj->nodesetval;
 			if (nodes != NULL) {
 				gint ni;
-				xmlNodePtr *pnode = nodes->nodeTab;
+				xmlNodePtr *node = nodes->nodeTab;
 				XklConfigItem *ci = xkl_config_item_new();
 				for (ni = nodes->nodeNr; --ni >= 0;) {
 					if (xkl_read_config_item
-					    (config, *pnode, ci))
+					    (config, *node, ci))
 						func(config, ci, NULL,
 						     data);
-					pnode++;
+					node++;
 				}
+				g_object_unref(G_OBJECT(ci));
+			}
+			xmlXPathFreeObject(xpath_obj);
+		}
+		g_free(xpe);
+	}
+
+	for (xpath_expr = variant_xpath_exprs; *xpath_expr; xpath_expr++) {
+		gchar *xpe = g_strdup_printf(*xpath_expr, country_code);
+		xpath_obj =
+		    xmlXPathEval((unsigned char *) xpe,
+				 xkl_config_registry_priv(config,
+							  xpath_context));
+		if (xpath_obj != NULL) {
+			xmlNodeSetPtr nodes = xpath_obj->nodesetval;
+			if (nodes != NULL) {
+				gint ni;
+				xmlNodePtr *node = nodes->nodeTab;
+				XklConfigItem *ci = xkl_config_item_new();
+				XklConfigItem *pci = xkl_config_item_new();
+				for (ni = nodes->nodeNr; --ni >= 0;) {
+					if (xkl_read_config_item
+					    (config, *node, ci) &&
+					    xkl_read_config_item
+					    (config,
+					     (*node)->parent->parent, pci))
+						func(config, pci, ci,
+						     data);
+					node++;
+				}
+				g_object_unref(G_OBJECT(pci));
 				g_object_unref(G_OBJECT(ci));
 			}
 			xmlXPathFreeObject(xpath_obj);
