@@ -132,9 +132,9 @@ print_layout(XklConfigRegistry * config, const XklConfigItem * item,
 }
 
 static void
-print_country_variant(XklConfigRegistry * config,
-		      const XklConfigItem * item,
-		      const XklConfigItem * subitem, gpointer data)
+print_iso_variant(XklConfigRegistry * config,
+		  const XklConfigItem * item,
+		  const XklConfigItem * subitem, gpointer data)
 {
 	print_xci(config, item, 2);
 	if (subitem)
@@ -149,7 +149,7 @@ print_country(XklConfigRegistry * config, const XklConfigItem * item,
 	print_xci(config, item, 0);
 
 	xkl_config_registry_foreach_country_variant(config, item->name,
-						    print_country_variant,
+						    print_iso_variant,
 						    data);
 }
 
@@ -159,6 +159,10 @@ print_language(XklConfigRegistry * config, const XklConfigItem * item,
 {
 	printf("language:");
 	print_xci(config, item, 0);
+
+	xkl_config_registry_foreach_language_variant(config, item->name,
+						     print_iso_variant,
+						     data);
 }
 
 int
