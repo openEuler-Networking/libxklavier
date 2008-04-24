@@ -401,6 +401,8 @@ xkl_config_registry_foreach_country_variant(XklConfigRegistry *
 	const gchar *variant_xpath_exprs[] = {
 		XKBCR_VARIANT_PATH
 		    "[configItem/countryList/iso3166Id = '%s']",
+		XKBCR_VARIANT_PATH
+		    "[../../configItem/countryList/iso3166Id = '%s' and not(configItem/countryList/iso3166Id)]",
 		NULL
 	};
 
@@ -430,6 +432,8 @@ xkl_config_registry_foreach_language_variant(XklConfigRegistry *
 	const gchar *variant_xpath_exprs[] = {
 		XKBCR_VARIANT_PATH
 		    "[configItem/languageList/iso639Id = '%s']",
+		XKBCR_VARIANT_PATH
+		    "[../../configItem/languageList/iso639Id = '%s' and not(configItem/languageList/iso639Id)]",
 		NULL
 	};
 
