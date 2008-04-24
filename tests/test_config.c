@@ -145,7 +145,7 @@ static void
 print_country(XklConfigRegistry * config, const XklConfigItem * item,
 	      gpointer data)
 {
-	printf("country:");
+	printf("country: ");
 	print_xci(config, item, 0);
 
 	xkl_config_registry_foreach_country_variant(config, item->name,
@@ -157,7 +157,7 @@ static void
 print_language(XklConfigRegistry * config, const XklConfigItem * item,
 	       gpointer data)
 {
-	printf("language:");
+	printf("language: ");
 	print_xci(config, item, 0);
 
 	xkl_config_registry_foreach_language_variant(config, item->name,
