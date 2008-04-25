@@ -307,25 +307,27 @@ xkl_config_registry_foreach_iso_variant(XklConfigRegistry *
 					TwoConfigItemsProcessFunc
 					func, gpointer data,
 					const gchar * layout_xpath_exprs[],
+					const gboolean
+					should_code_be_lowered1[],
 					const gchar *
 					variant_xpath_exprs[],
 					const gboolean
-					should_layout_id_be_lowered[])
+					should_code_be_lowered2[])
 {
 	xmlXPathObjectPtr xpath_obj;
 	const gchar **xpath_expr;
-	const gboolean *is_low_id = should_layout_id_be_lowered;
+	const gboolean *is_low_id = should_code_be_lowered1;
+	gchar *low_iso_code;
 
 	if (!xkl_config_registry_is_initialized(config))
 		return;
 
+	low_iso_code = g_ascii_strdown(iso_code, -1);
+
 	for (xpath_expr = layout_xpath_exprs; *xpath_expr;
 	     xpath_expr++, is_low_id++) {
-		gchar *aic = *is_low_id ? g_ascii_strdown(iso_code,
-							  -1) :
-		    g_strdup(iso_code);
+		const gchar *aic = *is_low_id ? low_iso_code : iso_code;
 		gchar *xpe = g_strdup_printf(*xpath_expr, aic);
-		g_free(aic);
 		xpath_obj =
 		    xmlXPathEval((unsigned char *) xpe,
 				 xkl_config_registry_priv(config,
@@ -350,8 +352,11 @@ xkl_config_registry_foreach_iso_variant(XklConfigRegistry *
 		g_free(xpe);
 	}
 
-	for (xpath_expr = variant_xpath_exprs; *xpath_expr; xpath_expr++) {
-		gchar *xpe = g_strdup_printf(*xpath_expr, iso_code);
+	is_low_id = should_code_be_lowered2;
+	for (xpath_expr = variant_xpath_exprs; *xpath_expr;
+	     xpath_expr++, is_low_id++) {
+		const gchar *aic = *is_low_id ? low_iso_code : iso_code;
+		gchar *xpe = g_strdup_printf(*xpath_expr, aic);
 		xpath_obj =
 		    xmlXPathEval((unsigned char *) xpe,
 				 xkl_config_registry_priv(config,
@@ -380,6 +385,8 @@ xkl_config_registry_foreach_iso_variant(XklConfigRegistry *
 		}
 		g_free(xpe);
 	}
+
+	g_free(low_iso_code);
 }
 
 void
@@ -396,22 +403,27 @@ xkl_config_registry_foreach_country_variant(XklConfigRegistry *
 		    "[configItem/countryList/iso3166Id = '%s']",
 		NULL
 	};
-	const gboolean should_layout_id_be_lowered[] = { TRUE, FALSE };
+	const gboolean should_code_be_lowered1[] = { TRUE, FALSE };
 
 	const gchar *variant_xpath_exprs[] = {
 		XKBCR_VARIANT_PATH
 		    "[configItem/countryList/iso3166Id = '%s']",
 		XKBCR_VARIANT_PATH
+		    "[../../configItem/name = '%s' and not(configItem/countryList/iso3166Id)]",
+		XKBCR_VARIANT_PATH
 		    "[../../configItem/countryList/iso3166Id = '%s' and not(configItem/countryList/iso3166Id)]",
 		NULL
 	};
+
+	const gboolean should_code_be_lowered2[] = { FALSE, TRUE, FALSE };
 
 	xkl_config_registry_foreach_iso_variant(config,
 						country_code,
 						func, data,
 						layout_xpath_exprs,
+						should_code_be_lowered1,
 						variant_xpath_exprs,
-						should_layout_id_be_lowered);
+						should_code_be_lowered2);
 }
 
 void
@@ -427,7 +439,7 @@ xkl_config_registry_foreach_language_variant(XklConfigRegistry *
 		    "[configItem/languageList/iso639Id = '%s']",
 		NULL
 	};
-	const gboolean should_layout_id_be_lowered[] = { FALSE };
+	const gboolean should_code_be_lowered1[] = { FALSE };
 
 	const gchar *variant_xpath_exprs[] = {
 		XKBCR_VARIANT_PATH
@@ -436,11 +448,13 @@ xkl_config_registry_foreach_language_variant(XklConfigRegistry *
 		    "[../../configItem/languageList/iso639Id = '%s' and not(configItem/languageList/iso639Id)]",
 		NULL
 	};
+	const gboolean should_code_be_lowered2[] = { FALSE, FALSE };
 
 	xkl_config_registry_foreach_iso_variant(config,
 						language_code,
 						func, data,
 						layout_xpath_exprs,
+						should_code_be_lowered1,
 						variant_xpath_exprs,
-						should_layout_id_be_lowered);
+						should_code_be_lowered2);
 }
