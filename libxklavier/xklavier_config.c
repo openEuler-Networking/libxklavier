@@ -35,7 +35,7 @@ static xmlXPathCompExprPtr models_xpath;
 static xmlXPathCompExprPtr layouts_xpath;
 static xmlXPathCompExprPtr option_groups_xpath;
 
-// gettext domain for translations
+/* gettext domain for translations */
 #define XKB_DOMAIN "xkeyboard-config"
 
 enum {
