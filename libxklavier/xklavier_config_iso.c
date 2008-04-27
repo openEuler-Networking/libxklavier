@@ -37,7 +37,7 @@ static GHashTable *lang_code_names = NULL;
 
 typedef struct {
 	const gchar *domain;
-	const gchar *attr_names[];
+	const gchar **attr_names;
 } LookupParams;
 
 typedef struct {
@@ -46,9 +46,11 @@ typedef struct {
 	LookupParams *params;
 } CodeBuildStruct;
 
-static LookupParams countryLookup = { "iso_3166", {"alpha_2_code", NULL} };
-static LookupParams languageLookup =
-    { "iso_639", {"iso_639_2B_code", "iso_639_2T_code", NULL} };
+static const char *countryLookupNames[] = { "alpha_2_code", NULL };
+static const char *languageLookupNames[] = { "iso_639_2B_code", "iso_639_2T_code", NULL };
+
+static LookupParams countryLookup = { "iso_3166", countryLookupNames };
+static LookupParams languageLookup = { "iso_639", languageLookupNames };
 
 static void
 iso_codes_parse_start_tag(GMarkupParseContext * ctx,
