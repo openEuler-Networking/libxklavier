@@ -1,3 +1,4 @@
+3.6	Added API for countries and languages
 3.5	Got rid of the fallback xml file (some code cleanup).
 	Fixed a couple of bugs (one crasher)
 3.4	Updated translation scheme, based on xkeyboard-config 1.2

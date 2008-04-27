@@ -2,6 +2,7 @@
 
 	* libxklavier/xkl_config_item.h, libxklavier/xkl_config_registry.h,
 	doc/reference: a bit of cleanup for gtkdoc
+	* NEWS: preparing 3.6
 
 2008-04-26 svu
 
