@@ -65,7 +65,7 @@ xkl_rules_set_load(XklEngine * engine)
 
 	locale = setlocale(LC_ALL, NULL);
 
-	snprintf(file_name, sizeof file_name, XKB_BASE "/rules/%s", rf);
+	g_snprintf(file_name, sizeof file_name, XKB_BASE "/rules/%s", rf);
 	xkl_debug(160, "Loading rules from [%s]\n", file_name);
 
 	rules_set = XkbRF_Load(file_name, locale, True, True);

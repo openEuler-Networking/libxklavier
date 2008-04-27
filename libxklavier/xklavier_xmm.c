@@ -263,8 +263,8 @@ xkl_xmm_actualize_group(XklEngine * engine, gint group)
 	    xkl_engine_backend(engine, XklXmm,
 			       current_config).layouts[group];
 
-	snprintf(cmd, sizeof cmd,
-		 "xmodmap %s/xmodmap.%s", XMODMAP_BASE, layout_name);
+	g_snprintf(cmd, sizeof cmd,
+		   "xmodmap %s/xmodmap.%s", XMODMAP_BASE, layout_name);
 
 	res = system(cmd);
 	if (res > 0) {

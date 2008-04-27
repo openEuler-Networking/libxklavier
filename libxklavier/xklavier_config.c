@@ -272,7 +272,7 @@ xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry
 
 	if (!xkl_config_registry_is_initialized(config))
 		return;
-	snprintf(xpath_expr, sizeof xpath_expr, format, value);
+	g_snprintf(xpath_expr, sizeof xpath_expr, format, value);
 	xpath_obj = xmlXPathEval((unsigned char *) xpath_expr,
 				 xkl_config_registry_priv(config,
 							  xpath_context));
@@ -300,7 +300,8 @@ xkl_config_registry_find_object(XklConfigRegistry * config,
 	if (!xkl_config_registry_is_initialized(config))
 		return FALSE;
 
-	snprintf(xpath_expr, sizeof xpath_expr, format, arg1, pitem->name);
+	g_snprintf(xpath_expr, sizeof xpath_expr, format, arg1,
+		   pitem->name);
 	xpath_obj =
 	    xmlXPathEval((unsigned char *) xpath_expr,
 			 xkl_config_registry_priv(config, xpath_context));

@@ -121,7 +121,7 @@ xkl_get_debug_window_title(XklEngine * engine, Window win)
 	if (win != (Window) NULL) {
 		name = xkl_engine_get_window_title(engine, win);
 		if (name != NULL) {
-			snprintf(sname, sizeof(sname), "%.32s", name);
+			g_snprintf(sname, sizeof(sname), "%.32s", name);
 			g_free(name);
 		}
 	}
