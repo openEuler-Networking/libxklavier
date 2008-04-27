@@ -108,6 +108,7 @@ extern "C" {
      */
 		GObjectClass parent_class;
 	};
+
 /**
  * xkl_config_item_get_type:
  * 

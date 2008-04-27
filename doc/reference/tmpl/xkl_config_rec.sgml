@@ -2,7 +2,7 @@
 XklConfigRec
 
 <!-- ##### SECTION Short_Description ##### -->
-X keyboard configuration container
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -22,11 +22,6 @@ X keyboard configuration container
 
 </para>
 
-@parent: 
-@model: 
-@layouts: 
-@variants: 
-@options: 
 
 <!-- ##### FUNCTION xkl_config_rec_new ##### -->
 <para>
@@ -98,6 +93,15 @@ X keyboard configuration container
 @config: 
 @Param2: 
 @rules_file: 
+@engine: 
+@Returns: 
+
+
+<!-- ##### FUNCTION xkl_engine_backup_names_prop ##### -->
+<para>
+
+</para>
+
 @engine: 
 @Returns: 
 

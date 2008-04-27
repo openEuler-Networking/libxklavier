@@ -51,6 +51,7 @@ extern "C" {
 		XklConfigRegistryPrivate *priv;
 	};
 
+
 /**
  * The XklConfigRegistry class, derived from GObject
  */
@@ -60,12 +61,14 @@ extern "C" {
      */
 		GObjectClass parent_class;
 	};
+
+
 /**
  * xkl_config_registry_get_type:
  *
- * Get type info for XConfig
+ * Get type info for XklConfigRegistry
  *
- * Returns: GType for XConfig
+ * Returns: GType for XklConfigRegistry
  */
 	extern GType xkl_config_registry_get_type(void);
 

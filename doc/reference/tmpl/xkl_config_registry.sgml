@@ -2,7 +2,7 @@
 XklConfigRegistry
 
 <!-- ##### SECTION Short_Description ##### -->
-X keyboard configuration registry
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -28,8 +28,11 @@ X keyboard configuration registry
 
 </para>
 
-@parent: 
-@priv: 
+
+<!-- ##### ARG XklConfigRegistry:engine ##### -->
+<para>
+
+</para>
 
 <!-- ##### FUNCTION xkl_config_registry_load ##### -->
 <para>
@@ -38,6 +41,27 @@ X keyboard configuration registry
 
 @config: 
 @Returns: 
+
+
+<!-- ##### USER_FUNCTION ConfigItemProcessFunc ##### -->
+<para>
+
+</para>
+
+@config: 
+@item: 
+@data: 
+
+
+<!-- ##### USER_FUNCTION TwoConfigItemsProcessFunc ##### -->
+<para>
+
+</para>
+
+@config: 
+@item: 
+@subitem: 
+@data: 
 
 
 <!-- ##### FUNCTION xkl_config_registry_foreach_model ##### -->
@@ -142,5 +166,47 @@ X keyboard configuration registry
 @option_group_name: 
 @item: 
 @Returns: 
+
+
+<!-- ##### FUNCTION xkl_config_registry_foreach_country ##### -->
+<para>
+
+</para>
+
+@config: 
+@Param2: 
+@data: 
+
+
+<!-- ##### FUNCTION xkl_config_registry_foreach_country_variant ##### -->
+<para>
+
+</para>
+
+@config: 
+@country_code: 
+@Param3: 
+@data: 
+
+
+<!-- ##### FUNCTION xkl_config_registry_foreach_language ##### -->
+<para>
+
+</para>
+
+@config: 
+@Param2: 
+@data: 
+
+
+<!-- ##### FUNCTION xkl_config_registry_foreach_language_variant ##### -->
+<para>
+
+</para>
+
+@config: 
+@language_code: 
+@Param3: 
+@data: 
 
 

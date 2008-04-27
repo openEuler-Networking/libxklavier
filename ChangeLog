@@ -1,3 +1,8 @@
+2008-04-27 svu
+
+	* libxklavier/xkl_config_item.h, libxklavier/xkl_config_registry.h,
+	doc/reference: a bit of cleanup for gtkdoc
+
 2008-04-26 svu
 
 	* libxklavier/xklavier_config_iso.c: another lost xpath, better

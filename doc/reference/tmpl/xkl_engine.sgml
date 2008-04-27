@@ -2,7 +2,7 @@
 XklEngine
 
 <!-- ##### SECTION Short_Description ##### -->
-Base X keyboard configuration and access engine
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -55,8 +55,73 @@ Base X keyboard configuration and access engine
 
 </para>
 
-@parent: 
-@priv: 
+
+<!-- ##### SIGNAL XklEngine::X-config-changed ##### -->
+<para>
+
+</para>
+
+@xklengine: the object which received the signal.
+
+<!-- ##### SIGNAL XklEngine::X-state-changed ##### -->
+<para>
+
+</para>
+
+@xklengine: the object which received the signal.
+@arg1: 
+@arg2: 
+@arg3: 
+
+<!-- ##### SIGNAL XklEngine::new-toplevel-window ##### -->
+<para>
+
+</para>
+
+@xklengine: the object which received the signal.
+@arg1: 
+@arg2: 
+@Returns: 
+
+<!-- ##### ARG XklEngine:backendName ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG XklEngine:default-group ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG XklEngine:display ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG XklEngine:features ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG XklEngine:indicators-handling ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG XklEngine:max-num-groups ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG XklEngine:num-groups ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG XklEngine:secondary-groups-mask ##### -->
+<para>
+
+</para>
 
 <!-- ##### FUNCTION xkl_engine_get_instance ##### -->
 <para>
@@ -378,6 +443,24 @@ Base X keyboard configuration and access engine
 
 
 <!-- ##### FUNCTION xkl_engine_get_secondary_groups_mask ##### -->
+<para>
+
+</para>
+
+@engine: 
+@Returns: 
+
+
+<!-- ##### FUNCTION xkl_engine_set_default_group ##### -->
+<para>
+
+</para>
+
+@engine: 
+@group: 
+
+
+<!-- ##### FUNCTION xkl_engine_get_default_group ##### -->
 <para>
 
 </para>

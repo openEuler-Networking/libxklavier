@@ -2,7 +2,7 @@
 XklConfigItem
 
 <!-- ##### SECTION Short_Description ##### -->
-X keyboard configuration registry item
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -38,15 +38,39 @@ X keyboard configuration registry item
 
 
 
+<!-- ##### MACRO XCI_PROP_ALLOW_MULTIPLE_SELECTION ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO XCI_PROP_VENDOR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO XCI_PROP_COUNTRY_LIST ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO XCI_PROP_LANGUAGE_LIST ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### STRUCT XklConfigItem ##### -->
 <para>
 
 </para>
 
-@parent: 
-@name: 
-@short_description: 
-@description: 
 
 <!-- ##### FUNCTION xkl_config_item_new ##### -->
 <para>
@@ -54,15 +78,5 @@ X keyboard configuration registry item
 </para>
 
 @Returns: 
-
-
-<!-- ##### USER_FUNCTION ConfigItemProcessFunc ##### -->
-<para>
-
-</para>
-
-@config: 
-@item: 
-@data: 
 
 
