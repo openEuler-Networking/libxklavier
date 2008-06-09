@@ -1,3 +1,8 @@
+2008-06-09 svu
+
+	* libxklavier/xklavier_config_iso.c: take languages from variants into
+	account
+
 2008-04-27 svu
 
 	* libxklavier/xkl_config_item.h, libxklavier/xkl_config_registry.h,

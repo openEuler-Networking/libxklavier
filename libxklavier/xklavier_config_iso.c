@@ -293,6 +293,7 @@ xkl_config_registry_foreach_language(XklConfigRegistry *
 {
 	const gchar *xpath_exprs[] = {
 		XKBCR_LAYOUT_PATH "/configItem/languageList/iso639Id",
+		XKBCR_VARIANT_PATH "/configItem/languageList/iso639Id",
 		NULL
 	};
 
