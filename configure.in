@@ -151,7 +151,7 @@ AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
 
 PKG_CHECK_MODULES(GLIB, \
-	glib-2.0 >= 2.6.0 gobject-2.0 >= 2.6.0)
+	glib-2.0 >= 2.16.0 gobject-2.0 >= 2.16.0)
 AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_CFLAGS)
 

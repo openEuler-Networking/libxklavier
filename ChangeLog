@@ -1,3 +1,8 @@
+2008-06-17 svu
+
+	* configure.in: fixing glib version requirement,
+	http://bugs.freedesktop.org/show_bug.cgi?id=16207
+
 2008-06-09 svu
 
 	* libxklavier/xklavier_config_iso.c: take languages from variants into
