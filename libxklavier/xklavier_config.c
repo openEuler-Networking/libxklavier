@@ -891,6 +891,8 @@ xkl_config_registry_class_init(XklConfigRegistryClass * klass)
 	object_class->set_property = xkl_config_registry_set_property;
 	object_class->get_property = xkl_config_registry_get_property;
 
+	bind_textdomain_codeset (XKB_DOMAIN, "UTF-8");
+
 	engine_param_spec = g_param_spec_object("engine",
 						"Engine",
 						"XklEngine",
