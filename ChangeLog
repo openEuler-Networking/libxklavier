@@ -1,3 +1,7 @@
+2008-09-05 svu
+
+	* NEWS, configure.in: preparing 3.7
+
 2008-09-03 svu
 
 	* libxklavier/xklavier_config.c: enforcing UTF-8 output of gettext,
