@@ -46,16 +46,9 @@ xkl_xkb_get_indicators_names(XklEngine * engine)
 gint
 xkl_xkb_pause_listen(XklEngine * engine)
 {
-	XkbSelectEvents(xkl_engine_get_display(engine), XkbUseCoreKbd,
+	XkbSelectEvents(xkl_engine_get_display(engine),
+			xkl_engine_backend(engine, XklXkb, device_id),
 			XkbAllEventsMask, 0);
-/*  XkbSelectEventDetails( xkl_display,
-                         XkbUseCoreKbd,
-                       XkbStateNotify,
-                     0,
-                   0 );
-
-  !!_XklSelectInput( _xklRootWindow, 0 );
-*/
 	return 0;
 }
 
@@ -72,25 +65,26 @@ xkl_xkb_resume_listen(XklEngine * engine)
           XkbNewKeyboardNotifyMask)
 
 	Display *display = xkl_engine_get_display(engine);
-	XkbSelectEvents(display, XkbUseCoreKbd, XKB_EVT_MASK,
-			XKB_EVT_MASK);
+	XkbSelectEvents(display,
+			xkl_engine_backend(engine, XklXkb, device_id),
+			XKB_EVT_MASK, XKB_EVT_MASK);
 
 #define XKB_STATE_EVT_DTL_MASK \
          (XkbGroupStateMask)
 
 	XkbSelectEventDetails(display,
-			      XkbUseCoreKbd,
-			      XkbStateNotify,
-			      XKB_STATE_EVT_DTL_MASK,
+			      xkl_engine_backend(engine, XklXkb,
+						 device_id),
+			      XkbStateNotify, XKB_STATE_EVT_DTL_MASK,
 			      XKB_STATE_EVT_DTL_MASK);
 
 #define XKB_NAMES_EVT_DTL_MASK \
          (XkbGroupNamesMask|XkbIndicatorNamesMask)
 
 	XkbSelectEventDetails(display,
-			      XkbUseCoreKbd,
-			      XkbNamesNotify,
-			      XKB_NAMES_EVT_DTL_MASK,
+			      xkl_engine_backend(engine, XklXkb,
+						 device_id),
+			      XkbNamesNotify, XKB_NAMES_EVT_DTL_MASK,
 			      XKB_NAMES_EVT_DTL_MASK);
 	return 0;
 }
@@ -158,7 +152,9 @@ xkl_xkb_load_actual_desc(XklEngine * engine)
 	Status status;
 
 	Display *display = xkl_engine_get_display(engine);
-	XkbDescPtr desc = XkbGetMap(display, KBD_MASK, XkbUseCoreKbd);
+	XkbDescPtr desc = XkbGetMap(display, KBD_MASK,
+				    xkl_engine_backend(engine, XklXkb,
+						       device_id));
 	xkl_engine_backend(engine, XklXkb, actual_desc) = desc;
 	if (desc != NULL) {
 		rv = Success == (status = XkbGetControls(display,
@@ -217,10 +213,10 @@ xkl_xkb_if_cached_info_equals_actual(XklEngine * engine)
 				rv = i < 0;
 			}
 		}
-    /* 
-     * in case of failure, reuse in _XklXkbLoadAllInfo
-     * in case of success - free it
-     */
+		/* 
+		 * in case of failure, reuse in _XklXkbLoadAllInfo
+		 * in case of success - free it
+		 */
 		if (rv) {
 			XkbFreeKeyboard(actual,
 					XkbAllComponentsMask, True);
@@ -310,7 +306,8 @@ xkl_xkb_lock_group(XklEngine * engine, gint group)
 	Display *display = xkl_engine_get_display(engine);
 	xkl_debug(100, "Posted request for change the group to %d ##\n",
 		  group);
-	XkbLockGroup(display, XkbUseCoreKbd, group);
+	XkbLockGroup(display,
+		     xkl_engine_backend(engine, XklXkb, device_id), group);
 	XSync(display, False);
 }
 
@@ -324,11 +321,16 @@ xkl_xkb_get_server_state(XklEngine * engine, XklState * current_state_out)
 	Display *display = xkl_engine_get_display(engine);
 
 	current_state_out->group = 0;
-	if (Success == XkbGetState(display, XkbUseCoreKbd, &state))
+	if (Success ==
+	    XkbGetState(display,
+			xkl_engine_backend(engine, XklXkb, device_id),
+			&state))
 		current_state_out->group = state.locked_group;
 
 	if (Success ==
-	    XkbGetIndicatorState(display, XkbUseCoreKbd,
+	    XkbGetIndicatorState(display,
+				 xkl_engine_backend(engine, XklXkb,
+						    device_id),
 				 &current_state_out->indicators))
 		current_state_out->indicators &=
 		    xkl_engine_backend(engine, XklXkb,
@@ -375,10 +377,12 @@ xkl_xkb_set_indicator(XklEngine * engine, gint indicator_num, gboolean set)
 
 	case XkbIM_NoAutomatic:
 		{
-			if (cached->names->
-			    indicators[indicator_num] != None)
+			if (cached->names->indicators[indicator_num] !=
+			    None)
 				XkbSetNamedIndicator(display,
-						     XkbUseCoreKbd,
+						     xkl_engine_backend
+						     (engine, XklXkb,
+						      device_id),
 						     cached->names->
 						     indicators
 						     [indicator_num], set,
@@ -440,13 +444,15 @@ xkl_xkb_set_indicator(XklEngine * engine, gint indicator_num, gboolean set)
 					group = i;
 					break;
 				}
-			if (map->
-			    which_groups & (XkbIM_UseLocked |
-					    XkbIM_UseEffective)) {
+			if (map->which_groups & (XkbIM_UseLocked |
+						 XkbIM_UseEffective)) {
 				/* Important: Groups should be ignored here - because they are handled separately! */
 				/* XklLockGroup( group ); */
 			} else if (map->which_groups & XkbIM_UseLatched)
-				XkbLatchGroup(display, XkbUseCoreKbd,
+				XkbLatchGroup(display,
+					      xkl_engine_backend(engine,
+								 XklXkb,
+								 device_id),
 					      group);
 			else {
 				/* Can do nothing. Just ignore the indicator */
@@ -487,12 +493,17 @@ xkl_xkb_set_indicator(XklEngine * engine, gint indicator_num, gboolean set)
 
 		mods = set ? affect : 0;
 
-		if (map->
-		    which_mods & (XkbIM_UseLocked | XkbIM_UseEffective))
-			XkbLockModifiers(display, XkbUseCoreKbd,
+		if (map->which_mods &
+		    (XkbIM_UseLocked | XkbIM_UseEffective))
+			XkbLockModifiers(display,
+					 xkl_engine_backend(engine, XklXkb,
+							    device_id),
 					 affect, mods);
 		else if (map->which_mods & XkbIM_UseLatched)
-			XkbLatchModifiers(display, XkbUseCoreKbd,
+			XkbLatchModifiers(display,
+					  xkl_engine_backend(engine,
+							     XklXkb,
+							     device_id),
 					  affect, mods);
 		else {
 			return TRUE;
@@ -548,6 +559,7 @@ xkl_xkb_init(XklEngine * engine)
 		return -1;
 
 	xkl_engine_priv(engine, backend) = g_new0(XklXkb, 1);
+	xkl_engine_backend(engine, XklXkb, device_id) = XkbUseCoreKbd;
 
 	xkl_xkb_ext_present = XkbQueryExtension(display,
 						&opcode,

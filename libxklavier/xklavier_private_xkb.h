@@ -43,6 +43,7 @@ typedef struct _XklXkb {
 
 	gchar *group_names[XkbNumKbdGroups];
 
+	int device_id;
 } XklXkb;
 
 extern void xkl_engine_dump_xkb_desc(XklEngine * engine,
@@ -121,7 +122,7 @@ extern gboolean xkl_xkb_config_native_prepare(XklEngine * engine,
 					      gpointer component_names);
 
 extern void xkl_xkb_config_native_cleanup(XklEngine * engine,
-					 gpointer component_names);
+					  gpointer component_names);
 
 #endif
 

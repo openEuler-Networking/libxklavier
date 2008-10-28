@@ -1,3 +1,9 @@
+2008-09-28 svu
+
+	* libxklavier/xklavier_config_xkb.c,
+	libxklavier/xklavier_private_xkb.h, libxklavier/xklavier_xkb.c:
+	introducing device_id (for a moment - the core one, hardcoded)
+
 2008-09-05 svu
 
 	* NEWS, configure.in: preparing 3.7

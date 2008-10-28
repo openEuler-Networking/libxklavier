@@ -182,15 +182,7 @@ xkl_config_get_keyboard(XklEngine * engine,
 			gboolean activate)
 {
 	XkbDescPtr xkb = NULL;
-#if 0
-	xkb = XkbGetKeyboardByName(_xklDpy,
-				   XkbUseCoreKbd,
-				   &componentNames,
-				   XkbGBN_AllComponentsMask &
-				   (~XkbGBN_GeometryMask),
-				   XkbGBN_AllComponentsMask &
-				   (~XkbGBN_GeometryMask), activate);
-#else
+
 	char xkm_fn[L_tmpnam];
 	char xkb_fn[L_tmpnam];
 	FILE *tmpxkm;
@@ -309,8 +301,7 @@ xkl_config_get_keyboard(XklEngine * engine,
 								}
 							} else	/* no activate, just load */
 								xkb =
-								    result.
-								    xkb;
+								    result.xkb;
 						} else {	/* could not load properly */
 
 							xkl_debug(0,
@@ -380,7 +371,6 @@ xkl_config_get_keyboard(XklEngine * engine,
 		xkl_debug(0, "Could not get tmp names\n");
 	}
 
-#endif
 	return xkb;
 }
 #else				/* no XKB headers */
