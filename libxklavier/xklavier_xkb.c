@@ -27,6 +27,11 @@
 #include "xklavier_private.h"
 #include "xklavier_private_xkb.h"
 
+#ifdef HAVE_XINPUT
+#include <X11/extensions/XI.h>
+#include <X11/extensions/XInput.h>
+#endif
+
 #ifdef LIBXKBFILE_PRESENT
 
 const gchar **
@@ -55,6 +60,10 @@ xkl_xkb_pause_listen(XklEngine * engine)
 gint
 xkl_xkb_resume_listen(XklEngine * engine)
 {
+#ifdef HAVE_XINPUT
+	int xitype;
+	XEventClass xiclass;
+#endif
 	/* What events we want */
 #define XKB_EVT_MASK \
          (XkbStateNotifyMask| \
@@ -86,6 +95,13 @@ xkl_xkb_resume_listen(XklEngine * engine)
 						 device_id),
 			      XkbNamesNotify, XKB_NAMES_EVT_DTL_MASK,
 			      XKB_NAMES_EVT_DTL_MASK);
+#ifdef HAVE_XINPUT
+	DevicePresence(display, xitype, xiclass);
+	XSelectExtensionEvent(display,
+			      xkl_engine_priv(engine, root_window),
+			      &xiclass, 1);
+	xkl_engine_backend(engine, XklXkb, xi_event_type) = xitype;
+#endif
 	return 0;
 }
 
@@ -522,6 +538,7 @@ xkl_xkb_init(XklEngine * engine)
 #ifdef LIBXKBFILE_PRESENT
 	gint opcode;
 	gboolean xkl_xkb_ext_present;
+	int xi_opc, xi_event_type, xi_error_code;
 
 	xkl_engine_priv(engine, backend_id) = "XKB";
 	xkl_engine_priv(engine, features) = XKLF_CAN_TOGGLE_INDICATORS |
@@ -599,6 +616,14 @@ xkl_xkb_init(XklEngine * engine)
 		xkl_engine_priv(engine, features) |=
 		    XKLF_MULTIPLE_LAYOUTS_SUPPORTED;
 
+	if (XQueryExtension
+	    (display, "XInputExtension", &xi_opc,
+	     &xi_event_type, &xi_error_code)) {
+		xkl_debug(150, "XInputExtension found (%d, %d, %d)\n",
+			  xi_opc, xi_event_type, xi_error_code);
+		xkl_engine_priv(engine, features) |= XKLF_DEVICE_DISCOVERY;
+	} else
+		xkl_debug(0, "XInputExtension not found\n");
 	return 0;
 #else
 	xkl_debug(160,

@@ -891,6 +891,11 @@ xkl_engine_class_init(XklEngineClass * klass)
 							config_notify),
 		     NULL, NULL, xkl_engine_VOID__VOID, G_TYPE_NONE, 0);
 
+	g_signal_new("X-new-device", XKL_TYPE_ENGINE,
+		     G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET(XklEngineClass,
+							new_device_notify),
+		     NULL, NULL, xkl_engine_VOID__VOID, G_TYPE_NONE, 0);
+
 	g_signal_new("new-toplevel-window", XKL_TYPE_ENGINE,
 		     G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET(XklEngineClass,
 							new_window_notify),
@@ -905,7 +910,6 @@ xkl_engine_class_init(XklEngineClass * klass)
 		     G_TYPE_NONE, 3, state_change_type, G_TYPE_INT,
 		     G_TYPE_BOOLEAN);
 
-	/* 2 Windows passed */
 	/* static stuff initialized */
 
 	sdl = g_getenv("XKL_DEBUG");

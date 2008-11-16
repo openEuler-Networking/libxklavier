@@ -22,6 +22,7 @@
 
 #ifdef LIBXKBFILE_PRESENT
 
+#include <config.h>
 #include <X11/XKBlib.h>
 #include <X11/extensions/XKBrules.h>
 
@@ -44,6 +45,10 @@ typedef struct _XklXkb {
 	gchar *group_names[XkbNumKbdGroups];
 
 	int device_id;
+
+#ifdef HAVE_XINPUT
+	gint xi_event_type;
+#endif
 } XklXkb;
 
 extern void xkl_engine_dump_xkb_desc(XklEngine * engine,

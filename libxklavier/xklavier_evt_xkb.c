@@ -26,6 +26,23 @@
 #include "xklavier_private.h"
 #include "xklavier_private_xkb.h"
 
+#ifdef HAVE_XINPUT
+#include "config.h"
+#include "X11/extensions/XInput.h"
+
+static gint
+xkl_xinput_process_x_event(XklEngine * engine, XEvent * xev)
+{
+	XDevicePresenceNotifyEvent* dpne = (XDevicePresenceNotifyEvent*)xev;
+	xkl_debug(200, "XInput event detected: %d\n", dpne->devchange);
+	if (dpne->devchange == DeviceEnabled) {
+		xkl_debug(150, "Device enabled: %d\n", dpne->deviceid);
+		g_signal_emit_by_name(engine, "X-new-device");
+	}
+	return 1;
+}
+#endif
+
 /*
  * XKB event handler
  */
@@ -38,11 +55,17 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 	guint inds;
 	XkbEvent *kev = (XkbEvent *) xev;
 
-	if (xev->type != xkl_engine_backend(engine, XklXkb, event_type))
-		return 0;
-
 	if (!(xkl_engine_priv(engine, listener_type) &
 	      (XKLL_MANAGE_WINDOW_STATES | XKLL_TRACK_KEYBOARD_STATE)))
+		return 0;
+
+#ifdef HAVE_XINPUT
+	/* Special case XInput event */
+	if (xev->type == xkl_engine_backend(engine, XklXkb, xi_event_type))
+		return xkl_xinput_process_x_event(engine, xev);
+#endif
+
+	if (xev->type != xkl_engine_backend(engine, XklXkb, event_type))
 		return 0;
 
 	xkl_debug(150, "Xkb event detected\n");

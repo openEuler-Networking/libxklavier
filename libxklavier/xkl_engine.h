@@ -64,6 +64,7 @@ extern "C" {
 		XKLF_CAN_OUTPUT_CONFIG_AS_BINARY = 0x04,
 		XKLF_MULTIPLE_LAYOUTS_SUPPORTED = 0x08,
 		XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT = 0x10,
+		XKLF_DEVICE_DISCOVERY = 0x20,
 	} XklEngineFeatures;
 
 /**
@@ -137,6 +138,14 @@ extern "C" {
 		void (*state_notify) (XklEngine * engine,
 				      XklEngineStateChange change_type,
 				      gint group, gboolean restore);
+
+/**
+ * XklEngine::new_device_notify
+ * @engine: the object on which the signal is emitted
+ *
+ * Used for notifying application of the new keyboard attached
+ */
+		void (*new_device_notify) (XklEngine * engine);
 
 	};
 
