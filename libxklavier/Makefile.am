@@ -17,7 +17,8 @@ endif
 
 EXTRA_DIST=marshal.list
 
-GLIB_GENMARSHAL = $(shell pkg-config --variable=glib_genmarshal glib-2.0)
+# GLIB_GENMARSHAL = $(shell $PKG_CONFIG --variable=glib_genmarshal glib-2.0)
+GLIB_GENMARSHAL = `$PKG_CONFIG --variable=glib_genmarshal glib-2.0`
 
 xkl_engine_marshal.h: marshal.list
 	$(GLIB_GENMARSHAL) --prefix=xkl_engine marshal.list --header > xkl_engine_marshal.h
@@ -27,7 +28,7 @@ xkl_engine_marshal.c: xkl_engine_marshal.h
 
 AM_CFLAGS=-Wall -DDATA_DIR=\"$(datadir)/$(PACKAGE)\" \
   -I. -I$(includedir) $(X_CFLAGS) -I$(top_srcdir) \
-  $(XML_CFLAGS) $(GLIB_CFLAGS) \
+  $(XML_CFLAGS) $(GLIB_CFLAGS) $(XINPUT_CFLAGS) \
   $(LIBXKBFILE_PRESENT_CFLAG) \
   $(ENABLE_XKB_SUPPORT_CFLAG) \
   $(ENABLE_XMODMAP_SUPPORT_CFLAG)
@@ -45,7 +46,7 @@ libxklavier_la_SOURCES = xklavier.c xklavier_evt.c xklavier_config.c xklavier_co
 	xklavier_util.c xklavier_props.c xklavier_dump.c xkl_engine_marshal.c \
 	$(noinst_HEADERS) $(xklavierinc_HEADERS)
 libxklavier_la_LDFLAGS = -version-info @VERSION_INFO@ \
- $(XML_LIBS) $(GLIB_LIBS) \
+ $(XML_LIBS) $(GLIB_LIBS) $(XINPUT_LIBS) \
  $(LIBXKBFILE_PRESENT_LDFLAGS) \
  $(X_LIBS) $(LIBICONV) 
 
