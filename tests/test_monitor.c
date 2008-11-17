@@ -41,7 +41,7 @@ print_usage()
 	printf("         -l3 - listen to track the keyboard state\n");
 }
 
-void
+static void
 state_changed(XklEngine * engine, XklEngineStateChange type,
 	      gint new_group, gboolean restore)
 {
@@ -49,7 +49,7 @@ state_changed(XklEngine * engine, XklEngineStateChange type,
 		  restore);
 }
 
-void
+static void
 config_changed(XklEngine * engine)
 {
 	const gchar **gn;
@@ -62,6 +62,12 @@ config_changed(XklEngine * engine)
 	gt = xkl_engine_get_num_groups(engine);
 	for (i = 0; i < gt; i++)
 		xkl_debug(0, "group[%d]: [%s]\n", i, gn[i]);
+}
+
+static void
+new_device(XklEngine * engine)
+{
+	xkl_debug(0, "New device attached!\n");
 }
 
 int
@@ -142,13 +148,15 @@ main(int argc, char *argv[])
 				 G_CALLBACK(state_changed), NULL);
 		g_signal_connect(engine, "X-config-changed",
 				 G_CALLBACK(config_changed), NULL);
+		g_signal_connect(engine, "X-new-device",
+				 G_CALLBACK(new_device), NULL);
 
 		xkl_debug(0, "Now, listening: %X...\n", listener_type);
 		xkl_engine_start_listen(engine, listener_type);
 
 		while (1) {
 			XNextEvent(dpy, &ev.core);
-			if (xkl_engine_filter_events(engine, &ev.core))
+			if (!xkl_engine_filter_events(engine, &ev.core))
 				xkl_debug(200, "Unknown event %d\n",
 					  ev.type);
 		}
