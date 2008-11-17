@@ -1,6 +1,6 @@
 AC_PREREQ(2.59)
 
-AC_INIT([libxklavier], [3.7])
+AC_INIT([libxklavier], [3.8])
 AC_CONFIG_SRCDIR([libxklavier/xklavier.c])
 AM_INIT_AUTOMAKE([1.10 dist-bzip2])
 
@@ -8,7 +8,7 @@ AM_CONFIG_HEADER(config.h)
 AC_CONFIG_MACRO_DIR(m4)
 
 dnl for DLL
-VERSION_INFO=13:0:1
+VERSION_INFO=14:0:2
 AC_SUBST(VERSION_INFO)
 
 AM_MAINTAINER_MODE

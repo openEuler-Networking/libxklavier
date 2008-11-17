@@ -1,3 +1,7 @@
+2008-11-17 svu
+
+	* configure.in: bumping versions (package and dll interface)
+
 2008-11-16 svu
 
 	* configure.in, libxklavier/Makefile.am: updating the build process,
