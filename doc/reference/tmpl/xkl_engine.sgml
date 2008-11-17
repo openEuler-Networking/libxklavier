@@ -41,6 +41,7 @@ XklEngine
 @XKLF_CAN_OUTPUT_CONFIG_AS_BINARY: 
 @XKLF_MULTIPLE_LAYOUTS_SUPPORTED: 
 @XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT: 
+@XKLF_DEVICE_DISCOVERY: 
 
 <!-- ##### STRUCT XklState ##### -->
 <para>
@@ -57,6 +58,13 @@ XklEngine
 
 
 <!-- ##### SIGNAL XklEngine::X-config-changed ##### -->
+<para>
+
+</para>
+
+@xklengine: the object which received the signal.
+
+<!-- ##### SIGNAL XklEngine::X-new-device ##### -->
 <para>
 
 </para>
