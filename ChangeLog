@@ -2,6 +2,9 @@
 
 	* configure.in, libxklavier/Makefile.am: updating the build process,
 	adding XInput dependency
+	* libxklavier/xkl_engine.h, libxklavier/xklavier.c,
+	libxklavier/xklavier_evt_xkb.c, libxklavier/xklavier_xkb.c,
+	libxklavier/xklavier_private_xkb.h: using XInput for device discovery
 
 2008-09-28 svu
 
