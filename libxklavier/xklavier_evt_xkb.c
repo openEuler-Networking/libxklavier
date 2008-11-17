@@ -33,7 +33,8 @@
 static gint
 xkl_xinput_process_x_event(XklEngine * engine, XEvent * xev)
 {
-	XDevicePresenceNotifyEvent* dpne = (XDevicePresenceNotifyEvent*)xev;
+	XDevicePresenceNotifyEvent *dpne =
+	    (XDevicePresenceNotifyEvent *) xev;
 	xkl_debug(200, "XInput event detected: %d\n", dpne->devchange);
 	if (dpne->devchange == DeviceEnabled) {
 		xkl_debug(150, "Device enabled: %d\n", dpne->deviceid);
@@ -86,8 +87,8 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 		if (kev->state.changed & GROUP_CHANGE_MASK)
 			xkl_engine_process_state_modification(engine,
 							      GROUP_CHANGED,
-							      kev->state.
-							      locked_group,
+							      kev->
+							      state.locked_group,
 							      0, FALSE);
 		else {		/* ...not interested... */
 
@@ -98,8 +99,8 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 				xkl_debug(0,
 					  "ATTENTION! Currently cached group %d is not equal to the current group from the event: %d\n!",
 					  xkl_engine_priv(engine,
-							  curr_state).
-					  group, kev->state.locked_group);
+							  curr_state).group,
+					  kev->state.locked_group);
 		}
 
 		break;
@@ -173,8 +174,8 @@ xkl_xkb_set_indicators(XklEngine * engine, const XklState * window_state)
 	ForPhysIndicators(i, bit) if (cached->names->indicators[i] != None) {
 		gboolean status;
 		status = xkl_xkb_set_indicator(engine, i,
-					       (window_state->
-						indicators & bit) != 0);
+					       (window_state->indicators &
+						bit) != 0);
 		xkl_debug(150, "Set indicator \"%s\"/%d to %d: %d\n",
 			  xkl_engine_backend(engine, XklXkb,
 					     indicator_names)[i],

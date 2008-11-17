@@ -96,11 +96,14 @@ xkl_xkb_resume_listen(XklEngine * engine)
 			      XkbNamesNotify, XKB_NAMES_EVT_DTL_MASK,
 			      XKB_NAMES_EVT_DTL_MASK);
 #ifdef HAVE_XINPUT
-	DevicePresence(display, xitype, xiclass);
-	XSelectExtensionEvent(display,
-			      xkl_engine_priv(engine, root_window),
-			      &xiclass, 1);
-	xkl_engine_backend(engine, XklXkb, xi_event_type) = xitype;
+	if (xkl_engine_priv(engine, features) | XKLF_DEVICE_DISCOVERY) {
+		DevicePresence(display, xitype, xiclass);
+		XSelectExtensionEvent(display,
+				      xkl_engine_priv(engine, root_window),
+				      &xiclass, 1);
+		xkl_engine_backend(engine, XklXkb, xi_event_type) = xitype;
+	} else
+		xkl_engine_backend(engine, XklXkb, xi_event_type) = -1;
 #endif
 	return 0;
 }
@@ -350,8 +353,8 @@ xkl_xkb_get_server_state(XklEngine * engine, XklState * current_state_out)
 				 &current_state_out->indicators))
 		current_state_out->indicators &=
 		    xkl_engine_backend(engine, XklXkb,
-				       cached_desc)->indicators->
-		    phys_indicators;
+				       cached_desc)->
+		    indicators->phys_indicators;
 	else
 		current_state_out->indicators = 0;
 }
@@ -399,8 +402,8 @@ xkl_xkb_set_indicator(XklEngine * engine, gint indicator_num, gboolean set)
 						     xkl_engine_backend
 						     (engine, XklXkb,
 						      device_id),
-						     cached->names->
-						     indicators
+						     cached->
+						     names->indicators
 						     [indicator_num], set,
 						     False, NULL);
 			else {
