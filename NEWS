@@ -1,3 +1,5 @@
+3.8	Added "new device" signal - for plugged keyboard (no need in the 
+	"device removed yet"
 3.7	A couple of essential bugfixes. Now all translated strings are in
 	UTF-8 (even in 8-bit locales).
 3.6	Added API for countries and languages

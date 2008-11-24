@@ -1,3 +1,7 @@
+2008-11-24 svu
+
+	* NEWS: preparing 3.8
+
 2008-11-17 svu
 
 	* configure.in: bumping versions (package and dll interface)
