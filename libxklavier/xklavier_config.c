@@ -131,8 +131,8 @@ xkl_item_populate_optional_array(XklConfigItem * item, xmlNodePtr ptr,
 		      (element_ptr, element_tag));
 	     element_ptr = element_ptr->next, idx++) {
 		elements[idx] =
-		    g_strdup((const char *) element_ptr->
-			     children->content);
+		    g_strdup((const char *) element_ptr->children->
+			     content);
 	}
 
 	g_object_set_data_full(G_OBJECT(item),
@@ -184,22 +184,23 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 	    && short_desc_element->children != NULL) {
 		strncat(item->short_description,
 			dgettext(XKB_DOMAIN,
-				 (const char *) short_desc_element->
-				 children->content),
+				 (const char *)
+				 short_desc_element->children->content),
 			XKL_MAX_CI_SHORT_DESC_LENGTH - 1);
 	}
 
 	if (desc_element != NULL && desc_element->children != NULL) {
 		strncat(item->description,
 			dgettext(XKB_DOMAIN,
-				 (const char *) desc_element->children->
-				 content), XKL_MAX_CI_DESC_LENGTH - 1);
+				 (const char *) desc_element->
+				 children->content),
+			XKL_MAX_CI_DESC_LENGTH - 1);
 	}
 
 	if (vendor_element != NULL && vendor_element->children != NULL) {
 		vendor =
-		    g_strdup((const char *) vendor_element->children->
-			     content);
+		    g_strdup((const char *) vendor_element->
+			     children->content);
 		g_object_set_data_full(G_OBJECT(item), XCI_PROP_VENDOR,
 				       vendor, g_free);
 	}
@@ -250,8 +251,7 @@ xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
 					 (config, xpath_context));
 	if (xpath_obj != NULL) {
 		xkl_config_registry_foreach_in_nodeset(config,
-						       xpath_obj->
-						       nodesetval,
+						       xpath_obj->nodesetval,
 						       func, data);
 		xmlXPathFreeObject(xpath_obj);
 	}
@@ -278,8 +278,7 @@ xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry
 							  xpath_context));
 	if (xpath_obj != NULL) {
 		xkl_config_registry_foreach_in_nodeset(config,
-						       xpath_obj->
-						       nodesetval,
+						       xpath_obj->nodesetval,
 						       func, data);
 		xmlXPathFreeObject(xpath_obj);
 	}
@@ -480,15 +479,13 @@ xkl_config_registry_load_from_file(XklConfigRegistry * config,
 				   const gchar * file_name)
 {
 	xmlParserCtxtPtr ctxt = xmlNewParserCtxt();
-	xmlSAXHandler *saxh = g_new0(xmlSAXHandler, 1);
 	xkl_debug(100, "Loading XML registry from file %s\n", file_name);
 
 	/* Filter out all unneeded languages! */
-	xmlSAX2InitDefaultSAXHandler(saxh, TRUE);
-	saxh->startElementNs = xkl_xml_sax_start_element_ns;
-	saxh->endElementNs = xkl_xml_sax_end_element_ns;
-	saxh->characters = xkl_xml_sax_characters;
-	ctxt->sax = saxh;
+	xmlSAX2InitDefaultSAXHandler(ctxt->sax, TRUE);
+	ctxt->sax->startElementNs = xkl_xml_sax_start_element_ns;
+	ctxt->sax->endElementNs = xkl_xml_sax_end_element_ns;
+	ctxt->sax->characters = xkl_xml_sax_characters;
 
 	xkl_config_registry_priv(config, doc) =
 	    xmlCtxtReadFile(ctxt, file_name, NULL, XML_PARSE_NOBLANKS);
@@ -891,7 +888,7 @@ xkl_config_registry_class_init(XklConfigRegistryClass * klass)
 	object_class->set_property = xkl_config_registry_set_property;
 	object_class->get_property = xkl_config_registry_get_property;
 
-	bind_textdomain_codeset (XKB_DOMAIN, "UTF-8");
+	bind_textdomain_codeset(XKB_DOMAIN, "UTF-8");
 
 	engine_param_spec = g_param_spec_object("engine",
 						"Engine",

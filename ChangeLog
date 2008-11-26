@@ -1,3 +1,8 @@
+2008-11-26 svu
+
+	* libxklavier/xklavier_config.c: fixed memleak,
+	http://bugs.freedesktop.org/show_bug.cgi?id=17651
+
 2008-11-24 svu
 
 	* NEWS: preparing 3.8
