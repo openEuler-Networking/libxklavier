@@ -1,3 +1,10 @@
+2008-11-26  Rob Bradford  <rob@linux.intel.com>
+
+	* libxklavier/Makefile.am:
+	* tests/Makefile.am: Remove "-I$(includedir)" from the build system.
+	It is superfluous and break cross-compilation.
+	http://bugs.freedesktop.org/show_bug.cgi?id=17738
+
 2008-11-26 svu
 
 	* libxklavier/xklavier_config.c: fixed memleak,

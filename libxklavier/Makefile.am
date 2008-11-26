@@ -27,7 +27,7 @@ xkl_engine_marshal.c: xkl_engine_marshal.h
 	$(GLIB_GENMARSHAL) --prefix=xkl_engine marshal.list --body > xkl_engine_marshal.c
 
 AM_CFLAGS=-Wall -DDATA_DIR=\"$(datadir)/$(PACKAGE)\" \
-  -I. -I$(includedir) $(X_CFLAGS) -I$(top_srcdir) \
+  -I. $(X_CFLAGS) -I$(top_srcdir) \
   $(XML_CFLAGS) $(GLIB_CFLAGS) $(XINPUT_CFLAGS) \
   $(LIBXKBFILE_PRESENT_CFLAG) \
   $(ENABLE_XKB_SUPPORT_CFLAG) \
