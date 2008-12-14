@@ -45,7 +45,8 @@ libxklavier_la_SOURCES = xklavier.c xklavier_evt.c xklavier_config.c xklavier_co
 	xklavier_xmm.c xklavier_xmm_opts.c xklavier_evt_xmm.c xklavier_config_xmm.c \
 	xklavier_util.c xklavier_props.c xklavier_dump.c xkl_engine_marshal.c \
 	$(noinst_HEADERS) $(xklavierinc_HEADERS)
-libxklavier_la_LDFLAGS = -version-info @VERSION_INFO@ \
+libxklavier_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
+libxklavier_la_LIBADD = \
  $(XML_LIBS) $(GLIB_LIBS) $(XINPUT_LIBS) \
  $(LIBXKBFILE_PRESENT_LDFLAGS) \
  $(X_LIBS) $(LIBICONV) 

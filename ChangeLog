@@ -1,3 +1,8 @@
+2008-12-14  svu
+
+	* libxklavier/Makefile.am, tests/Makefile.am: small cygwin fixes,
+	http://bugs.freedesktop.org/show_bug.cgi?id=19030
+
 2008-11-26  Rob Bradford  <rob@linux.intel.com>
 
 	* libxklavier/Makefile.am:
