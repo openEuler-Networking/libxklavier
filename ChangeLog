@@ -1,3 +1,8 @@
+2009-01-21  svu
+
+	* configure.in: eliminate bashisms,
+	http://bugs.freedesktop.org/show_bug.cgi?id=19645
+
 2008-12-14  svu
 
 	* libxklavier/Makefile.am, tests/Makefile.am: small cygwin fixes,
