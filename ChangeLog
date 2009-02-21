@@ -1,3 +1,8 @@
+2009-02-21  svu
+
+	* libxklavier/Makefile.am, tests/Makefile.am: reordering CFLAGS,
+	http://bugs.freedesktop.org/show_bug.cgi?id=20244
+
 2009-01-21  svu
 
 	* configure.in: eliminate bashisms,
