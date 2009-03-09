@@ -243,11 +243,11 @@ xkl_config_get_keyboard(XklEngine * engine,
 			case 0:
 				/* child */
 				xkl_debug(160, "Executing %s\n", XKBCOMP);
-				xkl_debug(160, "%s %s %s %s %s %s %s\n",
-					  XKBCOMP, XKBCOMP, "-I",
+				xkl_debug(160, "%s %s %s %s %s %s %s %s\n",
+					  XKBCOMP, XKBCOMP, "-w0", "-I",
 					  "-I" XKB_BASE, "-xkm", xkb_fn,
 					  xkm_fn);
-				execl(XKBCOMP, XKBCOMP, "-I",
+				execl(XKBCOMP, XKBCOMP, "-w0", "-I",
 				      "-I" XKB_BASE, "-xkm", xkb_fn,
 				      xkm_fn, NULL);
 				xkl_debug(0, "Could not exec %s: %d\n",
