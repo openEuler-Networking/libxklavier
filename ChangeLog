@@ -1,6 +1,8 @@
 2008-03-10 svu
 
-	* libxklavier/xklavier_evt.c: a
+	* libxklavier/xklavier_evt.c: The X11 error processing is more 
+	robust in relation to the missing engine (during the 
+	initialization)
 
 2009-03-09  svu
 
