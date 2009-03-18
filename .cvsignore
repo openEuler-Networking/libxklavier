@@ -32,4 +32,6 @@ install-sh
 missing
 mkinstalldirs
 libxklavier-*.tar.*
-
+.anjuta
+.tm_project2.cache
+m4
