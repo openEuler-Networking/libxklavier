@@ -1,6 +1,7 @@
 2008-03-18 svu
 
 	* Makefile.am, gtk-doc.make: unneeded external file should not be in dist/CVS
+	* configure.in, NEWS: preparing 3.9
 
 2008-03-10 svu
 
