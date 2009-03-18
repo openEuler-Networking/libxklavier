@@ -1,3 +1,7 @@
+2008-03-18 svu
+
+	* Makefile.am, gtk-doc.make: unneeded external file should not be in dist/CVS
+
 2008-03-10 svu
 
 	* libxklavier/xklavier_evt.c: The X11 error processing is more 
