@@ -6,5 +6,5 @@ test_monitor_SOURCES=test_monitor.c
 
 AM_CFLAGS=-Wall -Werror -I$(top_srcdir) $(X_CFLAGS) $(GLIB_CFLAGS)
 
-LDADD=$(top_builddir)/libxklavier/libxklavier.la $(X_LIBS) -lX11 $(GLIB_LIBS)
+LDADD=$(top_builddir)/libxklavier/libxklavier.la $(X_LIBS) $(GLIB_LIBS)
 

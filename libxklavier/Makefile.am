@@ -49,6 +49,6 @@ libxklavier_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
 libxklavier_la_LIBADD = \
  $(XML_LIBS) $(GLIB_LIBS) $(XINPUT_LIBS) \
  $(LIBXKBFILE_PRESENT_LDFLAGS) \
- $(X_LIBS) $(LIBICONV) 
+ $(X_LIBS) -lX11 $(LIBICONV) 
 
 

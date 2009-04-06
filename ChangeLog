@@ -1,9 +1,14 @@
-2008-03-18 svu
+2009-04-06 svu
+
+	* libxklavier/Makefile.am, tests/Makefile.am: adding -lX11 to .la
+	file, http://bugs.freedesktop.org/show_bug.cgi?id=20243
+
+2009-03-18 svu
 
 	* Makefile.am, gtk-doc.make: unneeded external file should not be in dist/CVS
 	* configure.in, NEWS: preparing 3.9
 
-2008-03-10 svu
+2009-03-10 svu
 
 	* libxklavier/xklavier_evt.c: The X11 error processing is more 
 	robust in relation to the missing engine (during the 
