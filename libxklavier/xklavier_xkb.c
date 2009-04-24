@@ -590,12 +590,8 @@ xkl_xkb_init(XklEngine * engine)
 								    XklXkb,
 								    error_code),
 						NULL, NULL);
-	if (!xkl_xkb_ext_present) {
-		XSetErrorHandler((XErrorHandler)
-				 xkl_engine_priv(engine,
-						 default_error_handler));
+	if (!xkl_xkb_ext_present)
 		return -1;
-	}
 
 	xkl_debug(160,
 		  "xkbEvenType: %X, xkbError: %X, display: %p, root: "

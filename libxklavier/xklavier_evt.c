@@ -465,7 +465,7 @@ xkl_engine_process_create_window_evt(XklEngine * engine,
  * This handler can be called in the middle of the engine initialization -
  * so it is not fair to assume that the engine is available
  */
-void
+int
 xkl_process_error(Display * dpy, XErrorEvent * evt)
 {
 	char buf[128] = "";
@@ -504,6 +504,9 @@ xkl_process_error(Display * dpy, XErrorEvent * evt)
 				 (engine, default_error_handler))
 				    (dpy, evt);
 	}
+
+	/* X ignores this return value anyway */
+	return 0;
 }
 
 /*

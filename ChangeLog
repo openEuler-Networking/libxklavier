@@ -1,3 +1,19 @@
+2009-04-23  Federico Mena Quintero  <federico@novell.com>
+
+	https://bugs.freedesktop.org/show_bug.cgi?id=21365 - Make sure
+	libxklavier's X error handler still runs, even if the XKB
+	extension is not present.
+	* libxklavier/xklavier_evt.c (xkl_process_error): Fix the
+	prototype to match XErrorHandler, so that we don't have to use
+	casts when using XSetErrorHandler().
+	* libxklavier/xklavier_xkb.c (xkl_xkb_init): In case XKB is not
+	present, do not reset the X error handler here...
+	* libxklavier/xklavier.c (xkl_engine_constructor): ... but do it
+	here instead in case neither the XKB nor xmodmap modules can be
+	initialized.  This way if either succeeds, libxklavier will have
+	its own X error handler present, which is needed to filter out
+	"harmless" errors like BadWindow for disappearing windows.
+
 2009-04-06 svu
 
 	* libxklavier/Makefile.am, tests/Makefile.am: adding -lX11 to .la

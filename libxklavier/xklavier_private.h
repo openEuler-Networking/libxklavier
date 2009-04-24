@@ -261,7 +261,7 @@ extern void xkl_engine_process_property_evt(XklEngine * engine,
 extern void xkl_engine_process_create_window_evt(XklEngine * engine,
 						 XCreateWindowEvent * cev);
 
-extern void xkl_process_error(Display * dpy, XErrorEvent * evt);
+extern int xkl_process_error(Display * dpy, XErrorEvent * evt);
 
 extern void xkl_engine_process_state_modification(XklEngine * engine,
 						  XklEngineStateChange

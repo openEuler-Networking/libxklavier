@@ -631,7 +631,7 @@ xkl_engine_constructor(GType type,
 	xkl_engine_priv(engine, display) = display;
 
 	xkl_engine_priv(engine, default_error_handler) =
-	    XSetErrorHandler((XErrorHandler) xkl_process_error);
+	    XSetErrorHandler(xkl_process_error);
 
 	scr = DefaultScreen(display);
 	xkl_engine_priv(engine, root_window) = RootWindow(display, scr);
@@ -671,6 +671,7 @@ xkl_engine_constructor(GType type,
 			  xkl_engine_get_backend_name(engine));
 	} else {
 		xkl_debug(0, "All backends failed, last result: %d\n", rv);
+		XSetErrorHandler(xkl_engine_priv(engine, default_error_handler));
 		xkl_engine_priv(engine, display) = NULL;
 		g_object_unref(G_OBJECT(engine));
 		return NULL;
