@@ -1,3 +1,4 @@
+ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = libxklavier doc tests
 
 EXTRA_DIST = libxklavier.spec libxklavier.spec.in \

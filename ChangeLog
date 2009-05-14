@@ -1,3 +1,8 @@
+2009-05-14  svu
+
+	* autogen.sh, Makefile.am: fixing the build process (thanks to
+	Marc-André Lureau)
+
 2009-04-23  Federico Mena Quintero  <federico@novell.com>
 
 	https://bugs.freedesktop.org/show_bug.cgi?id=21365 - Make sure
