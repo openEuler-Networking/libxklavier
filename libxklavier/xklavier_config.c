@@ -35,6 +35,12 @@ static xmlXPathCompExprPtr models_xpath;
 static xmlXPathCompExprPtr layouts_xpath;
 static xmlXPathCompExprPtr option_groups_xpath;
 
+static GRegex **xml_encode_regexen = NULL;
+static GRegex **xml_decode_regexen = NULL;
+static const char const *xml_decode_regexen_str[] =
+    { "&lt;", "&gt;", "&amp;" };
+static const char const *xml_encode_regexen_str[] = { "<", ">", "&" };
+
 /* gettext domain for translations */
 #define XKB_DOMAIN "xkeyboard-config"
 
@@ -141,6 +147,8 @@ xkl_item_populate_optional_array(XklConfigItem * item, xmlNodePtr ptr,
 	return TRUE;
 }
 
+#include "libxml/parserInternals.h"
+
 gboolean
 xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 		     XklConfigItem * item)
@@ -149,7 +157,10 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 	xmlNodePtr desc_element = NULL, short_desc_element =
 	    NULL, vendor_element = NULL;
 
-	gchar *vendor = NULL;
+	gchar *vendor = NULL, *translated = NULL, *escaped =
+	    NULL, *unescaped = NULL;
+
+	gint i;
 
 	*item->name = 0;
 	*item->short_description = 0;
@@ -183,18 +194,49 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 	if (short_desc_element != NULL
 	    && short_desc_element->children != NULL) {
 		strncat(item->short_description,
-			dgettext(XKB_DOMAIN,
-				 (const char *)
+			dgettext(XKB_DOMAIN, (const char *)
 				 short_desc_element->children->content),
 			XKL_MAX_CI_SHORT_DESC_LENGTH - 1);
 	}
 
 	if (desc_element != NULL && desc_element->children != NULL) {
+		/* Convert all xml-related characters to XML form, otherwise dgettext won't find the translation 
+		 * The conversion is not using libxml2, because there are no handy functions in API */
+		translated =
+		    g_strdup((gchar *) desc_element->children->content);
+		for (i =
+		     sizeof(xml_encode_regexen_str) /
+		     sizeof(xml_encode_regexen_str[0]); --i >= 0;) {
+			escaped =
+			    g_regex_replace(xml_encode_regexen[i],
+					    translated, -1, 0,
+					    xml_decode_regexen_str[i], 0,
+					    NULL);
+			g_free(translated);
+			translated = escaped;
+		}
+		escaped = translated;
+
+		/* Do the translation! */
+		translated =
+		    g_strdup(dgettext(XKB_DOMAIN, (const char *) escaped));
+		g_free(escaped);
+
+		/* Convert all XML entities back to normal form */
+		for (i =
+		     sizeof(xml_decode_regexen_str) /
+		     sizeof(xml_decode_regexen_str[0]); --i >= 0;) {
+			unescaped =
+			    g_regex_replace(xml_decode_regexen[i],
+					    translated, -1, 0,
+					    xml_encode_regexen_str[i], 0,
+					    NULL);
+			g_free(translated);
+			translated = unescaped;
+		}
 		strncat(item->description,
-			dgettext(XKB_DOMAIN,
-				 (const char *) desc_element->
-				 children->content),
-			XKL_MAX_CI_DESC_LENGTH - 1);
+			translated, XKL_MAX_CI_DESC_LENGTH - 1);
+		g_free(translated);
 	}
 
 	if (vendor_element != NULL && vendor_element->children != NULL) {
@@ -861,6 +903,8 @@ xkl_config_registry_finalize(GObject * obj)
 extern void
 xkl_config_registry_class_term(XklConfigRegistryClass * klass)
 {
+	gint i;
+
 	if (models_xpath != NULL) {
 		xmlXPathFreeCompExpr(models_xpath);
 		models_xpath = NULL;
@@ -873,6 +917,24 @@ xkl_config_registry_class_term(XklConfigRegistryClass * klass)
 		xmlXPathFreeCompExpr(option_groups_xpath);
 		option_groups_xpath = NULL;
 	}
+	if (xml_encode_regexen != NULL) {
+		for (i =
+		     sizeof(xml_encode_regexen_str) /
+		     sizeof(xml_encode_regexen_str[0]); --i >= 0;) {
+			g_regex_unref(xml_encode_regexen[i]);
+		}
+		g_free(xml_encode_regexen);
+		xml_encode_regexen = NULL;
+	}
+	if (xml_decode_regexen != NULL) {
+		for (i =
+		     sizeof(xml_decode_regexen_str) /
+		     sizeof(xml_decode_regexen_str[0]); --i >= 0;) {
+			g_regex_unref(xml_decode_regexen[i]);
+		}
+		g_free(xml_decode_regexen);
+		xml_decode_regexen = NULL;
+	}
 }
 
 static void
@@ -880,6 +942,7 @@ xkl_config_registry_class_init(XklConfigRegistryClass * klass)
 {
 	GObjectClass *object_class;
 	GParamSpec *engine_param_spec;
+	gint i;
 
 	object_class = (GObjectClass *) klass;
 	parent_class = g_type_class_peek_parent(object_class);
@@ -909,4 +972,21 @@ xkl_config_registry_class_init(XklConfigRegistryClass * klass)
 					XKBCR_LAYOUT_PATH);
 	option_groups_xpath = xmlXPathCompile((unsigned char *)
 					      XKBCR_GROUP_PATH);
+
+	xml_encode_regexen =
+	    g_new0(GRegex *,
+		   sizeof(xml_encode_regexen_str) /
+		   sizeof(xml_encode_regexen_str[0]));
+	xml_decode_regexen =
+	    g_new0(GRegex *,
+		   sizeof(xml_decode_regexen_str) /
+		   sizeof(xml_decode_regexen_str[0]));
+	for (i =
+	     sizeof(xml_encode_regexen_str) /
+	     sizeof(xml_encode_regexen_str[0]); --i >= 0;) {
+		xml_encode_regexen[i] =
+		    g_regex_new(xml_encode_regexen_str[i], 0, 0, NULL);
+		xml_decode_regexen[i] =
+		    g_regex_new(xml_decode_regexen_str[i], 0, 0, NULL);
+	}
 }
