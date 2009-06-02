@@ -47,7 +47,8 @@ typedef struct {
 } CodeBuildStruct;
 
 static const char *countryLookupNames[] = { "alpha_2_code", NULL };
-static const char *languageLookupNames[] = { "iso_639_2B_code", "iso_639_2T_code", NULL };
+static const char *languageLookupNames[] =
+    { "iso_639_2B_code", "iso_639_2T_code", NULL };
 
 static LookupParams countryLookup = { "iso_3166", countryLookupNames };
 static LookupParams languageLookup = { "iso_639", languageLookupNames };
@@ -96,12 +97,10 @@ iso_codes_parse_start_tag(GMarkupParseContext * ctx,
 		while (*attr) {
 			if (g_str_equal(*attr_names, *attr)) {
 				if (**attr_values) {
-					g_hash_table_insert(cbs->
-							    code_names,
-							    g_strdup
-							    (*attr_values),
-							    g_strdup
-							    (name));
+					g_hash_table_insert
+					    (cbs->code_names,
+					     g_strdup(*attr_values),
+					     g_strdup(name));
 				}
 			}
 			attr++;
@@ -230,8 +229,8 @@ xkl_config_registry_foreach_iso_code(XklConfigRegistry * config,
 				xmlNodePtr *node = nodes->nodeTab;
 				for (ni = nodes->nodeNr; --ni >= 0;) {
 					gchar *iso_code =
-					    (gchar *) (*node)->
-					    children->content;
+					    (gchar *) (*node)->children->
+					    content;
 					const gchar *description;
 					iso_code =
 					    to_upper ?
@@ -258,10 +257,9 @@ xkl_config_registry_foreach_iso_code(XklConfigRegistry * config,
 	g_hash_table_iter_init(&iter, code_pairs);
 	ci = xkl_config_item_new();
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
-		g_snprintf(ci->name, sizeof(ci->name),
-			   (const gchar *) key);
-		g_snprintf(ci->description, sizeof(ci->description),
-			   (const gchar *) value);
+		g_strlcpy(ci->name, (const gchar *) key, sizeof(ci->name));
+		g_strlcpy(ci->description, (const gchar *) value,
+			  sizeof(ci->description));
 		func(config, ci, data);
 	}
 	g_object_unref(G_OBJECT(ci));
