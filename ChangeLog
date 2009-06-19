@@ -1,3 +1,8 @@
+2009-06-19  svu
+
+	* libxklavier/xklavier_config.c, libxklavier/xklavier_config_iso.c,
+	libxklavier/xklavier_private.h: use xml files with exotic layouts
+
 2009-06-02  svu
 
 	* libxklavier/xklavier_config_iso.c: changed g_snprintf to more

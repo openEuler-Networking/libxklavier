@@ -211,6 +211,7 @@ xkl_config_registry_foreach_iso_code(XklConfigRegistry * config,
 	const gchar **xpath_expr;
 	gpointer key, value;
 	XklConfigItem *ci;
+	gint i;
 
 	if (!xkl_config_registry_is_initialized(config))
 		return;
@@ -218,38 +219,50 @@ xkl_config_registry_foreach_iso_code(XklConfigRegistry * config,
 	code_pairs = g_hash_table_new(g_str_hash, g_str_equal);
 
 	for (xpath_expr = xpath_exprs; *xpath_expr; xpath_expr++) {
-		xpath_obj =
-		    xmlXPathEval((unsigned char *) *xpath_expr,
-				 xkl_config_registry_priv(config,
-							  xpath_context));
-		if (xpath_obj != NULL) {
+		for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
 			gint ni;
-			xmlNodeSetPtr nodes = xpath_obj->nodesetval;
-			if (nodes != NULL) {
-				xmlNodePtr *node = nodes->nodeTab;
-				for (ni = nodes->nodeNr; --ni >= 0;) {
-					gchar *iso_code =
-					    (gchar *) (*node)->children->
-					    content;
-					const gchar *description;
-					iso_code =
-					    to_upper ?
-					    g_ascii_strup(iso_code,
-							  -1) :
-					    g_strdup(iso_code);
-					description = dgf(iso_code);
-/* If there is a mapping to some ISO description - consider it as ISO code (well, it is just an assumption) */
-					if (description)
-						g_hash_table_insert
-						    (code_pairs,
-						     g_strdup
-						     (iso_code),
-						     g_strdup
-						     (description));
-					g_free(iso_code);
-					node++;
-				}
+			xmlNodePtr *node;
+			xmlNodeSetPtr nodes;
+
+			xmlXPathContextPtr xmlctxt =
+			    xkl_config_registry_priv(config,
+						     xpath_contexts[i]);
+			if (xmlctxt == NULL)
+				continue;
+
+			xpath_obj =
+			    xmlXPathEval((unsigned char *) *xpath_expr,
+					 xmlctxt);
+			if (xpath_obj == NULL)
+				continue;
+
+			nodes = xpath_obj->nodesetval;
+			if (nodes == NULL) {
+				xmlXPathFreeObject(xpath_obj);
+				continue;
 			}
+
+			node = nodes->nodeTab;
+			for (ni = nodes->nodeNr; --ni >= 0;) {
+				gchar *iso_code =
+				    (gchar *) (*node)->children->content;
+				const gchar *description;
+				iso_code =
+				    to_upper ?
+				    g_ascii_strup(iso_code,
+						  -1) : g_strdup(iso_code);
+				description = dgf(iso_code);
+/* If there is a mapping to some ISO description - consider it as ISO code (well, it is just an assumption) */
+				if (description)
+					g_hash_table_insert
+					    (code_pairs,
+					     g_strdup
+					     (iso_code),
+					     g_strdup(description));
+				g_free(iso_code);
+				node++;
+			}
+
 			xmlXPathFreeObject(xpath_obj);
 		}
 	}
@@ -316,9 +329,11 @@ xkl_config_registry_foreach_iso_variant(XklConfigRegistry *
 					should_code_be_lowered2[])
 {
 	xmlXPathObjectPtr xpath_obj;
+	xmlNodeSetPtr nodes;
 	const gchar **xpath_expr;
 	const gboolean *is_low_id = should_code_be_lowered1;
 	gchar *low_iso_code;
+	gint i;
 
 	if (!xkl_config_registry_is_initialized(config))
 		return;
@@ -329,12 +344,19 @@ xkl_config_registry_foreach_iso_variant(XklConfigRegistry *
 	     xpath_expr++, is_low_id++) {
 		const gchar *aic = *is_low_id ? low_iso_code : iso_code;
 		gchar *xpe = g_strdup_printf(*xpath_expr, aic);
-		xpath_obj =
-		    xmlXPathEval((unsigned char *) xpe,
-				 xkl_config_registry_priv(config,
-							  xpath_context));
-		if (xpath_obj != NULL) {
-			xmlNodeSetPtr nodes = xpath_obj->nodesetval;
+		for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
+			xmlXPathContextPtr xmlctxt =
+			    xkl_config_registry_priv(config,
+						     xpath_contexts[i]);
+			if (xmlctxt == NULL)
+				continue;
+
+			xpath_obj =
+			    xmlXPathEval((unsigned char *) xpe, xmlctxt);
+			if (xpath_obj == NULL)
+				continue;
+
+			nodes = xpath_obj->nodesetval;
 			if (nodes != NULL) {
 				gint ni;
 				xmlNodePtr *node = nodes->nodeTab;
@@ -358,12 +380,19 @@ xkl_config_registry_foreach_iso_variant(XklConfigRegistry *
 	     xpath_expr++, is_low_id++) {
 		const gchar *aic = *is_low_id ? low_iso_code : iso_code;
 		gchar *xpe = g_strdup_printf(*xpath_expr, aic);
-		xpath_obj =
-		    xmlXPathEval((unsigned char *) xpe,
-				 xkl_config_registry_priv(config,
-							  xpath_context));
-		if (xpath_obj != NULL) {
-			xmlNodeSetPtr nodes = xpath_obj->nodesetval;
+		for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
+			xmlXPathContextPtr xmlctxt =
+			    xkl_config_registry_priv(config,
+						     xpath_contexts[i]);
+			if (xmlctxt == NULL)
+				continue;
+
+			xpath_obj =
+			    xmlXPathEval((unsigned char *) xpe, xmlctxt);
+			if (xpath_obj == NULL)
+				continue;
+
+			nodes = xpath_obj->nodesetval;
 			if (nodes != NULL) {
 				gint ni;
 				xmlNodePtr *node = nodes->nodeTab;

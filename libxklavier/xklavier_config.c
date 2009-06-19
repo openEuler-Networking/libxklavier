@@ -37,16 +37,15 @@ static xmlXPathCompExprPtr option_groups_xpath;
 
 static GRegex **xml_encode_regexen = NULL;
 static GRegex **xml_decode_regexen = NULL;
-static const char const *xml_decode_regexen_str[] =
-    { "&lt;", "&gt;", "&amp;" };
-static const char const *xml_encode_regexen_str[] = { "<", ">", "&" };
+static const char *xml_decode_regexen_str[] = { "&lt;", "&gt;", "&amp;" };
+static const char *xml_encode_regexen_str[] = { "<", ">", "&" };
 
 /* gettext domain for translations */
 #define XKB_DOMAIN "xkeyboard-config"
 
 enum {
 	PROP_0,
-	PROP_ENGINE,
+	PROP_ENGINE
 };
 
 static gboolean
@@ -285,13 +284,21 @@ xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
 				     gpointer data)
 {
 	xmlXPathObjectPtr xpath_obj;
+	gint i;
 
 	if (!xkl_config_registry_is_initialized(config))
 		return;
-	xpath_obj = xmlXPathCompiledEval(xpath_comp_expr,
-					 xkl_config_registry_priv
-					 (config, xpath_context));
-	if (xpath_obj != NULL) {
+
+	for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
+		xmlXPathContextPtr xmlctxt =
+		    xkl_config_registry_priv(config, xpath_contexts[i]);
+		if (xmlctxt == NULL)
+			continue;
+
+		xpath_obj = xmlXPathCompiledEval(xpath_comp_expr, xmlctxt);
+		if (xpath_obj == NULL)
+			continue;
+
 		xkl_config_registry_foreach_in_nodeset(config,
 						       xpath_obj->nodesetval,
 						       func, data);
@@ -311,14 +318,23 @@ xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry
 {
 	char xpath_expr[1024];
 	xmlXPathObjectPtr xpath_obj;
+	gint i;
 
 	if (!xkl_config_registry_is_initialized(config))
 		return;
 	g_snprintf(xpath_expr, sizeof xpath_expr, format, value);
-	xpath_obj = xmlXPathEval((unsigned char *) xpath_expr,
-				 xkl_config_registry_priv(config,
-							  xpath_context));
-	if (xpath_obj != NULL) {
+
+	for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
+		xmlXPathContextPtr xmlctxt =
+		    xkl_config_registry_priv(config, xpath_contexts[i]);
+		if (xmlctxt == NULL)
+			continue;
+
+		xpath_obj =
+		    xmlXPathEval((unsigned char *) xpath_expr, xmlctxt);
+		if (xpath_obj == NULL)
+			continue;
+
 		xkl_config_registry_foreach_in_nodeset(config,
 						       xpath_obj->nodesetval,
 						       func, data);
@@ -337,28 +353,38 @@ xkl_config_registry_find_object(XklConfigRegistry * config,
 	xmlNodeSetPtr nodes;
 	gboolean rv = FALSE;
 	gchar xpath_expr[1024];
+	gint i;
 
 	if (!xkl_config_registry_is_initialized(config))
 		return FALSE;
 
 	g_snprintf(xpath_expr, sizeof xpath_expr, format, arg1,
 		   pitem->name);
-	xpath_obj =
-	    xmlXPathEval((unsigned char *) xpath_expr,
-			 xkl_config_registry_priv(config, xpath_context));
-	if (xpath_obj == NULL)
-		return FALSE;
 
-	nodes = xpath_obj->nodesetval;
-	if (nodes != NULL && nodes->nodeTab != NULL && nodes->nodeNr > 0) {
-		rv = xkl_read_config_item(config, nodes->nodeTab[0],
-					  pitem);
-		if (pnode != NULL) {
-			*pnode = *nodes->nodeTab;
+	for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
+		xmlXPathContextPtr xmlctxt =
+		    xkl_config_registry_priv(config, xpath_contexts[i]);
+		if (xmlctxt == NULL)
+			continue;
+
+		xpath_obj =
+		    xmlXPathEval((unsigned char *) xpath_expr, xmlctxt);
+		if (xpath_obj == NULL)
+			continue;
+
+		nodes = xpath_obj->nodesetval;
+		if (nodes != NULL && nodes->nodeTab != NULL
+		    && nodes->nodeNr > 0) {
+			rv = xkl_read_config_item(config,
+						  nodes->nodeTab[0],
+						  pitem);
+			if (pnode != NULL) {
+				*pnode = *nodes->nodeTab;
+			}
 		}
-	}
 
-	xmlXPathFreeObject(xpath_obj);
+		xmlXPathFreeObject(xpath_obj);
+	}
 	return rv;
 }
 
@@ -518,9 +544,11 @@ xkl_xml_sax_end_element_ns(void *ctx,
 
 gboolean
 xkl_config_registry_load_from_file(XklConfigRegistry * config,
-				   const gchar * file_name)
+				   const gchar * file_name, gint docidx)
 {
 	xmlParserCtxtPtr ctxt = xmlNewParserCtxt();
+	xmlDocPtr doc;
+
 	xkl_debug(100, "Loading XML registry from file %s\n", file_name);
 
 	/* Filter out all unneeded languages! */
@@ -529,18 +557,20 @@ xkl_config_registry_load_from_file(XklConfigRegistry * config,
 	ctxt->sax->endElementNs = xkl_xml_sax_end_element_ns;
 	ctxt->sax->characters = xkl_xml_sax_characters;
 
-	xkl_config_registry_priv(config, doc) =
+	doc = xkl_config_registry_priv(config, docs[docidx]) =
 	    xmlCtxtReadFile(ctxt, file_name, NULL, XML_PARSE_NOBLANKS);
 	xmlFreeParserCtxt(ctxt);
 
-	if (xkl_config_registry_priv(config, doc) == NULL) {
-		xkl_config_registry_priv(config, xpath_context) = NULL;
+	if (doc == NULL) {
+		xkl_config_registry_priv(config, xpath_contexts[docidx]) =
+		    NULL;
 		xkl_last_error_message =
-		    "Could not parse XKB configuration registry";
+		    "Could not parse primary XKB configuration registry";
 		return FALSE;
 	}
-	xkl_config_registry_priv(config, xpath_context) =
-	    xmlXPathNewContext(xkl_config_registry_priv(config, doc));
+
+	xkl_config_registry_priv(config, xpath_contexts[docidx]) =
+	    xmlXPathNewContext(doc);
 
 	return TRUE;
 }
@@ -566,18 +596,39 @@ xkl_config_registry_load_helper(XklConfigRegistry * config,
 		return FALSE;
 	}
 
-	return xkl_config_registry_load_from_file(config, file_name);
+	if (!xkl_config_registry_load_from_file(config, file_name, 0))
+		return FALSE;
+
+	g_snprintf(file_name, sizeof file_name, "%s/%s.extras.xml",
+		   base_dir, rf);
+
+	/* no extras - ok, no problem */
+	if (stat(file_name, &stat_buf) != 0)
+		return TRUE;
+
+	return xkl_config_registry_load_from_file(config, file_name, 1);
 }
 
 void
 xkl_config_registry_free(XklConfigRegistry * config)
 {
+	gint i;
 	if (xkl_config_registry_is_initialized(config)) {
-		xmlXPathFreeContext(xkl_config_registry_priv
-				    (config, xpath_context));
-		xmlFreeDoc(xkl_config_registry_priv(config, doc));
-		xkl_config_registry_priv(config, xpath_context) = NULL;
-		xkl_config_registry_priv(config, doc) = NULL;
+		for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
+			xmlXPathContextPtr xmlctxt =
+			    xkl_config_registry_priv(config,
+						     xpath_contexts[i]);
+			if (xmlctxt == NULL)
+				continue;
+
+			xmlXPathFreeContext(xmlctxt);
+			xmlFreeDoc(xkl_config_registry_priv
+				   (config, docs[i]));
+			xkl_config_registry_priv(config,
+						 xpath_contexts[i]) = NULL;
+			xkl_config_registry_priv(config, docs[i]) = NULL;
+		}
+
 	}
 }
 
@@ -621,19 +672,30 @@ xkl_config_registry_foreach_option_group(XklConfigRegistry *
 					 func, gpointer data)
 {
 	xmlXPathObjectPtr xpath_obj;
-	gint i;
+	gint i, j;
 
 	if (!xkl_config_registry_is_initialized(config))
 		return;
-	xpath_obj =
-	    xmlXPathCompiledEval(option_groups_xpath,
-				 xkl_config_registry_priv(config,
-							  xpath_context));
-	if (xpath_obj != NULL) {
-		xmlNodeSetPtr nodes = xpath_obj->nodesetval;
-		xmlNodePtr *pnode = nodes->nodeTab;
-		XklConfigItem *ci = xkl_config_item_new();
-		for (i = nodes->nodeNr; --i >= 0;) {
+
+	for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
+		xmlNodeSetPtr nodes;
+		xmlNodePtr *pnode;
+		XklConfigItem *ci;
+
+		xmlXPathContextPtr xmlctxt =
+		    xkl_config_registry_priv(config, xpath_contexts[i]);
+		if (xmlctxt == NULL)
+			continue;
+
+		xpath_obj =
+		    xmlXPathCompiledEval(option_groups_xpath, xmlctxt);
+		if (xpath_obj == NULL)
+			continue;
+
+		nodes = xpath_obj->nodesetval;
+		pnode = nodes->nodeTab;
+		ci = xkl_config_item_new();
+		for (j = nodes->nodeNr; --j >= 0;) {
 
 			if (xkl_read_config_item(config, *pnode, ci)) {
 				gboolean allow_multisel = TRUE;

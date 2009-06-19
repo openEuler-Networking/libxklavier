@@ -34,6 +34,8 @@ enum { WM_NAME,
 	TOTAL_ATOMS
 };
 
+#define XKL_NUMBER_OF_REGISTRY_DOCS 2
+
 struct _XklEnginePrivate {
 
 	gboolean group_per_toplevel_window;
@@ -245,9 +247,8 @@ extern XklEngine *xkl_get_the_engine(void);
 struct _XklConfigRegistryPrivate {
 	XklEngine *engine;
 
-	xmlDocPtr doc;
-
-	xmlXPathContextPtr xpath_context;
+	xmlDocPtr docs[XKL_NUMBER_OF_REGISTRY_DOCS];
+	xmlXPathContextPtr xpath_contexts[XKL_NUMBER_OF_REGISTRY_DOCS];
 };
 
 extern void xkl_engine_ensure_vtable_inited(XklEngine * engine);
@@ -388,16 +389,15 @@ extern void xkl_engine_one_switch_to_secondary_group_performed(XklEngine *
 
 extern gboolean xkl_config_registry_load_from_file(XklConfigRegistry *
 						   config,
-						   const gchar *
-						   file_name);
+						   const gchar * file_name,
+						   gint docidx);
 
 extern void xkl_config_registry_free(XklConfigRegistry * config);
 
 extern gchar *xkl_locale_from_utf8(XklConfigRegistry * config,
 				   const gchar * utf8string);
 
-extern gboolean xkl_config_registry_load_helper(XklConfigRegistry * config,
-						const char
+extern gboolean xkl_config_registry_load_helper(XklConfigRegistry * config, const char
 						default_ruleset[],
 						const char base_dir[]);
 
@@ -414,7 +414,7 @@ extern gboolean xkl_config_registry_load_helper(XklConfigRegistry * config,
 #define xkl_engine_vcall(engine,func)  (*(engine)->priv->func)
 
 #define xkl_config_registry_is_initialized(config) \
-  ( xkl_config_registry_priv(config,xpath_context) != NULL )
+  ( xkl_config_registry_priv(config,xpath_contexts[0]) != NULL )
 
 #define xkl_config_registry_priv(config,member)  (config)->priv->member
 #define xkl_config_registry_get_engine(config) ((config)->priv->engine)
@@ -434,6 +434,7 @@ extern gboolean xkl_config_registry_load_helper(XklConfigRegistry * config,
 #define XML_TAG_ISO639ID "iso639Id"
 
 extern void
+
 xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry * config,
 						const gchar * format,
 						const gchar * value,
