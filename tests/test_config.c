@@ -248,7 +248,7 @@ main(int argc, char *const argv[])
 
 		xkl_debug(0, "Xklavier initialized\n");
 		config = xkl_config_registry_get_instance(engine);
-		xkl_config_registry_load(config);
+		xkl_config_registry_load(config, TRUE);
 
 		xkl_debug(0, "Xklavier registry loaded\n");
 		xkl_debug(0, "Backend: [%s]\n",

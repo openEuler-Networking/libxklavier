@@ -136,8 +136,8 @@ xkl_item_populate_optional_array(XklConfigItem * item, xmlNodePtr ptr,
 		      (element_ptr, element_tag));
 	     element_ptr = element_ptr->next, idx++) {
 		elements[idx] =
-		    g_strdup((const char *) element_ptr->children->
-			     content);
+		    g_strdup((const char *) element_ptr->
+			     children->content);
 	}
 
 	g_object_set_data_full(G_OBJECT(item),
@@ -240,8 +240,8 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 
 	if (vendor_element != NULL && vendor_element->children != NULL) {
 		vendor =
-		    g_strdup((const char *) vendor_element->
-			     children->content);
+		    g_strdup((const char *) vendor_element->children->
+			     content);
 		g_object_set_data_full(G_OBJECT(item), XCI_PROP_VENDOR,
 				       vendor, g_free);
 	}
@@ -300,8 +300,9 @@ xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
 			continue;
 
 		xkl_config_registry_foreach_in_nodeset(config,
-						       xpath_obj->nodesetval,
-						       func, data);
+						       xpath_obj->
+						       nodesetval, func,
+						       data);
 		xmlXPathFreeObject(xpath_obj);
 	}
 }
@@ -336,8 +337,9 @@ xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry
 			continue;
 
 		xkl_config_registry_foreach_in_nodeset(config,
-						       xpath_obj->nodesetval,
-						       func, data);
+						       xpath_obj->
+						       nodesetval, func,
+						       data);
 		xmlXPathFreeObject(xpath_obj);
 	}
 }
@@ -578,7 +580,8 @@ xkl_config_registry_load_from_file(XklConfigRegistry * config,
 gboolean
 xkl_config_registry_load_helper(XklConfigRegistry * config,
 				const char default_ruleset[],
-				const char base_dir[])
+				const char base_dir[],
+				gboolean if_extras_needed)
 {
 	struct stat stat_buf;
 	gchar file_name[MAXPATHLEN] = "";
@@ -598,6 +601,9 @@ xkl_config_registry_load_helper(XklConfigRegistry * config,
 
 	if (!xkl_config_registry_load_from_file(config, file_name, 0))
 		return FALSE;
+
+	if (!if_extras_needed)
+		return TRUE;
 
 	g_snprintf(file_name, sizeof file_name, "%s/%s.extras.xml",
 		   base_dir, rf);
@@ -825,14 +831,16 @@ xkl_config_rec_activate(const XklConfigRec * data, XklEngine * engine)
 }
 
 gboolean
-xkl_config_registry_load(XklConfigRegistry * config)
+xkl_config_registry_load(XklConfigRegistry * config,
+			 gboolean if_extras_needed)
 {
 	XklEngine *engine;
 
 	xkl_config_registry_free(config);
 	engine = xkl_config_registry_get_engine(config);
 	xkl_engine_ensure_vtable_inited(engine);
-	return xkl_engine_vcall(engine, load_config_registry) (config);
+	return xkl_engine_vcall(engine, load_config_registry) (config,
+							       if_extras_needed);
 }
 
 gboolean

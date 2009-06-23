@@ -78,7 +78,8 @@ extern gboolean xkl_xkb_activate_config_rec(XklEngine * engine,
 
 extern void xkl_xkb_init_config_registry(XklConfigRegistry * config);
 
-extern gboolean xkl_xkb_load_config_registry(XklConfigRegistry * config);
+extern gboolean xkl_xkb_load_config_registry(XklConfigRegistry * config,
+					     gboolean if_extras_needed);
 
 extern gboolean xkl_xkb_write_config_rec_to_file(XklEngine * engine,
 						 const char *file_name,

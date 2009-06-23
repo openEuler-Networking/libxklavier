@@ -95,11 +95,13 @@ xkl_xkb_init_config_registry(XklConfigRegistry * config)
 }
 
 gboolean
-xkl_xkb_load_config_registry(XklConfigRegistry * config)
+xkl_xkb_load_config_registry(XklConfigRegistry * config,
+			     gboolean if_extras_needed)
 {
 	return xkl_config_registry_load_helper(config,
 					       XKB_DEFAULT_RULESET,
-					       XKB_BASE "/rules");
+					       XKB_BASE "/rules",
+					       if_extras_needed);
 }
 
 #ifdef LIBXKBFILE_PRESENT
@@ -301,7 +303,8 @@ xkl_config_get_keyboard(XklEngine * engine,
 								}
 							} else	/* no activate, just load */
 								xkb =
-								    result.xkb;
+								    result.
+								    xkb;
 						} else {	/* could not load properly */
 
 							xkl_debug(0,

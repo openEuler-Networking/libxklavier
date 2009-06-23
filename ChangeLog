@@ -1,3 +1,13 @@
+2009-06-23  svu
+
+	* configure.in, libxklavier/xkl_config_registry.h,
+	libxklavier/xklavier_config.c, libxklavier/xklavier_config_xkb.c,
+	libxklavier/xklavier_config_xmm.c, libxklavier/xklavier_private.h,
+	libxklavier/xklavier_private_xkb.h,
+	libxklavier/xklavier_private_xmm.h, tests/test_config.c: use exotic
+	materials optionally. Breaking API/ABI (incrementing version_info)
+	* tests/test_monitor.c: eliminating unneeded code
+
 2009-06-19  svu
 
 	* libxklavier/xklavier_config.c, libxklavier/xklavier_config_iso.c,

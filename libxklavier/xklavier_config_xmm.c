@@ -44,11 +44,13 @@ xkl_xmm_init_config_registry(XklConfigRegistry * config)
 }
 
 gboolean
-xkl_xmm_load_config_registry(XklConfigRegistry * config)
+xkl_xmm_load_config_registry(XklConfigRegistry * config,
+			     gboolean if_extras_needed)
 {
 	return xkl_config_registry_load_helper(config,
 					       XMODMAP_DEFAULT_RULESET,
-					       XMODMAP_BASE);
+					       XMODMAP_BASE,
+					       if_extras_needed);
 }
 
 gboolean

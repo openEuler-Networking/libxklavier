@@ -77,7 +77,8 @@ extern gboolean xkl_xmm_activate_config_rec(XklEngine * engine,
 
 extern void xkl_xmm_init_config_registry(XklConfigRegistry * config);
 
-extern gboolean xkl_xmm_load_config_registry(XklConfigRegistry * config);
+extern gboolean xkl_xmm_load_config_registry(XklConfigRegistry * config,
+					     gboolean if_extras_needed);
 
 extern gint xkl_xmm_process_x_event(XklEngine * engine, XEvent * kev);
 

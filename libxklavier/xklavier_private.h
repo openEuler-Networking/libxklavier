@@ -99,7 +99,8 @@ struct _XklEnginePrivate {
 	 * xkb: loads xml from XKB_BASE+"/rules/"+ruleset+".xml"
 	 * xmodmap: loads xml from XMODMAP_BASE+"/"+ruleset+".xml"
 	 */
-	 gboolean(*load_config_registry) (XklConfigRegistry * config);
+	 gboolean(*load_config_registry) (XklConfigRegistry * config,
+					  gboolean if_extras_needed);
 
 	/*
 	 * Write the configuration into the file (binary/textual)
@@ -399,7 +400,8 @@ extern gchar *xkl_locale_from_utf8(XklConfigRegistry * config,
 
 extern gboolean xkl_config_registry_load_helper(XklConfigRegistry * config, const char
 						default_ruleset[],
-						const char base_dir[]);
+						const char base_dir[],
+						gboolean if_extras_needed);
 
 #define XKLAVIER_STATE_PROP_LENGTH 2
 
@@ -434,6 +436,7 @@ extern gboolean xkl_config_registry_load_helper(XklConfigRegistry * config, cons
 #define XML_TAG_ISO639ID "iso639Id"
 
 extern void
+
 
 xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry * config,
 						const gchar * format,

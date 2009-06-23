@@ -87,6 +87,8 @@ extern "C" {
 /**
  * xkl_config_registry_load:
  * @config: the config registry
+ * @if_extras_needed: whether exotic materials (layouts, options) 
+ * should be loaded as well
  *
  * Loads XML configuration registry. The name is taken from X server
  * (for XKB/libxkbfile, from the root window property)
@@ -94,7 +96,9 @@ extern "C" {
  * Returns: TRUE on success
  */
 	extern gboolean xkl_config_registry_load(XklConfigRegistry *
-						 config);
+						 config,
+						 gboolean
+						 if_extras_needed);
 
 /**
  * ConfigItemProcessFunc:
