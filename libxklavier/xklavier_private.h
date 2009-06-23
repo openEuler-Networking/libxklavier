@@ -438,6 +438,7 @@ extern gboolean xkl_config_registry_load_helper(XklConfigRegistry * config, cons
 extern void
 
 
+
 xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry * config,
 						const gchar * format,
 						const gchar * value,
@@ -452,7 +453,7 @@ extern void xkl_config_registry_foreach_in_xpath(XklConfigRegistry *
 						 func, gpointer data);
 
 extern gboolean xkl_read_config_item(XklConfigRegistry * config,
-				     xmlNodePtr iptr,
+				     gint doc_index, xmlNodePtr iptr,
 				     XklConfigItem * item);
 
 extern gint xkl_debug_level;

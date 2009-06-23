@@ -76,7 +76,7 @@ xkl_xml_find_config_item_child(xmlNodePtr iptr, xmlNodePtr * ptr)
 }
 
 static xmlNodePtr
-xkl_find_nonlocalized_element(xmlNodePtr ptr, const gchar * tag_name)
+xkl_find_element(xmlNodePtr ptr, const gchar * tag_name)
 {
 	xmlNodePtr found_element = NULL;
 
@@ -84,14 +84,9 @@ xkl_find_nonlocalized_element(xmlNodePtr ptr, const gchar * tag_name)
 	while (ptr != NULL) {
 		char *node_name = (char *) ptr->name;
 		if (ptr->type != XML_TEXT_NODE) {
-			xmlChar *lang = xmlNodeGetLang(ptr);
-
-			if (lang == NULL) {	/* No language specified */
-				if (!g_ascii_strcasecmp
-				    (node_name, tag_name)) {
-					found_element = ptr;
-					break;
-				}
+			if (!g_ascii_strcasecmp(node_name, tag_name)) {
+				found_element = ptr;
+				break;
 			}
 		}
 		ptr = ptr->next;
@@ -106,7 +101,7 @@ xkl_item_populate_optional_array(XklConfigItem * item, xmlNodePtr ptr,
 				 const gchar property_name[])
 {
 	xmlNodePtr top_list_element =
-	    xkl_find_nonlocalized_element(ptr, list_tag), element_ptr;
+	    xkl_find_element(ptr, list_tag), element_ptr;
 	gint n_elements, idx;
 	gchar **elements = NULL;
 
@@ -119,7 +114,7 @@ xkl_item_populate_optional_array(XklConfigItem * item, xmlNodePtr ptr,
 	element_ptr = top_list_element->children;
 	while (NULL !=
 	       (element_ptr =
-		xkl_find_nonlocalized_element(element_ptr, element_tag))) {
+		xkl_find_element(element_ptr, element_tag))) {
 		n_elements++;
 		element_ptr = element_ptr->next;
 	}
@@ -132,12 +127,11 @@ xkl_item_populate_optional_array(XklConfigItem * item, xmlNodePtr ptr,
 	element_ptr = top_list_element->children;
 	for (idx = 0;
 	     NULL != (element_ptr =
-		      xkl_find_nonlocalized_element
-		      (element_ptr, element_tag));
+		      xkl_find_element(element_ptr, element_tag));
 	     element_ptr = element_ptr->next, idx++) {
 		elements[idx] =
-		    g_strdup((const char *) element_ptr->
-			     children->content);
+		    g_strdup((const char *) element_ptr->children->
+			     content);
 	}
 
 	g_object_set_data_full(G_OBJECT(item),
@@ -149,8 +143,8 @@ xkl_item_populate_optional_array(XklConfigItem * item, xmlNodePtr ptr,
 #include "libxml/parserInternals.h"
 
 gboolean
-xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
-		     XklConfigItem * item)
+xkl_read_config_item(XklConfigRegistry * config, gint doc_index,
+		     xmlNodePtr iptr, XklConfigItem * item)
 {
 	xmlNodePtr name_element, ptr;
 	xmlNodePtr desc_element = NULL, short_desc_element =
@@ -172,6 +166,9 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 	if (!xkl_xml_find_config_item_child(iptr, &ptr))
 		return FALSE;
 
+	if (doc_index > 0)
+		g_object_set_data(G_OBJECT(item), XCI_PROP_EXTRA_ITEM, GINT_TO_POINTER(TRUE));
+
 	ptr = ptr->children;
 
 	if (ptr->type == XML_TEXT_NODE)
@@ -179,11 +176,9 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 	name_element = ptr;
 	ptr = ptr->next;
 
-	short_desc_element =
-	    xkl_find_nonlocalized_element(ptr, XML_TAG_SHORT_DESCR);
-	desc_element = xkl_find_nonlocalized_element(ptr, XML_TAG_DESCR);
-	vendor_element =
-	    xkl_find_nonlocalized_element(ptr, XML_TAG_VENDOR);
+	short_desc_element = xkl_find_element(ptr, XML_TAG_SHORT_DESCR);
+	desc_element = xkl_find_element(ptr, XML_TAG_DESCR);
+	vendor_element = xkl_find_element(ptr, XML_TAG_VENDOR);
 
 	if (name_element != NULL && name_element->children != NULL)
 		strncat(item->name,
@@ -240,8 +235,8 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 
 	if (vendor_element != NULL && vendor_element->children != NULL) {
 		vendor =
-		    g_strdup((const char *) vendor_element->children->
-			     content);
+		    g_strdup((const char *) vendor_element->
+			     children->content);
 		g_object_set_data_full(G_OBJECT(item), XCI_PROP_VENDOR,
 				       vendor, g_free);
 	}
@@ -258,7 +253,7 @@ xkl_read_config_item(XklConfigRegistry * config, xmlNodePtr iptr,
 
 static void
 xkl_config_registry_foreach_in_nodeset(XklConfigRegistry * config,
-				       xmlNodeSetPtr nodes,
+				       gint doc_index, xmlNodeSetPtr nodes,
 				       ConfigItemProcessFunc func,
 				       gpointer data)
 {
@@ -267,7 +262,8 @@ xkl_config_registry_foreach_in_nodeset(XklConfigRegistry * config,
 		xmlNodePtr *pnode = nodes->nodeTab;
 		XklConfigItem *ci = xkl_config_item_new();
 		for (i = nodes->nodeNr; --i >= 0;) {
-			if (xkl_read_config_item(config, *pnode, ci))
+			if (xkl_read_config_item
+			    (config, doc_index, *pnode, ci))
 				func(config, ci, data);
 
 			pnode++;
@@ -299,10 +295,9 @@ xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
 		if (xpath_obj == NULL)
 			continue;
 
-		xkl_config_registry_foreach_in_nodeset(config,
-						       xpath_obj->
-						       nodesetval, func,
-						       data);
+		xkl_config_registry_foreach_in_nodeset(config, i,
+						       xpath_obj->nodesetval,
+						       func, data);
 		xmlXPathFreeObject(xpath_obj);
 	}
 }
@@ -336,10 +331,9 @@ xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry
 		if (xpath_obj == NULL)
 			continue;
 
-		xkl_config_registry_foreach_in_nodeset(config,
-						       xpath_obj->
-						       nodesetval, func,
-						       data);
+		xkl_config_registry_foreach_in_nodeset(config, i,
+						       xpath_obj->nodesetval,
+						       func, data);
 		xmlXPathFreeObject(xpath_obj);
 	}
 }
@@ -377,7 +371,7 @@ xkl_config_registry_find_object(XklConfigRegistry * config,
 		nodes = xpath_obj->nodesetval;
 		if (nodes != NULL && nodes->nodeTab != NULL
 		    && nodes->nodeNr > 0) {
-			rv = xkl_read_config_item(config,
+			rv = xkl_read_config_item(config, i,
 						  nodes->nodeTab[0],
 						  pitem);
 			if (pnode != NULL) {
@@ -703,7 +697,7 @@ xkl_config_registry_foreach_option_group(XklConfigRegistry *
 		ci = xkl_config_item_new();
 		for (j = nodes->nodeNr; --j >= 0;) {
 
-			if (xkl_read_config_item(config, *pnode, ci)) {
+			if (xkl_read_config_item(config, i, *pnode, ci)) {
 				gboolean allow_multisel = TRUE;
 				xmlChar *sallow_multisel =
 				    xmlGetProp(*pnode,

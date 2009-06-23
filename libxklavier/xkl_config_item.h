@@ -100,6 +100,11 @@ extern "C" {
 #define XCI_PROP_LANGUAGE_LIST "languageList"
 
 /**
+ * Extra property for the XklConfigItem, defining whether that item is exotic(extra)
+ */
+#define XCI_PROP_EXTRA_ITEM "extraItem"
+
+/**
  * The XklConfigItem class, derived from GObject
  */
 	struct _XklConfigItemClass {

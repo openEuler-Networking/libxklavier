@@ -97,13 +97,18 @@ static void
 print_xci(XklConfigRegistry * config, const XklConfigItem * item,
 	  gint indent)
 {
+	gboolean is_extra =
+	    (gboolean)
+	    GPOINTER_TO_INT(g_object_get_data
+			    (G_OBJECT(item), XCI_PROP_EXTRA_ITEM));
 	gchar **countries = (gchar **) g_object_get_data(G_OBJECT(item),
 							 XCI_PROP_COUNTRY_LIST);
 	gchar **languages = (gchar **) g_object_get_data(G_OBJECT(item),
 							 XCI_PROP_LANGUAGE_LIST);
 	gint i;
-	printf("%*s[%s][%s][%s]\n", indent, "", item->name,
-	       item->description, item->short_description);
+	printf("%*s[%s][%s][%s]%s\n", indent, "", item->name,
+	       item->description, item->short_description,
+	       is_extra ? ":extra" : "");
 	if (countries != NULL)
 		for (i = 0; i < g_strv_length(countries); i++)
 			printf("%*s  country: [%s]\n", indent, "",
@@ -333,11 +338,11 @@ main(int argc, char *const argv[])
 
 			if (layouts != NULL) {
 				if (current_config->layouts != NULL)
-					g_strfreev(current_config->
-						   layouts);
+					g_strfreev
+					    (current_config->layouts);
 				if (current_config->variants != NULL)
-					g_strfreev(current_config->
-						   variants);
+					g_strfreev
+					    (current_config->variants);
 
 				current_config->layouts =
 				    g_new0(char *, 2);
@@ -350,8 +355,8 @@ main(int argc, char *const argv[])
 
 			if (options != NULL) {
 				if (current_config->options != NULL)
-					g_strfreev(current_config->
-						   options);
+					g_strfreev
+					    (current_config->options);
 
 				current_config->options =
 				    g_new0(char *, 2);

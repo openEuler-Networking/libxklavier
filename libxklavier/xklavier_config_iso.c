@@ -363,7 +363,7 @@ xkl_config_registry_foreach_iso_variant(XklConfigRegistry *
 				XklConfigItem *ci = xkl_config_item_new();
 				for (ni = nodes->nodeNr; --ni >= 0;) {
 					if (xkl_read_config_item
-					    (config, *node, ci))
+					    (config, i, *node, ci))
 						func(config, ci, NULL,
 						     data);
 					node++;
@@ -400,9 +400,9 @@ xkl_config_registry_foreach_iso_variant(XklConfigRegistry *
 				XklConfigItem *pci = xkl_config_item_new();
 				for (ni = nodes->nodeNr; --ni >= 0;) {
 					if (xkl_read_config_item
-					    (config, *node, ci) &&
+					    (config, i, *node, ci) &&
 					    xkl_read_config_item
-					    (config,
+					    (config, i,
 					     (*node)->parent->parent, pci))
 						func(config, pci, ci,
 						     data);
