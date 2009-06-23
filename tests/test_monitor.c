@@ -125,13 +125,9 @@ main(int argc, char *argv[])
 	engine = xkl_engine_get_instance(dpy);
 	if (engine != NULL) {
 		XklConfigRec *current_config;
-		XklConfigRegistry *config;
 		const gchar **names;
 
 		xkl_debug(0, "Xklavier initialized\n");
-		config = xkl_config_registry_get_instance(engine);
-		xkl_config_registry_load(config);
-		xkl_debug(0, "Xklavier registry loaded\n");
 
 		current_config = xkl_config_rec_new();
 		xkl_config_rec_get_from_server(current_config, engine);
@@ -164,11 +160,8 @@ main(int argc, char *argv[])
 		xkl_engine_stop_listen(engine);
 
 		g_object_unref(G_OBJECT(current_config));
-
-		g_object_unref(G_OBJECT(config));
-		xkl_debug(0, "Xklavier registry freed\n");
-		xkl_debug(0, "Xklavier terminating\n");
 		g_object_unref(G_OBJECT(engine));
+		xkl_debug(0, "Xklavier terminating\n");
 	} else {
 		fprintf(stderr, "Could not init Xklavier\n");
 		exit(2);
