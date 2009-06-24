@@ -211,7 +211,7 @@ xkl_config_registry_foreach_iso_code(XklConfigRegistry * config,
 	const gchar **xpath_expr;
 	gpointer key, value;
 	XklConfigItem *ci;
-	gint i;
+	gint di;
 
 	if (!xkl_config_registry_is_initialized(config))
 		return;
@@ -219,14 +219,14 @@ xkl_config_registry_foreach_iso_code(XklConfigRegistry * config,
 	code_pairs = g_hash_table_new(g_str_hash, g_str_equal);
 
 	for (xpath_expr = xpath_exprs; *xpath_expr; xpath_expr++) {
-		for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
+		for (di = 0; di < XKL_NUMBER_OF_REGISTRY_DOCS; di++) {
 			gint ni;
 			xmlNodePtr *node;
 			xmlNodeSetPtr nodes;
 
 			xmlXPathContextPtr xmlctxt =
 			    xkl_config_registry_priv(config,
-						     xpath_contexts[i]);
+						     xpath_contexts[di]);
 			if (xmlctxt == NULL)
 				continue;
 
@@ -333,7 +333,6 @@ xkl_config_registry_foreach_iso_variant(XklConfigRegistry *
 	const gchar **xpath_expr;
 	const gboolean *is_low_id = should_code_be_lowered1;
 	gchar *low_iso_code;
-	gint i;
 
 	if (!xkl_config_registry_is_initialized(config))
 		return;
@@ -344,10 +343,13 @@ xkl_config_registry_foreach_iso_variant(XklConfigRegistry *
 	     xpath_expr++, is_low_id++) {
 		const gchar *aic = *is_low_id ? low_iso_code : iso_code;
 		gchar *xpe = g_strdup_printf(*xpath_expr, aic);
-		for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
+		gint di;
+		GSList *processed_ids = NULL;
+
+		for (di = 0; di < XKL_NUMBER_OF_REGISTRY_DOCS; di++) {
 			xmlXPathContextPtr xmlctxt =
 			    xkl_config_registry_priv(config,
-						     xpath_contexts[i]);
+						     xpath_contexts[di]);
 			if (xmlctxt == NULL)
 				continue;
 
@@ -363,9 +365,22 @@ xkl_config_registry_foreach_iso_variant(XklConfigRegistry *
 				XklConfigItem *ci = xkl_config_item_new();
 				for (ni = nodes->nodeNr; --ni >= 0;) {
 					if (xkl_read_config_item
-					    (config, i, *node, ci))
-						func(config, ci, NULL,
-						     data);
+					    (config, di, *node, ci)) {
+						if (g_slist_find_custom
+						    (processed_ids,
+						     ci->name,
+						     (GCompareFunc)
+						     g_ascii_strcasecmp) ==
+						    NULL) {
+							func(config, ci,
+							     NULL, data);
+							processed_ids =
+							    g_slist_append
+							    (processed_ids,
+							     g_strdup
+							     (ci->name));
+						}
+					}
 					node++;
 				}
 				g_object_unref(G_OBJECT(ci));
@@ -380,10 +395,11 @@ xkl_config_registry_foreach_iso_variant(XklConfigRegistry *
 	     xpath_expr++, is_low_id++) {
 		const gchar *aic = *is_low_id ? low_iso_code : iso_code;
 		gchar *xpe = g_strdup_printf(*xpath_expr, aic);
-		for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
+		gint di;
+		for (di = 0; di < XKL_NUMBER_OF_REGISTRY_DOCS; di++) {
 			xmlXPathContextPtr xmlctxt =
 			    xkl_config_registry_priv(config,
-						     xpath_contexts[i]);
+						     xpath_contexts[di]);
 			if (xmlctxt == NULL)
 				continue;
 
@@ -400,9 +416,9 @@ xkl_config_registry_foreach_iso_variant(XklConfigRegistry *
 				XklConfigItem *pci = xkl_config_item_new();
 				for (ni = nodes->nodeNr; --ni >= 0;) {
 					if (xkl_read_config_item
-					    (config, i, *node, ci) &&
+					    (config, di, *node, ci) &&
 					    xkl_read_config_item
-					    (config, i,
+					    (config, di,
 					     (*node)->parent->parent, pci))
 						func(config, pci, ci,
 						     data);

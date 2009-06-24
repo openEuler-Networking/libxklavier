@@ -167,7 +167,8 @@ xkl_read_config_item(XklConfigRegistry * config, gint doc_index,
 		return FALSE;
 
 	if (doc_index > 0)
-		g_object_set_data(G_OBJECT(item), XCI_PROP_EXTRA_ITEM, GINT_TO_POINTER(TRUE));
+		g_object_set_data(G_OBJECT(item), XCI_PROP_EXTRA_ITEM,
+				  GINT_TO_POINTER(TRUE));
 
 	ptr = ptr->children;
 
@@ -253,6 +254,7 @@ xkl_read_config_item(XklConfigRegistry * config, gint doc_index,
 
 static void
 xkl_config_registry_foreach_in_nodeset(XklConfigRegistry * config,
+				       GSList ** processed_ids,
 				       gint doc_index, xmlNodeSetPtr nodes,
 				       ConfigItemProcessFunc func,
 				       gpointer data)
@@ -263,8 +265,18 @@ xkl_config_registry_foreach_in_nodeset(XklConfigRegistry * config,
 		XklConfigItem *ci = xkl_config_item_new();
 		for (i = nodes->nodeNr; --i >= 0;) {
 			if (xkl_read_config_item
-			    (config, doc_index, *pnode, ci))
-				func(config, ci, data);
+			    (config, doc_index, *pnode, ci)) {
+				if (g_slist_find_custom
+				    (*processed_ids, ci->name,
+				     (GCompareFunc) g_ascii_strcasecmp) ==
+				    NULL) {
+					func(config, ci, data);
+					*processed_ids =
+					    g_slist_append(*processed_ids,
+							   g_strdup
+							   (ci->name));
+				}
+			}
 
 			pnode++;
 		}
@@ -280,14 +292,15 @@ xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
 				     gpointer data)
 {
 	xmlXPathObjectPtr xpath_obj;
-	gint i;
+	gint di;
+	GSList *processed_ids = NULL;
 
 	if (!xkl_config_registry_is_initialized(config))
 		return;
 
-	for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
+	for (di = 0; di < XKL_NUMBER_OF_REGISTRY_DOCS; di++) {
 		xmlXPathContextPtr xmlctxt =
-		    xkl_config_registry_priv(config, xpath_contexts[i]);
+		    xkl_config_registry_priv(config, xpath_contexts[di]);
 		if (xmlctxt == NULL)
 			continue;
 
@@ -295,11 +308,14 @@ xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
 		if (xpath_obj == NULL)
 			continue;
 
-		xkl_config_registry_foreach_in_nodeset(config, i,
+		xkl_config_registry_foreach_in_nodeset(config,
+						       &processed_ids, di,
 						       xpath_obj->nodesetval,
 						       func, data);
 		xmlXPathFreeObject(xpath_obj);
 	}
+	g_slist_foreach(processed_ids, (GFunc) g_free, NULL);
+	g_slist_free(processed_ids);
 }
 
 void
@@ -314,15 +330,17 @@ xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry
 {
 	char xpath_expr[1024];
 	xmlXPathObjectPtr xpath_obj;
-	gint i;
+	gint di;
+	GSList *processed_ids = NULL;
 
 	if (!xkl_config_registry_is_initialized(config))
 		return;
+
 	g_snprintf(xpath_expr, sizeof xpath_expr, format, value);
 
-	for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
+	for (di = 0; di < XKL_NUMBER_OF_REGISTRY_DOCS; di++) {
 		xmlXPathContextPtr xmlctxt =
-		    xkl_config_registry_priv(config, xpath_contexts[i]);
+		    xkl_config_registry_priv(config, xpath_contexts[di]);
 		if (xmlctxt == NULL)
 			continue;
 
@@ -331,11 +349,14 @@ xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry
 		if (xpath_obj == NULL)
 			continue;
 
-		xkl_config_registry_foreach_in_nodeset(config, i,
+		xkl_config_registry_foreach_in_nodeset(config,
+						       &processed_ids, di,
 						       xpath_obj->nodesetval,
 						       func, data);
 		xmlXPathFreeObject(xpath_obj);
 	}
+	g_slist_foreach(processed_ids, (GFunc) g_free, NULL);
+	g_slist_free(processed_ids);
 }
 
 static gboolean
@@ -349,7 +370,7 @@ xkl_config_registry_find_object(XklConfigRegistry * config,
 	xmlNodeSetPtr nodes;
 	gboolean rv = FALSE;
 	gchar xpath_expr[1024];
-	gint i;
+	gint di;
 
 	if (!xkl_config_registry_is_initialized(config))
 		return FALSE;
@@ -357,9 +378,9 @@ xkl_config_registry_find_object(XklConfigRegistry * config,
 	g_snprintf(xpath_expr, sizeof xpath_expr, format, arg1,
 		   pitem->name);
 
-	for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
+	for (di = 0; di < XKL_NUMBER_OF_REGISTRY_DOCS; di++) {
 		xmlXPathContextPtr xmlctxt =
-		    xkl_config_registry_priv(config, xpath_contexts[i]);
+		    xkl_config_registry_priv(config, xpath_contexts[di]);
 		if (xmlctxt == NULL)
 			continue;
 
@@ -371,7 +392,7 @@ xkl_config_registry_find_object(XklConfigRegistry * config,
 		nodes = xpath_obj->nodesetval;
 		if (nodes != NULL && nodes->nodeTab != NULL
 		    && nodes->nodeNr > 0) {
-			rv = xkl_read_config_item(config, i,
+			rv = xkl_read_config_item(config, di,
 						  nodes->nodeTab[0],
 						  pitem);
 			if (pnode != NULL) {
@@ -612,21 +633,22 @@ xkl_config_registry_load_helper(XklConfigRegistry * config,
 void
 xkl_config_registry_free(XklConfigRegistry * config)
 {
-	gint i;
 	if (xkl_config_registry_is_initialized(config)) {
-		for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
+		gint di;
+		for (di = 0; di < XKL_NUMBER_OF_REGISTRY_DOCS; di++) {
 			xmlXPathContextPtr xmlctxt =
 			    xkl_config_registry_priv(config,
-						     xpath_contexts[i]);
+						     xpath_contexts[di]);
 			if (xmlctxt == NULL)
 				continue;
 
 			xmlXPathFreeContext(xmlctxt);
 			xmlFreeDoc(xkl_config_registry_priv
-				   (config, docs[i]));
+				   (config, docs[di]));
 			xkl_config_registry_priv(config,
-						 xpath_contexts[i]) = NULL;
-			xkl_config_registry_priv(config, docs[i]) = NULL;
+						 xpath_contexts[di]) =
+			    NULL;
+			xkl_config_registry_priv(config, docs[di]) = NULL;
 		}
 
 	}
@@ -672,18 +694,19 @@ xkl_config_registry_foreach_option_group(XklConfigRegistry *
 					 func, gpointer data)
 {
 	xmlXPathObjectPtr xpath_obj;
-	gint i, j;
+	gint di, j;
+	GSList *processed_ids = NULL;
 
 	if (!xkl_config_registry_is_initialized(config))
 		return;
 
-	for (i = XKL_NUMBER_OF_REGISTRY_DOCS; --i >= 0;) {
+	for (di = 0; di < XKL_NUMBER_OF_REGISTRY_DOCS; di++) {
 		xmlNodeSetPtr nodes;
 		xmlNodePtr *pnode;
 		XklConfigItem *ci;
 
 		xmlXPathContextPtr xmlctxt =
-		    xkl_config_registry_priv(config, xpath_contexts[i]);
+		    xkl_config_registry_priv(config, xpath_contexts[di]);
 		if (xmlctxt == NULL)
 			continue;
 
@@ -697,26 +720,35 @@ xkl_config_registry_foreach_option_group(XklConfigRegistry *
 		ci = xkl_config_item_new();
 		for (j = nodes->nodeNr; --j >= 0;) {
 
-			if (xkl_read_config_item(config, i, *pnode, ci)) {
-				gboolean allow_multisel = TRUE;
-				xmlChar *sallow_multisel =
-				    xmlGetProp(*pnode,
-					       (unsigned char *)
-					       XCI_PROP_ALLOW_MULTIPLE_SELECTION);
-				if (sallow_multisel != NULL) {
-					allow_multisel =
-					    !g_ascii_strcasecmp
-					    ("true", (char *)
-					     sallow_multisel);
-					xmlFree(sallow_multisel);
-					g_object_set_data(G_OBJECT
-							  (ci),
-							  XCI_PROP_ALLOW_MULTIPLE_SELECTION,
-							  GINT_TO_POINTER
-							  (allow_multisel));
-				}
+			if (xkl_read_config_item(config, di, *pnode, ci)) {
+				if (g_slist_find_custom
+				    (processed_ids, ci->name,
+				     (GCompareFunc) g_ascii_strcasecmp) ==
+				    NULL) {
+					gboolean allow_multisel = TRUE;
+					xmlChar *sallow_multisel =
+					    xmlGetProp(*pnode,
+						       (unsigned char *)
+						       XCI_PROP_ALLOW_MULTIPLE_SELECTION);
+					if (sallow_multisel != NULL) {
+						allow_multisel =
+						    !g_ascii_strcasecmp
+						    ("true", (char *)
+						     sallow_multisel);
+						xmlFree(sallow_multisel);
+						g_object_set_data(G_OBJECT
+								  (ci),
+								  XCI_PROP_ALLOW_MULTIPLE_SELECTION,
+								  GINT_TO_POINTER
+								  (allow_multisel));
+					}
 
-				func(config, ci, data);
+					func(config, ci, data);
+					processed_ids =
+					    g_slist_append(processed_ids,
+							   g_strdup
+							   (ci->name));
+				}
 			}
 
 			pnode++;
@@ -724,6 +756,8 @@ xkl_config_registry_foreach_option_group(XklConfigRegistry *
 		g_object_unref(G_OBJECT(ci));
 		xmlXPathFreeObject(xpath_obj);
 	}
+	g_slist_foreach(processed_ids, (GFunc) g_free, NULL);
+	g_slist_free(processed_ids);
 }
 
 void
