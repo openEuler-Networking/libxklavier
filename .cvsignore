@@ -33,5 +33,6 @@ missing
 mkinstalldirs
 libxklavier-*.tar.*
 .anjuta
+.anjuta_sym_db.db
 .tm_project2.cache
 m4
