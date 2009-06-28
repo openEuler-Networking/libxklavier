@@ -1,3 +1,7 @@
+4.0	Support for "extras" in xkeyboard-config, small bugfixes and build
+	fixes
+3.8	Added "new device" signal - for plugged keyboard (no need in the 
+	"device removed yet"
 3.9	Several small bugs fixed, including memleak and crash under NX
 3.8	Added "new device" signal - for plugged keyboard (no need in the 
 	"device removed yet"
