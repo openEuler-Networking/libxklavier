@@ -41,8 +41,8 @@ extern "C" {
 
 /**
  * The type of the keyboard state change
- *   GroupChanged: Group was changed
- *   IndicatorsChanged: Indicators were changed
+ *   @GROUP_CHANGED: Group was changed
+ *   @INDICATORS_CHANGED: Indicators were changed
  */
 	typedef enum {
 		GROUP_CHANGED,
@@ -51,12 +51,13 @@ extern "C" {
 
 /**
  * A set of flags used to indicate the capabilities of the active backend
- *   CanToggleIndicators: Backend allows to toggls indicators on/off
- *   CanOutputConfigAsASCII: Backend allows writing ASCII representation of the configuration
- *   CanOutputConfigAsBinary: Backend allows writing binary representation of the configuration
- *   MultipleLayoutsSupported: Backend supports multiple layouts
- *   RequiresManualLayoutManagement: Backend requires manual configuration, some daemon should do 
+ *   @XKLF_CAN_TOGGLE_INDICATORS: Backend allows to toggls indicators on/off
+ *   @XKLF_CAN_OUTPUT_CONFIG_AS_ASCII: Backend allows writing ASCII representation of the configuration
+ *   @XKLF_CAN_OUTPUT_CONFIG_AS_BINARY: Backend allows writing binary representation of the configuration
+ *   @XKLF_MULTIPLE_LAYOUTS_SUPPORTED: Backend supports multiple layouts
+ *   @XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT: Backend requires manual configuration, some daemon should do 
  *                                   xkl_start_listen(engine,XKLL_MANAGE_LAYOUTS);
+ *   @XKLF_DEVICE_DISCOVERY: Backend supports device discovery, can notify
  */
 	typedef enum {
 		XKLF_CAN_TOGGLE_INDICATORS = 0x01,
@@ -207,10 +208,10 @@ extern "C" {
 
 /**
  * The listener action modes:
- *   ManageWindowStates: The listener process should handle the per-window states 
+ *   @XKLL_MANAGE_WINDOW_STATES: The listener process should handle the per-window states 
  *                       and all the related activity
- *   TrackKeyboardState: Just track the state and pass it to the application above.
- *   ManageLayouts: The listener process should help backend to maintain the configuration
+ *   @XKLL_TRACK_KEYBOARD_STATE: Just track the state and pass it to the application above.
+ *   @XKLL_MANAGE_LAYOUTS: The listener process should help backend to maintain the configuration
  *                  (manually switch layouts etc).
  */
 	typedef enum {

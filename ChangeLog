@@ -1,3 +1,7 @@
+2009-06-28  svu
+
+	* libxklavier/xkl_engine.h, reference/tmpl/*: fix small gtk-doc issues
+
 2009-05-06  Sayamindu Dasgupta <sayamindu@laptop.org>
 
 	https://bugs.freedesktop.org/show_bug.cgi?id=21578 - Make use 
