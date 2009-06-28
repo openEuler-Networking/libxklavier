@@ -30,6 +30,7 @@
 #include <libxklavier/xkl_config_rec.h>
 #include <libxklavier/xkl_config_item.h>
 #include <libxklavier/xkl_config_registry.h>
+#include <libxklavier/xkl-enum-types.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -771,19 +771,6 @@ xkl_engine_finalize(GObject * obj)
 static void
 xkl_engine_class_init(XklEngineClass * klass)
 {
-	static GFlagsValue feature_flags[] = {
-		{XKLF_CAN_TOGGLE_INDICATORS, "XKLF_CAN_TOGGLE_INDICATORS",
-		 NULL},
-		{XKLF_CAN_OUTPUT_CONFIG_AS_ASCII,
-		 "XKLF_CAN_OUTPUT_CONFIG_AS_ASCII", NULL},
-		{XKLF_CAN_OUTPUT_CONFIG_AS_BINARY,
-		 "XKLF_CAN_OUTPUT_CONFIG_AS_BINARY", NULL},
-		{XKLF_MULTIPLE_LAYOUTS_SUPPORTED,
-		 "XKLF_MULTIPLE_LAYOUTS_SUPPORTED", NULL},
-		{XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT,
-		 "XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT", NULL},
-		{0, NULL, NULL}
-	};
 	static GEnumValue state_change_values[] = {
 		{GROUP_CHANGED, "GROUP_CHANGED", NULL},
 		{INDICATORS_CHANGED, "INDICATORS_CHANGED", NULL},
@@ -799,7 +786,6 @@ xkl_engine_class_init(XklEngineClass * klass)
 	GParamSpec *default_group_param_spec;
 	GParamSpec *secondary_groups_mask_param_spec;
 	GParamSpec *indicators_handling_param_spec;
-	GType features_type;
 	GType state_change_type;
 
 	const gchar *sdl;
@@ -824,9 +810,6 @@ xkl_engine_class_init(XklEngineClass * klass)
 						      NULL,
 						      G_PARAM_READABLE);
 
-	features_type = g_flags_register_static("XklEngineFeatures",
-						feature_flags);
-
 	state_change_type =
 	    g_enum_register_static("XklEngineStateChangeType",
 				   state_change_values);
@@ -834,7 +817,7 @@ xkl_engine_class_init(XklEngineClass * klass)
 	features_param_spec = g_param_spec_flags("features",
 						 "Features",
 						 "Backend features",
-						 features_type,
+						 XKL_TYPE_ENGINE_FEATURES,
 						 0, G_PARAM_READABLE);
 	max_num_groups_param_spec = g_param_spec_uint("max-num-groups",
 						      "maxNumGroups",
