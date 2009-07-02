@@ -1,3 +1,8 @@
+2009-07-02  svu
+
+	* libxklavier/xkl_engine.h: small fix for flag enum,
+	https://bugs.freedesktop.org/show_bug.cgi?id=21578
+
 2009-06-28  svu
 
 	* libxklavier/xkl_engine.h, reference/tmpl/*: fix small gtk-doc issues
