@@ -182,7 +182,7 @@ xkl_engine_start_listen(XklEngine * engine, guint what)
 && (what & XKLL_MANAGE_LAYOUTS))
 		xkl_debug(0,
 			  "The backend does not require manual layout management - "
-			  "but it is provided by the application");
+			  "but it is provided by the application\n");
 
 	xkl_engine_resume_listen(engine);
 	xkl_engine_load_window_tree(engine);
