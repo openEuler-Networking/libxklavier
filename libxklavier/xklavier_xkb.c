@@ -96,7 +96,7 @@ xkl_xkb_resume_listen(XklEngine * engine)
 			      XkbNamesNotify, XKB_NAMES_EVT_DTL_MASK,
 			      XKB_NAMES_EVT_DTL_MASK);
 #ifdef HAVE_XINPUT
-	if (xkl_engine_priv(engine, features) | XKLF_DEVICE_DISCOVERY) {
+	if (xkl_engine_priv(engine, features) & XKLF_DEVICE_DISCOVERY) {
 		DevicePresence(display, xitype, xiclass);
 		XSelectExtensionEvent(display,
 				      xkl_engine_priv(engine, root_window),
