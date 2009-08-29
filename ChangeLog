@@ -1,3 +1,9 @@
+2009-08-29  svu
+
+	* libxklavier/xklavier_evt.c: sometimes focus_in arrives when the
+	previously focused window is already destroyed. That causes BadMatch
+	and all kinds of trouble. The code should handle that case correctly.
+
 2009-08-17  svu
 
 	* libxklavier/xklavier_xkb.c: fixed a bug with XIE check,

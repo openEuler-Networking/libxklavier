@@ -100,6 +100,8 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 				XFocusChangeEvent * fev)
 {
 	Window win;
+	Window prev_toplevel_win =
+	    xkl_engine_priv(engine, curr_toplvl_win);
 	Window toplevel_win;
 	XklState selected_window_state;
 
@@ -135,36 +137,51 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 
 	if (xkl_engine_get_toplevel_window_state
 	    (engine, toplevel_win, &selected_window_state)) {
-		if (xkl_engine_priv(engine, curr_toplvl_win) !=
-		    toplevel_win) {
-			gboolean old_win_transparent, new_win_transparent;
-			XklState tmp_state;
-
-			old_win_transparent =
-			    xkl_engine_is_toplevel_window_transparent
-			    (engine,
-			     xkl_engine_priv(engine, curr_toplvl_win));
-			if (old_win_transparent)
-				xkl_debug(150,
-					  "Leaving transparent window\n");
+		if (prev_toplevel_win != toplevel_win) {
+			gboolean new_win_transparent;
+			Window parent = (Window) NULL, root =
+			    (Window) NULL, *children = NULL;
+			guint nchildren = 0;
 
 			/*
-			 * Reload the current state from the current window. 
-			 * Do not do it for transparent window - we keep the state from 
-			 * the _previous_ window.
+			 * If previous focused window exists - handle transparency and state
+			 * (optional)
 			 */
-			if (!old_win_transparent &&
-			    xkl_engine_get_toplevel_window_state(engine,
-								 xkl_engine_priv
-								 (engine,
-								  curr_toplvl_win),
-								 &tmp_state))
-			{
-				xkl_engine_update_current_state(engine,
-								tmp_state.group,
-								tmp_state.indicators,
-								"Loading current (previous) state from the current (previous) window");
-			}
+			if (xkl_engine_query_tree
+			    (engine, prev_toplevel_win, &root, &parent,
+			     &children, &nchildren) == Success) {
+				XklState tmp_state;
+				gboolean old_win_transparent =
+				    xkl_engine_is_toplevel_window_transparent
+				    (engine, prev_toplevel_win);
+
+				if (children != NULL)
+					XFree(children);
+
+				if (old_win_transparent)
+					xkl_debug(150,
+						  "Leaving transparent window\n");
+				/*
+				 * Reload the current state from the current window. 
+				 * Do not do it for transparent window - we keep the state from 
+				 * the _previous_ window.
+				 */
+				if (!old_win_transparent
+				    &&
+				    xkl_engine_get_toplevel_window_state
+				    (engine, prev_toplevel_win,
+				     &tmp_state)) {
+					xkl_engine_update_current_state
+					    (engine, tmp_state.group,
+					     tmp_state.indicators,
+					     "Loading current (previous) state from the current (previous) window");
+				}
+			} else
+				xkl_debug(150,
+					  "Current (previous) window "
+					  WINID_FORMAT
+					  " does not exist any more, so transparency/state are not analyzed\n",
+					  prev_toplevel_win);
 
 			xkl_engine_priv(engine, curr_toplvl_win) =
 			    toplevel_win;
