@@ -50,7 +50,8 @@ xkl_engine_filter_events(XklEngine * engine, XEvent * xev)
 			break;
 		case CreateNotify:
 			xkl_engine_process_create_window_evt(engine,
-							     &xev->xcreatewindow);
+							     &xev->
+							     xcreatewindow);
 			break;
 		case DestroyNotify:
 			xkl_debug(150,
@@ -233,8 +234,10 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 							  "Restoring the group from %d to %d after gaining focus\n",
 							  xkl_engine_priv
 							  (engine,
-							   curr_state).group,
-							  selected_window_state.group);
+							   curr_state).
+							  group,
+							  selected_window_state.
+							  group);
 						/*
 						 *  For fast mouse movements - the state is probably not updated yet
 						 *  (because of the group change notification being late).
@@ -242,17 +245,21 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 						 */
 						xkl_engine_update_current_state
 						    (engine,
-						     selected_window_state.group,
-						     selected_window_state.indicators,
+						     selected_window_state.
+						     group,
+						     selected_window_state.
+						     indicators,
 						     "Enforcing fast update of the current state");
 						xkl_engine_lock_group
 						    (engine,
-						     selected_window_state.group);
+						     selected_window_state.
+						     group);
 					} else {
 						xkl_debug(150,
 							  "Both old and new focused window "
 							  "have group %d so no point restoring it\n",
-							  selected_window_state.group);
+							  selected_window_state.
+							  group);
 						xkl_engine_one_switch_to_secondary_group_performed
 						    (engine);
 					}
@@ -266,8 +273,10 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 					xkl_debug(150,
 						  "Restoring the indicators from %X to %X after gaining focus\n",
 						  xkl_engine_priv(engine,
-								  curr_state).indicators,
-						  selected_window_state.indicators);
+								  curr_state).
+						  indicators,
+						  selected_window_state.
+						  indicators);
 					xkl_engine_ensure_vtable_inited
 					    (engine);
 					xkl_engine_vcall(engine,
@@ -278,12 +287,14 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 					xkl_debug(150,
 						  "Not restoring the indicators %X after gaining focus: indicator handling is not enabled\n",
 						  xkl_engine_priv(engine,
-								  curr_state).indicators);
+								  curr_state).
+						  indicators);
 			} else
 				xkl_debug(150,
 					  "Not restoring the group %d after gaining focus: global layout (xor transparent window)\n",
 					  xkl_engine_priv(engine,
-							  curr_state).group);
+							  curr_state).
+					  group);
 		} else
 			xkl_debug(150,
 				  "Same app window - just do nothing\n");
@@ -409,11 +420,13 @@ xkl_engine_process_property_evt(XklEngine * engine, XPropertyEvent * pev)
 					  "Something (%d) happened to WM_STATE of window 0x%x\n",
 					  pev->state, pev->window);
 				xkl_engine_select_input_merging(engine,
-								pev->window,
+								pev->
+								window,
 								PropertyChangeMask);
 				if (has_xkl_state) {
 					xkl_engine_delete_state(engine,
-								pev->window);
+								pev->
+								window);
 				}
 			}
 		}		/* XKLL_MANAGE_WINDOW_STATES */
@@ -492,8 +505,9 @@ xkl_process_error(Display * dpy, XErrorEvent * evt)
 		xkl_engine_priv(engine, last_error_code) = evt->error_code;
 
 	switch (evt->error_code) {
-	case BadWindow:
 	case BadAccess:
+	case BadDrawable:
+	case BadWindow:
 		{
 			XGetErrorText(evt->display, evt->error_code, buf,
 				      sizeof(buf));

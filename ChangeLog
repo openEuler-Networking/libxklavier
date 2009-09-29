@@ -1,3 +1,8 @@
+2009-09-30  svu
+
+	* libxklavier/xklavier_evt.c: ignore BadDrawable error,
+	https://bugs.edge.launchpad.net/ubuntu/+source/libxklavier/+bug/404924
+
 2009-08-29  svu
 
 	* libxklavier/xklavier_evt.c: sometimes focus_in arrives when the
