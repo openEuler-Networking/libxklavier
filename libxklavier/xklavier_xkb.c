@@ -632,8 +632,8 @@ xkl_xkb_init(XklEngine * engine)
 		xkl_engine_backend(engine, XklXkb, xi_event_type) = -1;
 		xkl_engine_backend(engine, XklXkb, xi_error_code) = -1;
 	}
-	return 0;
 #endif
+	return 0;
 #else
 	xkl_debug(160,
 		  "NO XKB LIBS, display: %p, root: " WINID_FORMAT
