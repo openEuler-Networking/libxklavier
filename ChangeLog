@@ -2,6 +2,8 @@
 
 	* libxklavier/xklavier_evt.c: ignore BadDrawable error,
 	https://bugs.edge.launchpad.net/ubuntu/+source/libxklavier/+bug/404924
+	* libxklavier/xklavier_private_xkb.h, libxklavier/xklavier_xkb.c: save
+	xinput error code and event type
 
 2009-08-29  svu
 

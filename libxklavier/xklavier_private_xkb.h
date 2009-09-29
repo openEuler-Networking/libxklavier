@@ -48,6 +48,8 @@ typedef struct _XklXkb {
 
 #ifdef HAVE_XINPUT
 	gint xi_event_type;
+
+	gint xi_error_code;
 #endif
 } XklXkb;
 

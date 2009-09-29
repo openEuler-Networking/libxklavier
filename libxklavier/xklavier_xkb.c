@@ -353,8 +353,8 @@ xkl_xkb_get_server_state(XklEngine * engine, XklState * current_state_out)
 				 &current_state_out->indicators))
 		current_state_out->indicators &=
 		    xkl_engine_backend(engine, XklXkb,
-				       cached_desc)->
-		    indicators->phys_indicators;
+				       cached_desc)->indicators->
+		    phys_indicators;
 	else
 		current_state_out->indicators = 0;
 }
@@ -402,8 +402,8 @@ xkl_xkb_set_indicator(XklEngine * engine, gint indicator_num, gboolean set)
 						     xkl_engine_backend
 						     (engine, XklXkb,
 						      device_id),
-						     cached->
-						     names->indicators
+						     cached->names->
+						     indicators
 						     [indicator_num], set,
 						     False, NULL);
 			else {
@@ -541,7 +541,7 @@ xkl_xkb_init(XklEngine * engine)
 #ifdef LIBXKBFILE_PRESENT
 	gint opcode;
 	gboolean xkl_xkb_ext_present;
-	int xi_opc, xi_event_type, xi_error_code;
+	int xi_opc;
 
 	xkl_engine_priv(engine, backend_id) = "XKB";
 	xkl_engine_priv(engine, features) = XKLF_CAN_TOGGLE_INDICATORS |
@@ -615,15 +615,25 @@ xkl_xkb_init(XklEngine * engine)
 		xkl_engine_priv(engine, features) |=
 		    XKLF_MULTIPLE_LAYOUTS_SUPPORTED;
 
+#if HAVE_XINPUT
 	if (XQueryExtension
 	    (display, "XInputExtension", &xi_opc,
-	     &xi_event_type, &xi_error_code)) {
+	     &xkl_engine_backend(engine, XklXkb, xi_event_type),
+	     &xkl_engine_backend(engine, XklXkb, xi_error_code))) {
 		xkl_debug(150, "XInputExtension found (%d, %d, %d)\n",
-			  xi_opc, xi_event_type, xi_error_code);
+			  xi_opc,
+			  xkl_engine_backend(engine, XklXkb,
+					     xi_event_type),
+			  xkl_engine_backend(engine, XklXkb,
+					     xi_error_code));
 		xkl_engine_priv(engine, features) |= XKLF_DEVICE_DISCOVERY;
-	} else
+	} else {
 		xkl_debug(0, "XInputExtension not found\n");
+		xkl_engine_backend(engine, XklXkb, xi_event_type) = -1;
+		xkl_engine_backend(engine, XklXkb, xi_error_code) = -1;
+	}
 	return 0;
+#endif
 #else
 	xkl_debug(160,
 		  "NO XKB LIBS, display: %p, root: " WINID_FORMAT
