@@ -162,6 +162,21 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 #endif
 }
 
+/*
+ * XKB error handler
+ */
+gint
+xkl_xkb_process_x_error(XklEngine * engine, XErrorEvent * xerev)
+{
+#ifdef HAVE_XINPUT
+	/* Ignore XInput errors */
+	if (xerev->error_code == xkl_engine_backend(engine, XklXkb, xi_error_code))
+		return 1;
+#endif
+
+	return 0;
+}
+
 void
 xkl_xkb_set_indicators(XklEngine * engine, const XklState * window_state)
 {

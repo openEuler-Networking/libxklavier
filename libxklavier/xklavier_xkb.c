@@ -564,6 +564,7 @@ xkl_xkb_init(XklEngine * engine)
 	xkl_engine_priv(engine, get_num_groups) = xkl_xkb_get_num_groups;
 	xkl_engine_priv(engine, lock_group) = xkl_xkb_lock_group;
 	xkl_engine_priv(engine, process_x_event) = xkl_xkb_process_x_event;
+	xkl_engine_priv(engine, process_x_error) = xkl_xkb_process_x_error;
 	xkl_engine_priv(engine, free_all_info) = xkl_xkb_free_all_info;
 	xkl_engine_priv(engine, if_cached_info_equals_actual) =
 	    xkl_xkb_if_cached_info_equals_actual;

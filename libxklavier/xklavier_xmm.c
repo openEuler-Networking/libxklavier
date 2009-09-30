@@ -327,6 +327,7 @@ xkl_xmm_init(XklEngine * engine)
 	xkl_engine_priv(engine, lock_group) = xkl_xmm_lock_group;
 
 	xkl_engine_priv(engine, process_x_event) = xkl_xmm_process_x_event;
+	xkl_engine_priv(engine, process_x_error) = NULL;
 	xkl_engine_priv(engine, free_all_info) = xkl_xmm_free_all_info;
 	xkl_engine_priv(engine, if_cached_info_equals_actual) =
 	    xkl_xmm_if_cached_info_equals_actual;

@@ -522,6 +522,22 @@ xkl_process_error(Display * dpy, XErrorEvent * evt)
 			break;
 		}
 	default:
+		if (engine != NULL
+		    && xkl_engine_priv(engine, process_x_error)) {
+			if (xkl_engine_priv(engine, process_x_error)
+			    (engine, evt)) {
+				xkl_debug(200,
+					  "X ERROR processed by the engine: %p, "
+					  WINID_FORMAT ", %d [%s], "
+					  "X11 request: %d, minor code: %d\n",
+					  dpy,
+					  (unsigned long) evt->resourceid,
+					  (int) evt->error_code, buf,
+					  (int) evt->request_code,
+					  (int) evt->minor_code);
+				break;
+			}
+		}
 		xkl_debug(200,
 			  "Unexpected by libxklavier X ERROR: %p, "
 			  WINID_FORMAT ", %d [%s], "

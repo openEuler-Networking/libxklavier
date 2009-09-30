@@ -157,6 +157,13 @@ struct _XklEnginePrivate {
 	 gint(*process_x_event) (XklEngine * engine, XEvent * xev);
 
 	/*
+	 * Handles X errors.
+	 * return 0 if further processing is needed
+	 *        1 if error was handled
+	 */
+	 gint(*process_x_error) (XklEngine * engine, XErrorEvent * xerev);
+
+	/*
 	 * Flushes the cached server config info.
 	 * xkb: frees XkbDesc
 	 * xmodmap: frees internal XklConfigRec

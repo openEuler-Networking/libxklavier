@@ -88,7 +88,9 @@ extern gboolean xkl_xkb_write_config_rec_to_file(XklEngine * engine,
 						 const XklConfigRec * data,
 						 const gboolean binary);
 
-extern gint xkl_xkb_process_x_event(XklEngine * engine, XEvent * kev);
+extern gint xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev);
+
+extern gint xkl_xkb_process_x_error(XklEngine * engine, XErrorEvent * xerev);
 
 extern void xkl_xkb_free_all_info(XklEngine * engine);
 
