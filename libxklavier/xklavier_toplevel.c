@@ -114,6 +114,22 @@ xkl_engine_add_toplevel_window(XklEngine * engine, Window toplevel_win,
 	    g_signal_lookup("new-toplevel-window", xkl_engine_get_type());
 	g_signal_emitv(params, signal_id, 0, &rv);
 	default_group_to_use = g_value_get_int(&rv);
+        
+	if (default_group_to_use == -1) {
+		Window transient_for = 0;
+		if (XGetTransientForHint(xkl_engine_get_display(engine), toplevel_win, &transient_for)) {
+			if (transient_for) {
+				XklState trans_state;
+				gboolean have_state =
+					xkl_engine_get_toplevel_window_state(engine,
+							 transient_for,
+							 &trans_state);
+				if (have_state) {
+					default_group_to_use = trans_state.group;
+				}
+			}
+		}
+	}
 
 	if (default_group_to_use == -1)
 		default_group_to_use =
