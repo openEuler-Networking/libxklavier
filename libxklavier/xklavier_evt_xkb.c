@@ -87,8 +87,8 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 		if (kev->state.changed & GROUP_CHANGE_MASK)
 			xkl_engine_process_state_modification(engine,
 							      GROUP_CHANGED,
-							      kev->
-							      state.locked_group,
+							      kev->state.
+							      locked_group,
 							      0, FALSE);
 		else {		/* ...not interested... */
 
@@ -99,8 +99,8 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 				xkl_debug(0,
 					  "ATTENTION! Currently cached group %d is not equal to the current group from the event: %d\n!",
 					  xkl_engine_priv(engine,
-							  curr_state).group,
-					  kev->state.locked_group);
+							  curr_state).
+					  group, kev->state.locked_group);
 		}
 
 		break;
@@ -170,7 +170,12 @@ xkl_xkb_process_x_error(XklEngine * engine, XErrorEvent * xerev)
 {
 #ifdef HAVE_XINPUT
 	/* Ignore XInput errors */
-	if (xerev->error_code == xkl_engine_backend(engine, XklXkb, xi_error_code))
+	if (xerev->error_code >=
+	    xkl_engine_backend(engine, XklXkb, xi_error_code)
+	    && xerev->error_code <=
+	    (xkl_engine_backend(engine, XklXkb, xi_error_code) +
+	     XI_BadClass))
+
 		return 1;
 #endif
 
