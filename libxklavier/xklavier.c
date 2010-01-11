@@ -174,7 +174,13 @@ xkl_set_log_appender(XklLogAppender func)
 gint
 xkl_engine_start_listen(XklEngine * engine, guint what)
 {
-	xkl_engine_priv(engine, listener_type) = what;
+	int i;
+	guchar *cntr = xkl_engine_priv(engine, listener_type_counters);
+	for (i = 0; i < XKL_NUMBER_OF_LISTEN_MODES; i++, cntr++)
+		if (what & (1 << i))
+			(*cntr)++;
+
+	xkl_engine_priv(engine, listener_type) |= what;
 
 	if (!
 	    (xkl_engine_priv(engine, features) &
@@ -191,9 +197,20 @@ xkl_engine_start_listen(XklEngine * engine, guint what)
 }
 
 gint
-xkl_engine_stop_listen(XklEngine * engine)
+xkl_engine_stop_listen(XklEngine * engine, guint what)
 {
+	int i;
 	xkl_engine_pause_listen(engine);
+	guchar *cntr = xkl_engine_priv(engine, listener_type_counters);
+	for (i = 0; i < XKL_NUMBER_OF_LISTEN_MODES; i++, cntr++) {
+		int mask = 1 << i;
+		if (what & mask) {
+			if (!--(*cntr))
+				xkl_engine_priv(engine, listener_type) &=
+				    !mask;
+		}
+	}
+
 	return 0;
 }
 
@@ -560,6 +577,8 @@ xkl_engine_lock_group(XklEngine * engine, int group)
 gint
 xkl_engine_pause_listen(XklEngine * engine)
 {
+	xkl_debug(150, "Pause listening (listenerType: %x)\n",
+		  xkl_engine_priv(engine, listener_type));
 	xkl_engine_ensure_vtable_inited(engine);
 	return xkl_engine_vcall(engine, pause_listen) (engine);
 }
@@ -568,8 +587,15 @@ gint
 xkl_engine_resume_listen(XklEngine * engine)
 {
 	xkl_engine_ensure_vtable_inited(engine);
-	xkl_debug(150, "listenerType: %x\n",
-		  xkl_engine_priv(engine, listener_type));
+	int listener_type = xkl_engine_priv(engine, listener_type);
+	xkl_debug(150, "Resume listening, listenerType: %x (%s%s%s)\n",
+		  listener_type,
+		  (listener_type & XKLL_MANAGE_WINDOW_STATES) ?
+		  "XKLL_MANAGE_WINDOW_STATES " : "",
+		  (listener_type & XKLL_TRACK_KEYBOARD_STATE) ?
+		  "XKLL_TRACK_KEYBOARD_STATE " : "",
+		  (listener_type & XKLL_MANAGE_LAYOUTS) ?
+		  "XKLL_MANAGE_LAYOUTS " : "");
 	if (xkl_engine_vcall(engine, resume_listen) (engine))
 		return 1;
 
@@ -624,8 +650,7 @@ xkl_engine_constructor(GType type,
 
 	engine = XKL_ENGINE(obj);
 
-	display =
-	    (Display *)
+	display = (Display *)
 	    g_value_peek_pointer(construct_properties[0].value);
 
 	xkl_engine_priv(engine, display) = display;
@@ -671,7 +696,8 @@ xkl_engine_constructor(GType type,
 			  xkl_engine_get_backend_name(engine));
 	} else {
 		xkl_debug(0, "All backends failed, last result: %d\n", rv);
-		XSetErrorHandler(xkl_engine_priv(engine, default_error_handler));
+		XSetErrorHandler(xkl_engine_priv
+				 (engine, default_error_handler));
 		xkl_engine_priv(engine, display) = NULL;
 		g_object_unref(G_OBJECT(engine));
 		return NULL;

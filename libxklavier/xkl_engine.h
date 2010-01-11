@@ -217,7 +217,7 @@ extern "C" {
 	typedef enum {
 		XKLL_MANAGE_WINDOW_STATES = 0x01,
 		XKLL_TRACK_KEYBOARD_STATE = 0x02,
-		XKLL_MANAGE_LAYOUTS = 0x04
+		XKLL_MANAGE_LAYOUTS = 0x04,
 	} XklEngineListenModes;
 
 /**
@@ -235,11 +235,13 @@ extern "C" {
 /**
  * xkl_engine_stop_listen:
  * @engine: the engine
+ * @flags: any combination of XKLL_* constants
  *
  * Stops listening for XKB-related events
  * Returns: 0
  */
-	extern gint xkl_engine_stop_listen(XklEngine * engine);
+	extern gint xkl_engine_stop_listen(XklEngine * engine,
+					   guint flags);
 
 /**
  * xkl_engine_pause_listen:

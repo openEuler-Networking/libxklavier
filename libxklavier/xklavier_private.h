@@ -36,6 +36,9 @@ enum { WM_NAME,
 
 #define XKL_NUMBER_OF_REGISTRY_DOCS 2
 
+/* We have 3 values in XklEngineListenModes */
+#define XKL_NUMBER_OF_LISTEN_MODES 3
+
 struct _XklEnginePrivate {
 
 	gboolean group_per_toplevel_window;
@@ -47,6 +50,11 @@ struct _XklEnginePrivate {
 	gint default_group;
 
 	guint listener_type;
+
+	/*
+	 * Separate counter for each of XklEngineListenModes!
+	 */
+	guchar listener_type_counters[XKL_NUMBER_OF_LISTEN_MODES];
 
 	guint secondary_groups_mask;
 
@@ -443,6 +451,7 @@ extern gboolean xkl_config_registry_load_helper(XklConfigRegistry * config, cons
 #define XML_TAG_ISO639ID "iso639Id"
 
 extern void
+
 
 
 
