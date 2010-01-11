@@ -1,3 +1,12 @@
+2010-01-11  svu
+
+	* libxklavier/xkl_engine.h, libxklavier/xklavier.c,
+	libxklavier/xklavier_private.h: introducing counters for start/stop
+	listen operations: in one process (actually g-s-d) start and stop can
+	be called several times, with different masks. The API is incompatibly
+	changed!
+	* configure.in: preparing 4.1 with new API
+
 2009-10-12  svu
 
 	* libxklavier/xklavier_toplevel.c: using transient property for smart
