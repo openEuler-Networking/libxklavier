@@ -198,14 +198,18 @@ gint
 xkl_engine_stop_listen(XklEngine * engine, guint what)
 {
 	int i;
-	xkl_engine_pause_listen(engine);
+	gboolean no_flags_remains = TRUE;
 	guchar *cntr = xkl_engine_priv(engine, listener_type_counters);
 	for (i = 0; i < XKLL_NUMBER_OF_LISTEN_MODES; i++, cntr++) {
 		int mask = 1 << i;
-		if (what & mask) {
+		if (what & mask)
 			(*cntr)--;
-		}
+
+		if (*cntr)
+			no_flags_remains = FALSE;
 	}
+	if (no_flags_remains)
+		xkl_engine_pause_listen(engine);
 
 	return 0;
 }
