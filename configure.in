@@ -1,6 +1,6 @@
 AC_PREREQ(2.59)
 
-AC_INIT([libxklavier], [4.1])
+AC_INIT([libxklavier], [5.0])
 AC_CONFIG_SRCDIR([libxklavier/xklavier.c])
 AM_INIT_AUTOMAKE([1.10 dist-bzip2])
 
