@@ -37,7 +37,13 @@ enum { WM_NAME,
 #define XKL_NUMBER_OF_REGISTRY_DOCS 2
 
 /* We have 3 values in XklEngineListenModes */
-#define XKL_NUMBER_OF_LISTEN_MODES 3
+enum {
+	XKLL_MANAGE_WINDOW_STATES_OFFSET = 0,
+	XKLL_TRACK_KEYBOARD_STATE_OFFSET,
+	XKLL_MANAGE_LAYOUTS_OFFSET,
+	XKLL_NUMBER_OF_LISTEN_MODES
+};
+
 
 struct _XklEnginePrivate {
 
@@ -49,12 +55,11 @@ struct _XklEnginePrivate {
 
 	gint default_group;
 
-	guint listener_type;
-
 	/*
 	 * Separate counter for each of XklEngineListenModes!
 	 */
-	guchar listener_type_counters[XKL_NUMBER_OF_LISTEN_MODES];
+	guchar listener_type_counters[XKLL_NUMBER_OF_LISTEN_MODES];
+#define xkl_engine_is_listening_for(engine, type) (xkl_engine_priv((engine), listener_type_counters)[type##_OFFSET] > 0)
 
 	guint secondary_groups_mask;
 
@@ -451,6 +456,7 @@ extern gboolean xkl_config_registry_load_helper(XklConfigRegistry * config, cons
 #define XML_TAG_ISO639ID "iso639Id"
 
 extern void
+
 
 
 

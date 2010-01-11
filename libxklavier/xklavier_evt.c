@@ -50,8 +50,7 @@ xkl_engine_filter_events(XklEngine * engine, XEvent * xev)
 			break;
 		case CreateNotify:
 			xkl_engine_process_create_window_evt(engine,
-							     &xev->
-							     xcreatewindow);
+							     &xev->xcreatewindow);
 			break;
 		case DestroyNotify:
 			xkl_debug(150,
@@ -107,8 +106,8 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 	XklState selected_window_state;
 
 	if (!
-	    (xkl_engine_priv(engine, listener_type) &
-	     XKLL_MANAGE_WINDOW_STATES))
+	    (xkl_engine_is_listening_for
+	     (engine, XKLL_MANAGE_WINDOW_STATES)))
 		return;
 
 	win = fev->window;
@@ -234,10 +233,8 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 							  "Restoring the group from %d to %d after gaining focus\n",
 							  xkl_engine_priv
 							  (engine,
-							   curr_state).
-							  group,
-							  selected_window_state.
-							  group);
+							   curr_state).group,
+							  selected_window_state.group);
 						/*
 						 *  For fast mouse movements - the state is probably not updated yet
 						 *  (because of the group change notification being late).
@@ -245,21 +242,17 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 						 */
 						xkl_engine_update_current_state
 						    (engine,
-						     selected_window_state.
-						     group,
-						     selected_window_state.
-						     indicators,
+						     selected_window_state.group,
+						     selected_window_state.indicators,
 						     "Enforcing fast update of the current state");
 						xkl_engine_lock_group
 						    (engine,
-						     selected_window_state.
-						     group);
+						     selected_window_state.group);
 					} else {
 						xkl_debug(150,
 							  "Both old and new focused window "
 							  "have group %d so no point restoring it\n",
-							  selected_window_state.
-							  group);
+							  selected_window_state.group);
 						xkl_engine_one_switch_to_secondary_group_performed
 						    (engine);
 					}
@@ -273,10 +266,8 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 					xkl_debug(150,
 						  "Restoring the indicators from %X to %X after gaining focus\n",
 						  xkl_engine_priv(engine,
-								  curr_state).
-						  indicators,
-						  selected_window_state.
-						  indicators);
+								  curr_state).indicators,
+						  selected_window_state.indicators);
 					xkl_engine_ensure_vtable_inited
 					    (engine);
 					xkl_engine_vcall(engine,
@@ -287,14 +278,12 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 					xkl_debug(150,
 						  "Not restoring the indicators %X after gaining focus: indicator handling is not enabled\n",
 						  xkl_engine_priv(engine,
-								  curr_state).
-						  indicators);
+								  curr_state).indicators);
 			} else
 				xkl_debug(150,
 					  "Not restoring the group %d after gaining focus: global layout (xor transparent window)\n",
 					  xkl_engine_priv(engine,
-							  curr_state).
-					  group);
+							  curr_state).group);
 		} else
 			xkl_debug(150,
 				  "Same app window - just do nothing\n");
@@ -336,8 +325,8 @@ xkl_engine_process_focus_out_evt(XklEngine * engine,
 				 XFocusChangeEvent * fev)
 {
 	if (!
-	    (xkl_engine_priv(engine, listener_type) &
-	     XKLL_MANAGE_WINDOW_STATES))
+	    (xkl_engine_is_listening_for
+	     (engine, XKLL_MANAGE_WINDOW_STATES)))
 		return;
 
 	if (fev->mode != NotifyNormal) {
@@ -380,7 +369,6 @@ xkl_engine_process_focus_out_evt(XklEngine * engine,
 void
 xkl_engine_process_property_evt(XklEngine * engine, XPropertyEvent * pev)
 {
-	guint listener_type = xkl_engine_priv(engine, listener_type);
 	if (400 <= xkl_debug_level) {
 		char *atom_name =
 		    XGetAtomName(xkl_engine_get_display(engine),
@@ -399,7 +387,8 @@ xkl_engine_process_property_evt(XklEngine * engine, XPropertyEvent * pev)
 	}
 
 	if (pev->atom == xkl_engine_priv(engine, atoms)[WM_STATE]) {
-		if (listener_type & XKLL_MANAGE_WINDOW_STATES) {
+		if (xkl_engine_is_listening_for
+		    (engine, XKLL_MANAGE_WINDOW_STATES)) {
 			gboolean has_xkl_state =
 			    xkl_engine_get_state(engine, pev->window,
 						 NULL);
@@ -420,21 +409,22 @@ xkl_engine_process_property_evt(XklEngine * engine, XPropertyEvent * pev)
 					  "Something (%d) happened to WM_STATE of window 0x%x\n",
 					  pev->state, pev->window);
 				xkl_engine_select_input_merging(engine,
-								pev->
-								window,
+								pev->window,
 								PropertyChangeMask);
 				if (has_xkl_state) {
 					xkl_engine_delete_state(engine,
-								pev->
-								window);
+								pev->window);
 				}
 			}
 		}		/* XKLL_MANAGE_WINDOW_STATES */
 	} else if (pev->atom == xkl_engine_priv(engine, base_config_atom)
 		   && pev->window == xkl_engine_priv(engine, root_window)) {
-		if (listener_type &
-		    (XKLL_MANAGE_WINDOW_STATES |
-		     XKLL_TRACK_KEYBOARD_STATE)) {
+		if (xkl_engine_is_listening_for
+		    (engine,
+		     XKLL_MANAGE_WINDOW_STATES) |
+		    xkl_engine_is_listening_for(engine,
+						XKLL_TRACK_KEYBOARD_STATE))
+		{
 			if (pev->state == PropertyNewValue) {
 				/* If root window got new *_NAMES_PROP_ATOM -
 				   it most probably means new keyboard config is loaded by somebody */
@@ -453,9 +443,8 @@ void
 xkl_engine_process_create_window_evt(XklEngine * engine,
 				     XCreateWindowEvent * cev)
 {
-	if (!
-	    (xkl_engine_priv(engine, listener_type) &
-	     XKLL_MANAGE_WINDOW_STATES))
+	if (!xkl_engine_is_listening_for
+	    (engine, XKLL_MANAGE_WINDOW_STATES))
 		return;
 
 	xkl_debug(200,
@@ -584,15 +573,14 @@ xkl_engine_process_state_modification(XklEngine * engine,
 	 */
 	if (!xkl_engine_find_toplevel_window
 	    (engine, focused, &focused_toplevel)
-	    && xkl_engine_priv(engine,
-			       listener_type) & XKLL_MANAGE_WINDOW_STATES)
+	    && xkl_engine_is_listening_for(engine,
+					   XKLL_MANAGE_WINDOW_STATES))
 		focused_toplevel = xkl_engine_priv(engine, curr_toplvl_win);	/* what else can I do */
 
 	xkl_debug(150, "Focused window: " WINID_FORMAT ", '%s'\n",
 		  focused_toplevel,
 		  xkl_get_debug_window_title(engine, focused_toplevel));
-	if (xkl_engine_priv(engine, listener_type) &
-	    XKLL_MANAGE_WINDOW_STATES) {
+	if (xkl_engine_is_listening_for(engine, XKLL_MANAGE_WINDOW_STATES)) {
 		xkl_debug(150, "CurClient: " WINID_FORMAT ", '%s'\n",
 			  xkl_engine_priv(engine, curr_toplvl_win),
 			  xkl_get_debug_window_title(engine,
@@ -610,8 +598,8 @@ xkl_engine_process_state_modification(XklEngine * engine,
 				xkl_engine_update_current_state(engine,
 								grp, inds,
 								"Updating the state from new focused window");
-				if (xkl_engine_priv(engine, listener_type)
-				    & XKLL_MANAGE_WINDOW_STATES)
+				if (xkl_engine_is_listening_for
+				    (engine, XKLL_MANAGE_WINDOW_STATES))
 					xkl_engine_add_toplevel_window
 					    (engine, focused_toplevel,
 					     (Window) NULL, FALSE,
@@ -665,8 +653,7 @@ xkl_engine_process_state_modification(XklEngine * engine,
 		xkl_engine_try_call_state_func(engine, change_type,
 					       &old_state);
 
-	if (xkl_engine_priv(engine, listener_type) &
-	    XKLL_MANAGE_WINDOW_STATES)
+	if (xkl_engine_is_listening_for(engine, XKLL_MANAGE_WINDOW_STATES))
 		xkl_engine_save_toplevel_window_state(engine,
 						      xkl_engine_priv
 						      (engine,

@@ -176,11 +176,9 @@ xkl_engine_start_listen(XklEngine * engine, guint what)
 {
 	int i;
 	guchar *cntr = xkl_engine_priv(engine, listener_type_counters);
-	for (i = 0; i < XKL_NUMBER_OF_LISTEN_MODES; i++, cntr++)
+	for (i = 0; i < XKLL_NUMBER_OF_LISTEN_MODES; i++, cntr++)
 		if (what & (1 << i))
 			(*cntr)++;
-
-	xkl_engine_priv(engine, listener_type) |= what;
 
 	if (!
 	    (xkl_engine_priv(engine, features) &
@@ -202,12 +200,10 @@ xkl_engine_stop_listen(XklEngine * engine, guint what)
 	int i;
 	xkl_engine_pause_listen(engine);
 	guchar *cntr = xkl_engine_priv(engine, listener_type_counters);
-	for (i = 0; i < XKL_NUMBER_OF_LISTEN_MODES; i++, cntr++) {
+	for (i = 0; i < XKLL_NUMBER_OF_LISTEN_MODES; i++, cntr++) {
 		int mask = 1 << i;
 		if (what & mask) {
-			if (!--(*cntr))
-				xkl_engine_priv(engine, listener_type) &=
-				    !mask;
+			(*cntr)--;
 		}
 	}
 
@@ -358,8 +354,7 @@ xkl_engine_load_window_tree(XklEngine * engine)
 	int revert;
 	gboolean retval = TRUE, have_toplevel_win;
 
-	if (xkl_engine_priv(engine, listener_type) &
-	    XKLL_MANAGE_WINDOW_STATES)
+	if (xkl_engine_is_listening_for(engine, XKLL_MANAGE_WINDOW_STATES))
 		retval =
 		    xkl_engine_load_subtree(engine,
 					    xkl_engine_priv(engine,
@@ -577,8 +572,7 @@ xkl_engine_lock_group(XklEngine * engine, int group)
 gint
 xkl_engine_pause_listen(XklEngine * engine)
 {
-	xkl_debug(150, "Pause listening (listenerType: %x)\n",
-		  xkl_engine_priv(engine, listener_type));
+	xkl_debug(150, "Pause listening\n");
 	xkl_engine_ensure_vtable_inited(engine);
 	return xkl_engine_vcall(engine, pause_listen) (engine);
 }
@@ -587,14 +581,16 @@ gint
 xkl_engine_resume_listen(XklEngine * engine)
 {
 	xkl_engine_ensure_vtable_inited(engine);
-	int listener_type = xkl_engine_priv(engine, listener_type);
-	xkl_debug(150, "Resume listening, listenerType: %x (%s%s%s)\n",
-		  listener_type,
-		  (listener_type & XKLL_MANAGE_WINDOW_STATES) ?
+	guchar *listener_type_counters =
+	    xkl_engine_priv(engine, listener_type_counters);
+	xkl_debug(150, "Resume listening, listenerType: (%s%s%s)\n",
+		  (listener_type_counters
+		   [XKLL_MANAGE_WINDOW_STATES_OFFSET]) ?
 		  "XKLL_MANAGE_WINDOW_STATES " : "",
-		  (listener_type & XKLL_TRACK_KEYBOARD_STATE) ?
+		  (listener_type_counters
+		   [XKLL_TRACK_KEYBOARD_STATE_OFFSET]) ?
 		  "XKLL_TRACK_KEYBOARD_STATE " : "",
-		  (listener_type & XKLL_MANAGE_LAYOUTS) ?
+		  (listener_type_counters[XKLL_MANAGE_LAYOUTS_OFFSET]) ?
 		  "XKLL_MANAGE_LAYOUTS " : "");
 	if (xkl_engine_vcall(engine, resume_listen) (engine))
 		return 1;

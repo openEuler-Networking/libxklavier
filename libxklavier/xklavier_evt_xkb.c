@@ -56,8 +56,10 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 	guint inds;
 	XkbEvent *kev = (XkbEvent *) xev;
 
-	if (!(xkl_engine_priv(engine, listener_type) &
-	      (XKLL_MANAGE_WINDOW_STATES | XKLL_TRACK_KEYBOARD_STATE)))
+	if (!
+	    (xkl_engine_is_listening_for(engine, XKLL_MANAGE_WINDOW_STATES)
+	     | xkl_engine_is_listening_for(engine,
+					   XKLL_TRACK_KEYBOARD_STATE)))
 		return 0;
 
 #ifdef HAVE_XINPUT
@@ -87,8 +89,8 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 		if (kev->state.changed & GROUP_CHANGE_MASK)
 			xkl_engine_process_state_modification(engine,
 							      GROUP_CHANGED,
-							      kev->state.
-							      locked_group,
+							      kev->
+							      state.locked_group,
 							      0, FALSE);
 		else {		/* ...not interested... */
 
@@ -99,8 +101,8 @@ xkl_xkb_process_x_event(XklEngine * engine, XEvent * xev)
 				xkl_debug(0,
 					  "ATTENTION! Currently cached group %d is not equal to the current group from the event: %d\n!",
 					  xkl_engine_priv(engine,
-							  curr_state).
-					  group, kev->state.locked_group);
+							  curr_state).group,
+					  kev->state.locked_group);
 		}
 
 		break;

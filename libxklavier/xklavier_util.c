@@ -100,8 +100,8 @@ xkl_engine_save_state(XklEngine * engine, Window win, XklState * state)
 	Window app_win;
 
 	if (!
-	    (xkl_engine_priv(engine, listener_type) &
-	     XKLL_MANAGE_WINDOW_STATES))
+	    (xkl_engine_is_listening_for
+	     (engine, XKLL_MANAGE_WINDOW_STATES)))
 		return;
 
 	if (xkl_engine_find_toplevel_window(engine, win, &app_win))

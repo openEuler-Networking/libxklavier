@@ -30,7 +30,7 @@
 static gint
 xkl_xmm_process_keypress_event(XklEngine * engine, XKeyPressedEvent * kpe)
 {
-	if (xkl_engine_priv(engine, listener_type) & XKLL_MANAGE_LAYOUTS) {
+	if (xkl_engine_is_listening_for(engine, XKLL_MANAGE_LAYOUTS)) {
 		gint current_shortcut = 0;
 		const XmmSwitchOption *sop;
 		xkl_debug(200, "Processing the KeyPress event\n");
@@ -44,12 +44,11 @@ xkl_xmm_process_keypress_event(XklEngine * engine, XKeyPressedEvent * kpe)
 			if (state.group != -1) {
 				gint new_group =
 				    (state.group +
-				     sop->
-				     shortcut_steps[current_shortcut]) %
+				     sop->shortcut_steps[current_shortcut])
+				    %
 				    g_strv_length(xkl_engine_backend
 						  (engine, XklXmm,
-						   current_config).
-						  layouts);
+						   current_config).layouts);
 				xkl_debug(150,
 					  "Setting new xmm group %d\n",
 					  new_group);
@@ -72,12 +71,11 @@ xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
 	 */
 	if (kpe->atom == state_atom) {
 		XklState state;
-		guint listener_type =
-		    xkl_engine_priv(engine, listener_type);
 
 		xkl_xmm_get_server_state(engine, &state);
 
-		if (listener_type & XKLL_MANAGE_LAYOUTS) {
+		if (xkl_engine_is_listening_for
+		    (engine, XKLL_MANAGE_LAYOUTS)) {
 			xkl_debug(150,
 				  "Current group from the root window property %d\n",
 				  state.group);
@@ -87,8 +85,12 @@ xkl_xmm_process_property_event(XklEngine * engine, XPropertyEvent * kpe)
 			return 1;
 		}
 
-		if (listener_type & (XKLL_MANAGE_WINDOW_STATES |
-				     XKLL_TRACK_KEYBOARD_STATE)) {
+		if (xkl_engine_is_listening_for
+		    (engine,
+		     XKLL_MANAGE_WINDOW_STATES) |
+		    xkl_engine_is_listening_for(engine,
+						XKLL_TRACK_KEYBOARD_STATE))
+		{
 			xkl_debug(150,
 				  "XMM state changed, new 'group' %d\n",
 				  state.group);

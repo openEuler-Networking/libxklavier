@@ -149,7 +149,7 @@ xkl_xmm_find_switch_option(XklEngine * engine, gint keycode,
 gint
 xkl_xmm_resume_listen(XklEngine * engine)
 {
-	if (xkl_engine_priv(engine, listener_type) & XKLL_MANAGE_LAYOUTS)
+	if (xkl_engine_is_listening_for(engine, XKLL_MANAGE_LAYOUTS))
 		xkl_xmm_shortcuts_grab(engine);
 	return 0;
 }
@@ -157,7 +157,7 @@ xkl_xmm_resume_listen(XklEngine * engine)
 gint
 xkl_xmm_pause_listen(XklEngine * engine)
 {
-	if (xkl_engine_priv(engine, listener_type) & XKLL_MANAGE_LAYOUTS)
+	if (xkl_engine_is_listening_for(engine, XKLL_MANAGE_LAYOUTS))
 		xkl_xmm_shortcuts_ungrab(engine);
 	return 0;
 }

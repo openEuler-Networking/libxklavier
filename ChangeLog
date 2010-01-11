@@ -5,7 +5,12 @@
 	listen operations: in one process (actually g-s-d) start and stop can
 	be called several times, with different masks. The API is incompatibly
 	changed!
-	* configure.in: preparing 4.1 with new API
+	* configure.in: preparing 5.0 with new API
+	* libxklavier/xklavier.c, libxklavier/xklavier_evt.c,
+	libxklavier/xklavier_evt_xkb.c, libxklavier/xklavier_evt_xmm.c,
+	libxklavier/xklavier_private.h, libxklavier/xklavier_util.c,
+	libxklavier/xklavier_xmm.c: removing listener mask field, it is enough
+	to use counters
 
 2009-10-12  svu
 
