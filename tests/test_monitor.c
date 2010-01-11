@@ -157,7 +157,7 @@ main(int argc, char *argv[])
 					  ev.type);
 		}
 
-		xkl_engine_stop_listen(engine);
+		xkl_engine_stop_listen(engine, listener_type);
 
 		g_object_unref(G_OBJECT(current_config));
 		g_object_unref(G_OBJECT(engine));
