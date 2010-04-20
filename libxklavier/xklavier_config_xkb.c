@@ -439,18 +439,18 @@ xkl_xkb_activate_config_rec(XklEngine * engine, const XklConfigRec * data)
 #if 0
 	{
 		int i;
-		XklDebug(150, "New model: [%s]\n", data->model);
-		XklDebug(150, "New layouts: %p\n", data->layouts);
-		for (i = data->numLayouts; --i >= 0;)
-			XklDebug(150, "New layout[%d]: [%s]\n", i,
+		xkl_debug(150, "New model: [%s]\n", data->model);
+		xkl_debug(150, "New layouts: %p\n", data->layouts);
+		for (i = 0; i < g_strv_length(data->layouts); i++)
+			xkl_debug(150, "New layout[%d]: [%s]\n", i,
 				 data->layouts[i]);
-		XklDebug(150, "New variants: %p\n", data->variants);
-		for (i = data->numVariants; --i >= 0;)
-			XklDebug(150, "New variant[%d]: [%s]\n", i,
+		xkl_debug(150, "New variants: %p\n", data->variants);
+		for (i = 0; i < g_strv_length(data->variants); i++)
+			xkl_debug(150, "New variant[%d]: [%s]\n", i,
 				 data->variants[i]);
-		XklDebug(150, "New options: %p\n", data->options);
-		for (i = data->numOptions; --i >= 0;)
-			XklDebug(150, "New option[%d]: [%s]\n", i,
+		xkl_debug(150, "New options: %p\n", data->options);
+		for (i = 0; i < g_strv_length(data->options); i++)
+			xkl_debug(150, "New option[%d]: [%s]\n", i,
 				 data->options[i]);
 	}
 #endif
