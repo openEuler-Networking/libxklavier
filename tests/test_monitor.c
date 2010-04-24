@@ -28,6 +28,8 @@
 
 extern void xkl_config_dump(FILE * file, XklConfigRec * data);
 
+static Display *dpy;
+
 static void
 print_usage()
 {
@@ -45,8 +47,23 @@ static void
 state_changed(XklEngine * engine, XklEngineStateChange type,
 	      gint new_group, gboolean restore)
 {
-	xkl_debug(0, "State changed: %d,%d,%d\n", type, new_group,
-		  restore);
+	XklState *state = xkl_engine_get_current_state(engine);
+	xkl_debug(0,
+		  "State changed: type %d, new group: %d, restore: %d. Current state %d %d\n",
+		  type, new_group, restore, state->group, state->indicators);
+	if (type == INDICATORS_CHANGED) {
+		Bool state;
+		Atom capsLock = XInternAtom(dpy, "Caps Lock", False);
+		Atom numLock = XInternAtom(dpy, "Num Lock", False);
+		Atom scrollLock = XInternAtom(dpy, "Scroll Lock", False);
+
+		XkbGetNamedIndicator(dpy, capsLock, NULL, &state, NULL, NULL);
+		xkl_debug(0, "Caps Lock: %d\n", state);
+		XkbGetNamedIndicator(dpy, numLock, NULL, &state, NULL, NULL);
+		xkl_debug(0, "Num Lock: %d\n", state);
+		XkbGetNamedIndicator(dpy, scrollLock, NULL, &state, NULL, NULL);
+		xkl_debug(0, "Scroll Lock: %d\n", state);
+	}
 }
 
 static void
@@ -76,7 +93,6 @@ main(int argc, char *argv[])
 	int c;
 	int debug_level = -1;
 	XkbEvent ev;
-	Display *dpy;
 	XklEngine *engine;
 	int listener_type = 0, lt;
 	int listener_types[] = { XKLL_MANAGE_LAYOUTS,
