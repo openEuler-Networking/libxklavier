@@ -1,3 +1,7 @@
+2010-09-13  svu
+
+	* configure.in: accessing X11 api using pkg-config
+
 2010-01-11  svu
 
 	* libxklavier/xkl_engine.h, libxklavier/xklavier.c,
