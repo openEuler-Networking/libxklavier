@@ -1,3 +1,5 @@
+5.0	Ability to have different types of listeners in the same process
+	(necessary for the latest unstable version of GNOME).
 4.0	Support for "extras" in xkeyboard-config, small bugfixes and build
 	fixes
 3.8	Added "new device" signal - for plugged keyboard (no need in the 
