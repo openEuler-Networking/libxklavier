@@ -248,6 +248,7 @@ xkl_engine_process_focus_in_evt(XklEngine * engine,
 						xkl_engine_lock_group
 						    (engine,
 						     selected_window_state.group);
+						xkl_engine_priv(engine, skip_one_save) = TRUE;
 					} else {
 						xkl_debug(150,
 							  "Both old and new focused window "
@@ -559,6 +560,12 @@ xkl_engine_process_state_modification(XklEngine * engine,
 	gint revert;
 	gboolean have_old_state = TRUE;
 	gboolean set_group = change_type == GROUP_CHANGED;
+
+	if (xkl_engine_priv(engine, skip_one_save)) {
+		xkl_debug(160, "Skipping one callback");
+		xkl_engine_priv(engine, skip_one_save) = FALSE;
+		return;
+	}
 
 	XGetInputFocus(xkl_engine_get_display(engine), &focused, &revert);
 

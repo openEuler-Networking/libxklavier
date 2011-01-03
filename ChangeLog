@@ -1,3 +1,9 @@
+2011-01-03  svu
+
+	* libxklavier/xklavier_evt.c, libxklavier/xklavier_private.h: fixed
+	one race condition, https://bugzilla.gnome.org/show_bug.cgi?id=638332
+
+
 2010-09-13  svu
 
 	* configure.in: accessing X11 api using pkg-config

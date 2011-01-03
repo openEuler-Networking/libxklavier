@@ -53,6 +53,8 @@ struct _XklEnginePrivate {
 
 	gboolean skip_one_restore;
 
+	gboolean skip_one_save;
+
 	gint default_group;
 
 	/*
