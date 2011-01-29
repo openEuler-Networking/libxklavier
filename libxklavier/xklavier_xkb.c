@@ -621,13 +621,19 @@ xkl_xkb_init(XklEngine * engine)
 	    (display, "XInputExtension", &xi_opc,
 	     &xkl_engine_backend(engine, XklXkb, xi_event_type),
 	     &xkl_engine_backend(engine, XklXkb, xi_error_code))) {
-		xkl_debug(150, "XInputExtension found (%d, %d, %d)\n",
-			  xi_opc,
+		XExtensionVersion *ev =
+		    XGetExtensionVersion(display, "XInputExtension");
+		xkl_debug(150,
+			  "XInputExtension found (%d, %d, %d) version %d.%d\n",
+			  xi_opc, xkl_engine_backend(engine, XklXkb,
+						     xi_event_type),
 			  xkl_engine_backend(engine, XklXkb,
-					     xi_event_type),
-			  xkl_engine_backend(engine, XklXkb,
-					     xi_error_code));
-		xkl_engine_priv(engine, features) |= XKLF_DEVICE_DISCOVERY;
+					     xi_error_code),
+			  ev->major_version, ev->minor_version);
+		if (ev->major_version >= 2)
+			xkl_engine_priv(engine, features) |=
+			    XKLF_DEVICE_DISCOVERY;
+		XFree(ev);
 	} else {
 		xkl_debug(0, "XInputExtension not found\n");
 		xkl_engine_backend(engine, XklXkb, xi_event_type) = -1;
