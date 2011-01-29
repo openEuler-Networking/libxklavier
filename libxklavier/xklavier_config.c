@@ -138,8 +138,8 @@ xkl_item_populate_optional_array(XklConfigItem * item, xmlNodePtr ptr,
 		      xkl_find_element(element_ptr, element_tag));
 	     element_ptr = element_ptr->next, idx++) {
 		elements[idx] =
-		    g_strdup((const char *) element_ptr->children->
-			     content);
+		    g_strdup((const char *) element_ptr->
+			     children->content);
 	}
 
 	g_object_set_data_full(G_OBJECT(item),
@@ -244,8 +244,8 @@ xkl_read_config_item(XklConfigRegistry * config, gint doc_index,
 
 	if (vendor_element != NULL && vendor_element->children != NULL) {
 		vendor =
-		    g_strdup((const char *) vendor_element->
-			     children->content);
+		    g_strdup((const char *) vendor_element->children->
+			     content);
 		g_object_set_data_full(G_OBJECT(item), XCI_PROP_VENDOR,
 				       vendor, g_free);
 	}
@@ -318,8 +318,9 @@ xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
 
 		xkl_config_registry_foreach_in_nodeset(config,
 						       &processed_ids, di,
-						       xpath_obj->nodesetval,
-						       func, data);
+						       xpath_obj->
+						       nodesetval, func,
+						       data);
 		xmlXPathFreeObject(xpath_obj);
 	}
 	g_slist_foreach(processed_ids, (GFunc) g_free, NULL);
@@ -359,8 +360,9 @@ xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry
 
 		xkl_config_registry_foreach_in_nodeset(config,
 						       &processed_ids, di,
-						       xpath_obj->nodesetval,
-						       func, data);
+						       xpath_obj->
+						       nodesetval, func,
+						       data);
 		xmlXPathFreeObject(xpath_obj);
 	}
 	g_slist_foreach(processed_ids, (GFunc) g_free, NULL);
@@ -782,25 +784,16 @@ xkl_config_registry_foreach_option(XklConfigRegistry * config,
 							func, data);
 }
 
-static void
-xkl_config_registry_search_by_pattern_in_layout(XklConfigRegistry * config,
-						const XklConfigItem * item,
-						SearchParamType *
-						search_param)
+static gboolean
+if_country_matches_pattern(const XklConfigItem * item,
+			   const gchar * pattern)
 {
 	gchar *upper_name = g_ascii_strup(item->name, -1);
-	const gchar *country_desc, *language_desc;
-
-	xkl_debug(200, "Layout to check: [%s]\n", item->name);
-
-	country_desc = xkl_get_country_iso_code(upper_name);
+	const gchar *country_desc = xkl_get_country_iso_code(upper_name);
+	g_free(upper_name);
 	xkl_debug(200, "Checking layout country: [%s]\n", country_desc);
-	search_param->country_matched = FALSE;
-	if ((country_desc != NULL)
-	    && strcasestr(country_desc, search_param->pattern)) {
-		search_param->country_matched = TRUE;
-		(search_param->func) (config, item, NULL,
-				      search_param->data);
+	if ((country_desc != NULL) && strcasestr(country_desc, pattern)) {
+		return TRUE;
 	} else {
 		gchar **countries = g_object_get_data(G_OBJECT(item),
 						      XCI_PROP_COUNTRY_LIST);
@@ -809,70 +802,91 @@ xkl_config_registry_search_by_pattern_in_layout(XklConfigRegistry * config,
 			    xkl_get_country_iso_code(*countries);
 			xkl_debug(200, "Checking country: [%s][%s]\n",
 				  *countries, country_desc);
-			if ((country_desc != NULL) && strcasestr
-			    (country_desc, search_param->pattern)) {
-				search_param->country_matched = TRUE;
-				(search_param->func) (config, item, NULL,
-						      search_param->data);
-				break;
+			if ((country_desc != NULL)
+			    && strcasestr(country_desc, pattern)) {
+				return TRUE;
 			}
 		}
 	}
+	return FALSE;
+}
 
-	if (!search_param->country_matched) {
-		language_desc = xkl_get_language_iso_code(item->name);
-		xkl_debug(200, "Checking layout language: [%s]\n",
-			  language_desc);
-		search_param->language_matched = FALSE;
-		if ((language_desc != NULL)
-		    && strcasestr(language_desc, search_param->pattern)) {
-			search_param->language_matched = TRUE;
-			(search_param->func) (config, item, NULL,
-					      search_param->data);
-		} else {
-			gchar **languages =
-			    g_object_get_data(G_OBJECT(item),
-					      XCI_PROP_LANGUAGE_LIST);
-			for (; languages && *languages; languages++) {
-				language_desc =
-				    xkl_get_language_iso_code(*languages);
-				xkl_debug(200,
-					  "Checking language: [%s][%s]\n",
-					  *languages, language_desc);
-				if ((language_desc != NULL)
-				    && strcasestr(language_desc,
-						  search_param->pattern)) {
-					search_param->language_matched =
-					    TRUE;
-					(search_param->func) (config, item,
-							      NULL,
-							      search_param->
-							      data);
-					break;
-				}
+static gboolean
+if_language_matches_pattern(const XklConfigItem * item,
+			    const gchar * pattern)
+{
+	const gchar *language_desc = xkl_get_language_iso_code(item->name);
+	xkl_debug(200, "Checking layout language: [%s]\n", language_desc);
+	if ((language_desc != NULL) && strcasestr(language_desc, pattern)) {
+		return TRUE;
+	} else {
+		gchar **languages = g_object_get_data(G_OBJECT(item),
+						      XCI_PROP_LANGUAGE_LIST);
+		for (; languages && *languages; languages++) {
+			language_desc =
+			    xkl_get_language_iso_code(*languages);
+			xkl_debug(200, "Checking language: [%s][%s]\n",
+				  *languages, language_desc);
+			if ((language_desc != NULL)
+			    && strcasestr(language_desc, pattern)) {
+				return TRUE;
 			}
 		}
+	}
+	return FALSE;
+}
+
+static void
+xkl_config_registry_search_by_pattern_in_layout(XklConfigRegistry * config,
+						const XklConfigItem * item,
+						SearchParamType *
+						search_param)
+{
+	gchar *upper_name = g_ascii_strup(item->name, -1);
+
+	xkl_debug(200, "Layout to check: [%s]\n", item->name);
+
+	search_param->country_matched =
+	    search_param->language_matched = FALSE;
+
+	if (if_country_matches_pattern(item, search_param->pattern)) {
+		search_param->country_matched = TRUE;
+		(search_param->func) (config, item, NULL,
+				      search_param->data);
+	} else
+	    if (if_language_matches_pattern(item, search_param->pattern)) {
+		search_param->language_matched = TRUE;
+		(search_param->func) (config, item, NULL,
+				      search_param->data);
+	} else if (strcasestr(item->description, search_param->pattern)) {
+		search_param->language_matched = TRUE;
+		(search_param->func) (config, item, NULL,
+				      search_param->data);
 	}
 
 	g_free(upper_name);
 }
 
 void
-xkl_config_registry_search_by_pattern(XklConfigRegistry * config,
-				      const gchar * pattern,
-				      TwoConfigItemsProcessFunc func,
-				      gpointer data)
+xkl_config_registry_search_by_pattern(XklConfigRegistry
+				      * config,
+				      const gchar *
+				      pattern,
+				      TwoConfigItemsProcessFunc
+				      func, gpointer data)
 {
 	xkl_debug(200, "Searching by pattern: [%s]\n", pattern);
-	SearchParamType search_param = { pattern, func, data };
+	SearchParamType search_param = {
+		pattern, func, data
+	};
 	xkl_config_registry_foreach_layout(config, (ConfigItemProcessFunc)
 					   xkl_config_registry_search_by_pattern_in_layout,
 					   &search_param);
 }
 
 gboolean
-xkl_config_registry_find_model(XklConfigRegistry * config,
-			       XklConfigItem * pitem /* in/out */ )
+xkl_config_registry_find_model(XklConfigRegistry *
+			       config, XklConfigItem * pitem /* in/out */ )
 {
 	return xkl_config_registry_find_object(config,
 					       XKBCR_MODEL_PATH
@@ -881,7 +895,8 @@ xkl_config_registry_find_model(XklConfigRegistry * config,
 }
 
 gboolean
-xkl_config_registry_find_layout(XklConfigRegistry * config,
+xkl_config_registry_find_layout(XklConfigRegistry *
+				config,
 				XklConfigItem * pitem /* in/out */ )
 {
 	return xkl_config_registry_find_object(config,
@@ -891,8 +906,10 @@ xkl_config_registry_find_layout(XklConfigRegistry * config,
 }
 
 gboolean
-xkl_config_registry_find_variant(XklConfigRegistry * config,
-				 const char *layout_name,
+xkl_config_registry_find_variant(XklConfigRegistry *
+				 config,
+				 const char
+				 *layout_name,
 				 XklConfigItem * pitem /* in/out */ )
 {
 	return xkl_config_registry_find_object(config,
@@ -902,21 +919,16 @@ xkl_config_registry_find_variant(XklConfigRegistry * config,
 }
 
 gboolean
-xkl_config_registry_find_option_group(XklConfigRegistry *
-				      config,
-				      XklConfigItem * pitem /* in/out */ )
+xkl_config_registry_find_option_group(XklConfigRegistry * config, XklConfigItem * pitem	/* in/out */
+    )
 {
 	xmlNodePtr node = NULL;
 	gboolean rv = xkl_config_registry_find_object(config,
 						      XKBCR_GROUP_PATH
 						      "[configItem/name = '%s%s']",
-						      "",
-						      pitem,
-						      &node);
-
+						      "", pitem, &node);
 	if (rv) {
-		xmlChar *val = xmlGetProp(node,
-					  (unsigned char *)
+		xmlChar *val = xmlGetProp(node, (unsigned char *)
 					  XCI_PROP_ALLOW_MULTIPLE_SELECTION);
 		if (val != NULL) {
 			gboolean allow_multisel =
@@ -932,8 +944,10 @@ xkl_config_registry_find_option_group(XklConfigRegistry *
 }
 
 gboolean
-xkl_config_registry_find_option(XklConfigRegistry * config,
-				const char *option_group_name,
+xkl_config_registry_find_option(XklConfigRegistry *
+				config,
+				const char
+				*option_group_name,
 				XklConfigItem * pitem /* in/out */ )
 {
 	return xkl_config_registry_find_object(config,
@@ -959,12 +973,12 @@ xkl_config_registry_load(XklConfigRegistry * config,
 			 gboolean if_extras_needed)
 {
 	XklEngine *engine;
-
 	xkl_config_registry_free(config);
 	engine = xkl_config_registry_get_engine(config);
 	xkl_engine_ensure_vtable_inited(engine);
-	return xkl_engine_vcall(engine, load_config_registry) (config,
-							       if_extras_needed);
+	return xkl_engine_vcall(engine,
+				load_config_registry) (config,
+						       if_extras_needed);
 }
 
 gboolean
@@ -984,10 +998,8 @@ xkl_config_rec_write_to_file(XklEngine * engine,
 		return FALSE;
 	}
 	xkl_engine_ensure_vtable_inited(engine);
-	return xkl_engine_vcall(engine,
-				write_config_rec_to_file) (engine,
-							   file_name,
-							   data, binary);
+	return xkl_engine_vcall(engine, write_config_rec_to_file)
+	    (engine, file_name, data, binary);
 }
 
 void
@@ -995,7 +1007,6 @@ xkl_config_rec_dump(FILE * file, XklConfigRec * data)
 {
 	int j;
 	fprintf(file, "  model: [%s]\n", data->model);
-
 	fprintf(file, "  layouts:\n");
 #define OUTPUT_ARRZ(arrz) \
   { \
@@ -1008,7 +1019,6 @@ xkl_config_rec_dump(FILE * file, XklConfigRec * data)
 	OUTPUT_ARRZ(layouts);
 	OUTPUT_ARRZ(variants);
 	OUTPUT_ARRZ(options);
-
 }
 
 G_DEFINE_TYPE(XklConfigRegistry, xkl_config_registry, G_TYPE_OBJECT)
@@ -1016,14 +1026,12 @@ static GObject *
 xkl_config_registry_constructor(GType type,
 				guint
 				n_construct_properties,
-				GObjectConstructParam
-				* construct_properties)
+				GObjectConstructParam *
+				construct_properties)
 {
 	GObject *obj;
 	XklConfigRegistry *config;
-	XklEngine *engine;
-
-	{
+	XklEngine *engine; {
 		/* Invoke parent constructor. */
 		XklConfigRegistryClass *klass;
 		klass =
@@ -1036,14 +1044,11 @@ xkl_config_registry_constructor(GType type,
 	}
 
 	config = XKL_CONFIG_REGISTRY(obj);
-
 	engine = XKL_ENGINE(g_value_peek_pointer
 			    (construct_properties[0].value));
 	xkl_config_registry_get_engine(config) = engine;
-
 	xkl_engine_ensure_vtable_inited(engine);
 	xkl_engine_vcall(engine, init_config_registry) (config);
-
 	return obj;
 }
 
@@ -1066,7 +1071,6 @@ xkl_config_registry_get_property(GObject * object,
 				 GValue * value, GParamSpec * pspec)
 {
 	XklConfigRegistry *config = XKL_CONFIG_REGISTRY(object);
-
 	switch (property_id) {
 	case PROP_ENGINE:
 		g_value_set_pointer(value,
@@ -1081,11 +1085,8 @@ static void
 xkl_config_registry_finalize(GObject * obj)
 {
 	XklConfigRegistry *config = (XklConfigRegistry *) obj;
-
 	xkl_config_registry_free(config);
-
 	g_free(config->priv);
-
 	G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
 
@@ -1098,7 +1099,6 @@ extern void
 xkl_config_registry_class_term(XklConfigRegistryClass * klass)
 {
 	gint i;
-
 	if (models_xpath != NULL) {
 		xmlXPathFreeCompExpr(models_xpath);
 		models_xpath = NULL;
@@ -1137,28 +1137,21 @@ xkl_config_registry_class_init(XklConfigRegistryClass * klass)
 	GObjectClass *object_class;
 	GParamSpec *engine_param_spec;
 	gint i;
-
 	object_class = (GObjectClass *) klass;
 	parent_class = g_type_class_peek_parent(object_class);
 	object_class->constructor = xkl_config_registry_constructor;
 	object_class->finalize = xkl_config_registry_finalize;
 	object_class->set_property = xkl_config_registry_set_property;
 	object_class->get_property = xkl_config_registry_get_property;
-
 	bind_textdomain_codeset(XKB_DOMAIN, "UTF-8");
-
-	engine_param_spec = g_param_spec_object("engine",
-						"Engine",
-						"XklEngine",
-						XKL_TYPE_ENGINE,
-						G_PARAM_CONSTRUCT_ONLY
-						| G_PARAM_READWRITE);
-
-	g_object_class_install_property(object_class,
-					PROP_ENGINE, engine_param_spec);
-
+	engine_param_spec =
+	    g_param_spec_object("engine", "Engine", "XklEngine",
+				XKL_TYPE_ENGINE,
+				G_PARAM_CONSTRUCT_ONLY |
+				G_PARAM_READWRITE);
+	g_object_class_install_property(object_class, PROP_ENGINE,
+					engine_param_spec);
 	/* static stuff initialized */
-
 	xmlXPathInit();
 	models_xpath = xmlXPathCompile((unsigned char *)
 				       XKBCR_MODEL_PATH);
@@ -1166,7 +1159,6 @@ xkl_config_registry_class_init(XklConfigRegistryClass * klass)
 					XKBCR_LAYOUT_PATH);
 	option_groups_xpath = xmlXPathCompile((unsigned char *)
 					      XKBCR_GROUP_PATH);
-
 	xml_encode_regexen =
 	    g_new0(GRegex *,
 		   sizeof(xml_encode_regexen_str) /
