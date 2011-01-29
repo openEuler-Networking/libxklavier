@@ -354,6 +354,26 @@ extern "C" {
 						      TwoConfigItemsProcessFunc
 						      func, gpointer data);
 
+
+/**
+ * xkl_config_registry_search_by_pattern:
+ * @config: the config registry
+ * @pattern: pattern to search for
+ * @func: callback to call for every matching layout/variant
+ * @data: anything which can be stored into the pointer
+ *
+ * Enumerates keyboard layout/variants that match the pattern.
+ * The layout/variant is considered as matching if one of the following
+ * is true:
+ * 1. Country description (from the country list) contains pattern as substring
+ * 2. Language description (from the language list) contains pattern as substring
+ */
+	extern void
+	 xkl_config_registry_search_by_pattern(XklConfigRegistry * config,
+					       const gchar * pattern,
+					       TwoConfigItemsProcessFunc
+					       func, gpointer data);
+
 #ifdef __cplusplus
 }
 #endif				/* __cplusplus */

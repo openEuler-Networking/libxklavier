@@ -33,14 +33,14 @@
 extern void xkl_config_rec_dump(FILE * file, XklConfigRec * data);
 
 enum { ACTION_NONE, ACTION_LIST, ACTION_GET, ACTION_SET,
-	ACTION_WRITE
+	ACTION_WRITE, ACTION_SEARCH
 };
 
 static void
 print_usage(void)
 {
 	printf
-	    ("Usage: test_config (-g)|(-s -m <model> -l <layouts> -o <options>)|(-h)|(-ws)|(-wb)(-d <debugLevel>)\n");
+	    ("Usage: test_config (-g)|(-s -m <model> -l <layouts> -o <options>)|(-h)|(-ws)|(-wb)(-d <debugLevel>)|(-p pattern)\n");
 	printf("Options:\n");
 	printf("         -al - list all available layouts and variants\n");
 	printf("         -am - list all available models\n");
@@ -57,6 +57,7 @@ print_usage(void)
 	printf("         -wb - Write the source XKB config file (" PACKAGE
 	       ".xkb)\n");
 	printf("         -d - Set the debug level (by default, 0)\n");
+	printf("         -p - Search by pattern\n");
 	printf("         -h - Show this help\n");
 }
 
@@ -97,8 +98,7 @@ static void
 print_xci(XklConfigRegistry * config, const XklConfigItem * item,
 	  gint indent)
 {
-	gboolean is_extra =
-	    (gboolean)
+	gboolean is_extra = (gboolean)
 	    GPOINTER_TO_INT(g_object_get_data
 			    (G_OBJECT(item), XCI_PROP_EXTRA_ITEM));
 	gchar **countries = (gchar **) g_object_get_data(G_OBJECT(item),
@@ -170,6 +170,16 @@ print_language(XklConfigRegistry * config, const XklConfigItem * item,
 						     data);
 }
 
+static void
+print_found_variants(XklConfigRegistry * config,
+		     const XklConfigItem * parent_item,
+		     const XklConfigItem * child_item)
+{
+	printf("found layout: [%s]\n", parent_item->name);
+	if (child_item != NULL)
+		printf("found variant: [%s]\n", child_item->name);
+}
+
 int
 main(int argc, char *const argv[])
 {
@@ -179,6 +189,7 @@ main(int argc, char *const argv[])
 	const gchar *model = NULL;
 	const gchar *layouts = NULL;
 	const gchar *options = NULL;
+	const gchar *pattern = NULL;
 	int debug_level = -1;
 	int binary = 0;
 	Display *dpy;
@@ -188,7 +199,7 @@ main(int argc, char *const argv[])
 				     G_TYPE_DEBUG_SIGNALS);
 
 	while (1) {
-		c = getopt(argc, argv, "ha:sgm:l:o:d:w:c:");
+		c = getopt(argc, argv, "ha:sgm:l:o:d:w:c:p:");
 		if (c == -1)
 			break;
 		switch (c) {
@@ -213,6 +224,10 @@ main(int argc, char *const argv[])
 			break;
 		case 'o':
 			printf("Options: [%s]\n", options = optarg);
+			break;
+		case 'p':
+			action = ACTION_SEARCH;
+			printf("Pattern: [%s]\n", pattern = optarg);
 			break;
 		case 'h':
 			print_usage();
@@ -384,6 +399,12 @@ main(int argc, char *const argv[])
 			xkl_debug(0, "The file " PACKAGE "%s is written\n",
 				  binary ? ".xkm" : ".xkb");
 			break;
+		case ACTION_SEARCH:
+			xkl_config_registry_search_by_pattern(config,
+							      pattern,
+							      (TwoConfigItemsProcessFunc)
+							      print_found_variants,
+							      NULL);
 		}
 
 		g_object_unref(G_OBJECT(current_config));

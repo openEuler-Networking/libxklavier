@@ -48,6 +48,14 @@ enum {
 	PROP_ENGINE
 };
 
+typedef struct {
+	const gchar *pattern;
+	TwoConfigItemsProcessFunc func;
+	gpointer data;
+	gboolean country_matched;
+	gboolean language_matched;
+} SearchParamType;
+
 static gboolean
 xkl_xml_find_config_item_child(xmlNodePtr iptr, xmlNodePtr * ptr)
 {
@@ -772,6 +780,94 @@ xkl_config_registry_foreach_option(XklConfigRegistry * config,
 							"[../configItem/name = '%s']",
 							option_group_name,
 							func, data);
+}
+
+static void
+xkl_config_registry_search_by_pattern_in_layout(XklConfigRegistry * config,
+						const XklConfigItem * item,
+						SearchParamType *
+						search_param)
+{
+	gchar *upper_name = g_ascii_strup(item->name, -1);
+	const gchar *country_desc, *language_desc;
+
+	xkl_debug(200, "Layout to check: [%s]\n", item->name);
+
+	country_desc = xkl_get_country_iso_code(upper_name);
+	xkl_debug(200, "Checking layout country: [%s]\n", country_desc);
+	search_param->country_matched = FALSE;
+	if ((country_desc != NULL)
+	    && strcasestr(country_desc, search_param->pattern)) {
+		search_param->country_matched = TRUE;
+		(search_param->func) (config, item, NULL,
+				      search_param->data);
+	} else {
+		gchar **countries = g_object_get_data(G_OBJECT(item),
+						      XCI_PROP_COUNTRY_LIST);
+		for (; countries && *countries; countries++) {
+			country_desc =
+			    xkl_get_country_iso_code(*countries);
+			xkl_debug(200, "Checking country: [%s][%s]\n",
+				  *countries, country_desc);
+			if ((country_desc != NULL) && strcasestr
+			    (country_desc, search_param->pattern)) {
+				search_param->country_matched = TRUE;
+				(search_param->func) (config, item, NULL,
+						      search_param->data);
+				break;
+			}
+		}
+	}
+
+	if (!search_param->country_matched) {
+		language_desc = xkl_get_language_iso_code(item->name);
+		xkl_debug(200, "Checking layout language: [%s]\n",
+			  language_desc);
+		search_param->language_matched = FALSE;
+		if ((language_desc != NULL)
+		    && strcasestr(language_desc, search_param->pattern)) {
+			search_param->language_matched = TRUE;
+			(search_param->func) (config, item, NULL,
+					      search_param->data);
+		} else {
+			gchar **languages =
+			    g_object_get_data(G_OBJECT(item),
+					      XCI_PROP_LANGUAGE_LIST);
+			for (; languages && *languages; languages++) {
+				language_desc =
+				    xkl_get_language_iso_code(*languages);
+				xkl_debug(200,
+					  "Checking language: [%s][%s]\n",
+					  *languages, language_desc);
+				if ((language_desc != NULL)
+				    && strcasestr(language_desc,
+						  search_param->pattern)) {
+					search_param->language_matched =
+					    TRUE;
+					(search_param->func) (config, item,
+							      NULL,
+							      search_param->
+							      data);
+					break;
+				}
+			}
+		}
+	}
+
+	g_free(upper_name);
+}
+
+void
+xkl_config_registry_search_by_pattern(XklConfigRegistry * config,
+				      const gchar * pattern,
+				      TwoConfigItemsProcessFunc func,
+				      gpointer data)
+{
+	xkl_debug(200, "Searching by pattern: [%s]\n", pattern);
+	SearchParamType search_param = { pattern, func, data };
+	xkl_config_registry_foreach_layout(config, (ConfigItemProcessFunc)
+					   xkl_config_registry_search_by_pattern_in_layout,
+					   &search_param);
 }
 
 gboolean

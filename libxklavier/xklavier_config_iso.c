@@ -165,7 +165,7 @@ iso_code_names_init(LookupParams * params)
 typedef const gchar *(*DescriptionGetterFunc) (const gchar * code);
 
 const gchar *
-get_language_iso_code(const gchar * code)
+xkl_get_language_iso_code(const gchar * code)
 {
 	const gchar *name;
 
@@ -182,7 +182,7 @@ get_language_iso_code(const gchar * code)
 }
 
 const gchar *
-get_country_iso_code(const gchar * code)
+xkl_get_country_iso_code(const gchar * code)
 {
 	const gchar *name;
 
@@ -292,7 +292,7 @@ xkl_config_registry_foreach_country(XklConfigRegistry *
 	};
 
 	xkl_config_registry_foreach_iso_code(config, func, xpath_exprs,
-					     get_country_iso_code, TRUE,
+					     xkl_get_country_iso_code, TRUE,
 					     data);
 }
 
@@ -309,7 +309,7 @@ xkl_config_registry_foreach_language(XklConfigRegistry *
 	};
 
 	xkl_config_registry_foreach_iso_code(config, func, xpath_exprs,
-					     get_language_iso_code, FALSE,
+					     xkl_get_language_iso_code, FALSE,
 					     data);
 }
 
