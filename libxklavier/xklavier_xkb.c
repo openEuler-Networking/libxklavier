@@ -188,8 +188,8 @@ xkl_xkb_load_actual_desc(XklEngine * engine)
 		if (!rv) {
 			xkl_last_error_message =
 			    "Could not load controls/names/indicators";
-			xkl_debug(0, "%s: %d\n",
-				  xkl_last_error_message, status);
+			xkl_debug(0, "%s: %d\n", xkl_last_error_message,
+				  status);
 			XkbFreeKeyboard(desc, XkbAllComponentsMask, True);
 			xkl_engine_backend(engine, XklXkb, actual_desc) =
 			    NULL;
@@ -237,8 +237,8 @@ xkl_xkb_if_cached_info_equals_actual(XklEngine * engine)
 		 * in case of success - free it
 		 */
 		if (rv) {
-			XkbFreeKeyboard(actual,
-					XkbAllComponentsMask, True);
+			XkbFreeKeyboard(actual, XkbAllComponentsMask,
+					True);
 			xkl_engine_backend(engine, XklXkb, actual_desc) =
 			    NULL;
 		}
@@ -285,8 +285,7 @@ xkl_xkb_load_all_info(XklEngine * engine)
 	for (i = cached->ctrls->num_groups; --i >= 0; pa++, group_name++) {
 		*group_name =
 		    XGetAtomName(display,
-				 *pa == None ? XInternAtom(display,
-							   "-",
+				 *pa == None ? XInternAtom(display, "-",
 							   False) : *pa);
 		xkl_debug(200, "Group %d has name [%s]\n", i, *group_name);
 	}
@@ -630,9 +629,14 @@ xkl_xkb_init(XklEngine * engine)
 			  xkl_engine_backend(engine, XklXkb,
 					     xi_error_code),
 			  ev->major_version, ev->minor_version);
-		if (ev->major_version >= 2)
+		/* DevicePresence is available from XI 1.4 */
+		if ((ev->major_version * 10) + ev->minor_version >= 14) {
+			xkl_debug(200, "DevicePresence available\n");
 			xkl_engine_priv(engine, features) |=
 			    XKLF_DEVICE_DISCOVERY;
+		} else {
+			xkl_debug(200, "DevicePresence not available\n");
+		}
 		XFree(ev);
 	} else {
 		xkl_debug(0, "XInputExtension not found\n");
