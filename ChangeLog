@@ -3,6 +3,7 @@
 	* libxklavier/xklavier_xkb.c: checking that XInput is >=2, otherwise
 	DevicePresence may be missing.
 	https://bugzilla.gnome.org/show_bug.cgi?id=583709
+	* libxklavier/xklavier_config.c: added variants to the search function
 
 2011-01-28  svu
 
