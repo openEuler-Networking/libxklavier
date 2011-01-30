@@ -4,6 +4,8 @@
 	DevicePresence may be missing.
 	https://bugzilla.gnome.org/show_bug.cgi?id=583709
 	* libxklavier/xklavier_config.c: added variants to the search function
+	* tests/test_config.c: Improved printing
+	* configure.in: bumped the package version and soname
 
 2011-01-28  svu
 

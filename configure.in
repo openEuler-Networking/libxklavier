@@ -1,6 +1,6 @@
 AC_PREREQ(2.59)
 
-AC_INIT([libxklavier], [5.0])
+AC_INIT([libxklavier], [5.1])
 AC_CONFIG_SRCDIR([libxklavier/xklavier.c])
 AM_INIT_AUTOMAKE([1.10 dist-bzip2])
 
@@ -9,7 +9,7 @@ AC_CONFIG_MACRO_DIR(m4)
 
 dnl for DLL
 dnl http://sources.redhat.com/autobook/autobook/autobook_91.html
-VERSION_INFO=16:0:0
+VERSION_INFO=17:0:1
 AC_SUBST(VERSION_INFO)
 
 AM_MAINTAINER_MODE
