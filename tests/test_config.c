@@ -175,9 +175,12 @@ print_found_variants(XklConfigRegistry * config,
 		     const XklConfigItem * parent_item,
 		     const XklConfigItem * child_item)
 {
-	printf("found layout: [%s]\n", parent_item->name);
-	if (child_item != NULL)
-		printf("found variant: [%s]\n", child_item->name);
+	if (child_item == NULL)
+		printf("found layout: [%s]\n", parent_item->name);
+	else
+		printf("found variant: [%s][%s]\n", parent_item->name,
+		       child_item->name);
+
 }
 
 int
