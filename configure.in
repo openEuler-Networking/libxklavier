@@ -57,10 +57,11 @@ AC_SUBST(X_CFLAGS)
 AC_ARG_WITH( xkb_base,
              [  --with-xkb-base=DIR        XKB base path (by default it is /usr/share/X11/xkb)],
              xkb_base="$withval", 
-             if test -z "$X_LIBS" ; then 
+             xorgdata=`$PKG_CONFIG --variable=datarootdir xorg-server`
+             if test -z "$xorgdata" ; then 
                xkb_base="/usr/share/X11/xkb"
              else
-               xkb_base="$X_LIBS/X11/xkb"
+               xkb_base="$xorgdata/X11/xkb"
              fi )
 
 AC_DEFINE_UNQUOTED(XKB_BASE,"${xkb_base}",Base for XKB configuration)
