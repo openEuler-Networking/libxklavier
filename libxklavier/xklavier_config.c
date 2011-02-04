@@ -49,7 +49,7 @@ enum {
 };
 
 typedef struct {
-	const gchar *upattern;
+	gchar **patterns;
 	TwoConfigItemsProcessFunc func;
 	gpointer data;
 	gboolean country_matched;
@@ -783,20 +783,29 @@ xkl_config_registry_foreach_option(XklConfigRegistry * config,
 							func, data);
 }
 
-/* Just because strcasestr is not available on all platforms */
 static gboolean
-strustr(const gchar * haystack, const gchar * ucneedle)
+search_all(const gchar * haystack, gchar ** needles)
 {
+	/* match anything */
+	if (!needles || !*needles)
+		return TRUE;
+
 	gchar *uchs = g_utf8_strup(haystack, -1);
-	const gboolean rv = g_strstr_len(uchs, -1, ucneedle) != NULL;
+	do {
+		if (g_strstr_len(uchs, -1, *needles) == NULL) {
+			g_free(uchs);
+			return FALSE;
+		}
+		needles++;
+	} while (*needles);
+
 	g_free(uchs);
-	return rv;
+	return TRUE;
 }
 
 static gboolean
 if_country_matches_pattern(const XklConfigItem * item,
-			   const gchar * upattern,
-			   const gboolean check_name)
+			   gchar ** patterns, const gboolean check_name)
 {
 	const gchar *country_desc;
 	if (check_name) {
@@ -806,7 +815,7 @@ if_country_matches_pattern(const XklConfigItem * item,
 		xkl_debug(200, "Checking layout country: [%s]\n",
 			  country_desc);
 		if ((country_desc != NULL)
-		    && strustr(country_desc, upattern))
+		    && search_all(country_desc, patterns))
 			return TRUE;
 	}
 
@@ -817,7 +826,7 @@ if_country_matches_pattern(const XklConfigItem * item,
 		xkl_debug(200, "Checking country: [%s][%s]\n",
 			  *countries, country_desc);
 		if ((country_desc != NULL)
-		    && strustr(country_desc, upattern)) {
+		    && search_all(country_desc, patterns)) {
 			return TRUE;
 		}
 	}
@@ -826,8 +835,7 @@ if_country_matches_pattern(const XklConfigItem * item,
 
 static gboolean
 if_language_matches_pattern(const XklConfigItem * item,
-			    const gchar * upattern,
-			    const gboolean check_name)
+			    gchar ** patterns, const gboolean check_name)
 {
 	const gchar *language_desc;
 	if (check_name) {
@@ -835,7 +843,7 @@ if_language_matches_pattern(const XklConfigItem * item,
 		xkl_debug(200, "Checking layout language: [%s]\n",
 			  language_desc);
 		if ((language_desc != NULL)
-		    && strustr(language_desc, upattern))
+		    && search_all(language_desc, patterns))
 			return TRUE;
 	}
 	gchar **languages = g_object_get_data(G_OBJECT(item),
@@ -845,7 +853,7 @@ if_language_matches_pattern(const XklConfigItem * item,
 		xkl_debug(200, "Checking language: [%s][%s]\n",
 			  *languages, language_desc);
 		if ((language_desc != NULL)
-		    && strustr(language_desc, upattern)) {
+		    && search_all(language_desc, patterns)) {
 			return TRUE;
 		}
 	}
@@ -861,17 +869,24 @@ xkl_config_registry_search_by_pattern_in_variant(XklConfigRegistry *
 						 search_param)
 {
 	gboolean variant_matched = FALSE;
-	xkl_debug(200, "Variant to check: [%s]\n", item->name);
+	gchar *full_desc = g_strdup_printf("%s - %s",
+					   search_param->layout_item->
+					   description, item->description);
 
-	if (strustr(item->description, search_param->upattern))
+	xkl_debug(200, "Variant to check: [%s][%s]\n", item->name,
+		  item->description);
+
+	if (search_all(full_desc, search_param->patterns))
 		variant_matched = TRUE;
+
+	g_free(full_desc);
 
 	if (!variant_matched) {
 		gchar **countries = g_object_get_data(G_OBJECT(item),
 						      XCI_PROP_COUNTRY_LIST);
 		if (countries && g_strv_length(countries) > 0) {
 			if (if_country_matches_pattern
-			    (item, search_param->upattern, FALSE))
+			    (item, search_param->patterns, FALSE))
 				variant_matched = TRUE;
 		} else {
 			if (search_param->country_matched)
@@ -884,7 +899,7 @@ xkl_config_registry_search_by_pattern_in_variant(XklConfigRegistry *
 						      XCI_PROP_LANGUAGE_LIST);
 		if (languages && g_strv_length(languages) > 0) {
 			if (if_language_matches_pattern
-			    (item, search_param->upattern, FALSE))
+			    (item, search_param->patterns, FALSE))
 				variant_matched = TRUE;
 		} else {
 			if (search_param->language_matched)
@@ -905,17 +920,18 @@ xkl_config_registry_search_by_pattern_in_layout(XklConfigRegistry * config,
 {
 	gchar *upper_name = g_ascii_strup(item->name, -1);
 
-	xkl_debug(200, "Layout to check: [%s]\n", item->name);
+	xkl_debug(200, "Layout to check: [%s][%s]\n", item->name,
+		  item->description);
 
 	search_param->country_matched =
 	    search_param->language_matched = FALSE;
 
-	if (if_country_matches_pattern(item, search_param->upattern, TRUE))
+	if (if_country_matches_pattern(item, search_param->patterns, TRUE))
 		search_param->country_matched = TRUE;
 	else if (if_language_matches_pattern
-		 (item, search_param->upattern, TRUE))
+		 (item, search_param->patterns, TRUE))
 		search_param->language_matched = TRUE;
-	else if (strustr(item->description, search_param->upattern))
+	else if (search_all(item->description, search_param->patterns))
 		search_param->language_matched = TRUE;
 
 	if (search_param->country_matched
@@ -943,12 +959,14 @@ xkl_config_registry_search_by_pattern(XklConfigRegistry
 {
 	xkl_debug(200, "Searching by pattern: [%s]\n", pattern);
 	gchar *upattern = g_utf8_strup(pattern, -1);
+	gchar **patterns = g_strsplit(upattern, " ", -1);
 	SearchParamType search_param = {
-		upattern, func, data
+		patterns, func, data
 	};
 	xkl_config_registry_foreach_layout(config, (ConfigItemProcessFunc)
 					   xkl_config_registry_search_by_pattern_in_layout,
 					   &search_param);
+	g_strfreev(patterns);
 	g_free(upattern);
 }
 
