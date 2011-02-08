@@ -139,8 +139,8 @@ xkl_item_populate_optional_array(XklConfigItem * item, xmlNodePtr ptr,
 		      xkl_find_element(element_ptr, element_tag));
 	     element_ptr = element_ptr->next, idx++) {
 		elements[idx] =
-		    g_strdup((const char *) element_ptr->children->
-			     content);
+		    g_strdup((const char *) element_ptr->
+			     children->content);
 	}
 
 	g_object_set_data_full(G_OBJECT(item),
@@ -245,8 +245,8 @@ xkl_read_config_item(XklConfigRegistry * config, gint doc_index,
 
 	if (vendor_element != NULL && vendor_element->children != NULL) {
 		vendor =
-		    g_strdup((const char *) vendor_element->
-			     children->content);
+		    g_strdup((const char *) vendor_element->children->
+			     content);
 		g_object_set_data_full(G_OBJECT(item), XCI_PROP_VENDOR,
 				       vendor, g_free);
 	}
@@ -319,8 +319,9 @@ xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
 
 		xkl_config_registry_foreach_in_nodeset(config,
 						       &processed_ids, di,
-						       xpath_obj->nodesetval,
-						       func, data);
+						       xpath_obj->
+						       nodesetval, func,
+						       data);
 		xmlXPathFreeObject(xpath_obj);
 	}
 	g_slist_foreach(processed_ids, (GFunc) g_free, NULL);
@@ -360,8 +361,9 @@ xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry
 
 		xkl_config_registry_foreach_in_nodeset(config,
 						       &processed_ids, di,
-						       xpath_obj->nodesetval,
-						       func, data);
+						       xpath_obj->
+						       nodesetval, func,
+						       data);
 		xmlXPathFreeObject(xpath_obj);
 	}
 	g_slist_foreach(processed_ids, (GFunc) g_free, NULL);
@@ -870,8 +872,9 @@ xkl_config_registry_search_by_pattern_in_variant(XklConfigRegistry *
 {
 	gboolean variant_matched = FALSE;
 	gchar *full_desc = g_strdup_printf("%s - %s",
-					   search_param->layout_item->
-					   description, item->description);
+					   search_param->
+					   layout_item->description,
+					   item->description);
 
 	xkl_debug(200, "Variant to check: [%s][%s]\n", item->name,
 		  item->description);
@@ -958,8 +961,8 @@ xkl_config_registry_search_by_pattern(XklConfigRegistry
 				      func, gpointer data)
 {
 	xkl_debug(200, "Searching by pattern: [%s]\n", pattern);
-	gchar *upattern = g_utf8_strup(pattern, -1);
-	gchar **patterns = g_strsplit(upattern, " ", -1);
+	gchar *upattern = pattern ? g_utf8_strup(pattern, -1) : NULL;
+	gchar **patterns = pattern ? g_strsplit(upattern, " ", -1) : NULL;
 	SearchParamType search_param = {
 		patterns, func, data
 	};
