@@ -480,10 +480,6 @@ extern gboolean xkl_read_config_item(XklConfigRegistry * config,
 				     gint doc_index, xmlNodePtr iptr,
 				     XklConfigItem * item);
 
-extern const gchar * xkl_get_language_iso_code(const gchar * code);
-
-extern const gchar * xkl_get_country_iso_code(const gchar * code);
-
 extern gint xkl_debug_level;
 
 extern const gchar *xkl_last_error_message;

@@ -810,7 +810,7 @@ if_country_matches_pattern(const XklConfigItem * item,
 	const gchar *country_desc;
 	if (check_name) {
 		gchar *upper_name = g_ascii_strup(item->name, -1);
-		country_desc = xkl_get_country_iso_code(upper_name);
+		country_desc = xkl_get_country_name(upper_name);
 		g_free(upper_name);
 		xkl_debug(200, "Checking layout country: [%s]\n",
 			  country_desc);
@@ -822,7 +822,7 @@ if_country_matches_pattern(const XklConfigItem * item,
 	gchar **countries = g_object_get_data(G_OBJECT(item),
 					      XCI_PROP_COUNTRY_LIST);
 	for (; countries && *countries; countries++) {
-		country_desc = xkl_get_country_iso_code(*countries);
+		country_desc = xkl_get_country_name(*countries);
 		xkl_debug(200, "Checking country: [%s][%s]\n",
 			  *countries, country_desc);
 		if ((country_desc != NULL)
@@ -839,7 +839,7 @@ if_language_matches_pattern(const XklConfigItem * item,
 {
 	const gchar *language_desc;
 	if (check_name) {
-		language_desc = xkl_get_language_iso_code(item->name);
+		language_desc = xkl_get_language_name(item->name);
 		xkl_debug(200, "Checking layout language: [%s]\n",
 			  language_desc);
 		if ((language_desc != NULL)
@@ -849,7 +849,7 @@ if_language_matches_pattern(const XklConfigItem * item,
 	gchar **languages = g_object_get_data(G_OBJECT(item),
 					      XCI_PROP_LANGUAGE_LIST);
 	for (; languages && *languages; languages++) {
-		language_desc = xkl_get_language_iso_code(*languages);
+		language_desc = xkl_get_language_name(*languages);
 		xkl_debug(200, "Checking language: [%s][%s]\n",
 			  *languages, language_desc);
 		if ((language_desc != NULL)

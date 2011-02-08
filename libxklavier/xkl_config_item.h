@@ -132,6 +132,10 @@ extern "C" {
  */
 	extern XklConfigItem *xkl_config_item_new(void);
 
+	extern const gchar * xkl_get_country_name(const gchar * code);
+
+	extern const gchar * xkl_get_language_name(const gchar * code);
+
 #ifdef __cplusplus
 }
 #endif				/* __cplusplus */
