@@ -43,6 +43,9 @@ xkl_engine_set_secondary_groups_mask
 xkl_engine_get_secondary_groups_mask
 xkl_engine_set_default_group
 xkl_engine_get_default_group
+xkl_engine_features_get_type
+xkl_engine_listen_modes_get_type
+xkl_engine_state_change_get_type
 <SUBSECTION Standard>
 XKL_ENGINE
 XKL_IS_ENGINE
@@ -51,6 +54,9 @@ xkl_engine_get_type
 XKL_ENGINE_CLASS
 XKL_IS_ENGINE_CLASS
 XKL_ENGINE_GET_CLASS
+XKL_TYPE_ENGINE_FEATURES
+XKL_TYPE_ENGINE_LISTEN_MODES
+XKL_TYPE_ENGINE_STATE_CHANGE
 </SECTION>
 
 <SECTION>
@@ -63,8 +69,11 @@ XCI_PROP_ALLOW_MULTIPLE_SELECTION
 XCI_PROP_VENDOR
 XCI_PROP_COUNTRY_LIST
 XCI_PROP_LANGUAGE_LIST
+XCI_PROP_EXTRA_ITEM
 XklConfigItem
 xkl_config_item_new
+xkl_get_country_name
+xkl_get_language_name
 <SUBSECTION Standard>
 XKL_CONFIG_ITEM
 XKL_IS_CONFIG_ITEM
@@ -122,6 +131,7 @@ xkl_config_registry_foreach_country
 xkl_config_registry_foreach_country_variant
 xkl_config_registry_foreach_language
 xkl_config_registry_foreach_language_variant
+xkl_config_registry_search_by_pattern
 <SUBSECTION Standard>
 XKL_CONFIG_REGISTRY
 XKL_IS_CONFIG_REGISTRY
