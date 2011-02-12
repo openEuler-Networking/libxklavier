@@ -132,8 +132,24 @@ extern "C" {
  */
 	extern XklConfigItem *xkl_config_item_new(void);
 
+/**
+ * xkl_get_country_name:
+ * @code: ISO 3166 Alpha 2 code: 2 chars, uppercase (US, RU, FR, ...)
+ *
+ * Get localized country name, from ISO code
+ *
+ * Returns: localized country name (USA, Russia, France, ... translated)
+ */
 	extern const gchar * xkl_get_country_name(const gchar * code);
 
+/**
+ * xkl_get_language_name:
+ * @code: ISO 639 2B or 2T code: 3 chars, lowercase (eng, rus, fra, ...)
+ *
+ * Get localized language name, from ISO code
+ *
+ * Returns: localized country name (English, Russiam, French, ... translated)
+ */
 	extern const gchar * xkl_get_language_name(const gchar * code);
 
 #ifdef __cplusplus
