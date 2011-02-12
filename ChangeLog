@@ -1,3 +1,9 @@
+2011-02-12  svu
+
+	* libxklavier/xkl_config_item.h, libxklavier/xkl_config_registry.h:
+	more gtk-doc comments
+	* doc/reference/libxklavier-sections.txt: fixed gtk-doc meta
+
 2011-01-29  svu
 
 	* libxklavier/xklavier_xkb.c: checking that XInput is >=2, otherwise
