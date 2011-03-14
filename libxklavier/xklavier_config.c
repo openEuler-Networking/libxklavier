@@ -514,62 +514,6 @@ xkl_config_registry_get_instance(XklEngine * engine)
 }
 
 /* We process descriptions as "leaf" elements - this is ok for base.xml*/
-static gboolean skipping_tag = FALSE;
-
-static void
-xkl_xml_sax_start_element_ns(void *ctx,
-			     const xmlChar * localname,
-			     const xmlChar * prefix,
-			     const xmlChar * URI,
-			     int nb_namespaces,
-			     const xmlChar ** namespaces,
-			     int nb_attributes,
-			     int nb_defaulted, const xmlChar ** attributes)
-{
-	int i;
-	gchar *lang = NULL;
-	for (i = 0; i < nb_attributes * 5; i += 5) {
-		int len = attributes[i + 4] - attributes[i + 3];
-		gchar *value = g_new0(gchar, len + 1);
-		memcpy(value, attributes[i + 3], len);
-		if (!g_ascii_strcasecmp((gchar *) attributes[i], "lang")
-		    /* && ... */
-		    ) {
-			lang = value;
-			break;
-		}
-		g_free(value);
-	}
-	if (lang != NULL) {
-		g_free(lang);
-		skipping_tag = TRUE;
-		return;
-	}
-	xmlSAX2StartElementNs(ctx, localname, prefix, URI,
-			      nb_namespaces, namespaces, nb_attributes,
-			      nb_defaulted, attributes);
-}
-
-static void
-xkl_xml_sax_characters(void *ctx, const xmlChar * ch, int len)
-{
-	if (!skipping_tag) {
-		xmlSAX2Characters(ctx, ch, len);
-	}
-}
-
-static void
-xkl_xml_sax_end_element_ns(void *ctx,
-			   const xmlChar * localname,
-			   const xmlChar * prefix, const xmlChar * URI)
-{
-	if (skipping_tag) {
-		skipping_tag = FALSE;
-	} else {
-		xmlSAX2EndElementNs(ctx, localname, prefix, URI);
-	}
-}
-
 gboolean
 xkl_config_registry_load_from_file(XklConfigRegistry * config,
 				   const gchar * file_name, gint docidx)
@@ -579,11 +523,7 @@ xkl_config_registry_load_from_file(XklConfigRegistry * config,
 
 	xkl_debug(100, "Loading XML registry from file %s\n", file_name);
 
-	/* Filter out all unneeded languages! */
 	xmlSAX2InitDefaultSAXHandler(ctxt->sax, TRUE);
-	ctxt->sax->startElementNs = xkl_xml_sax_start_element_ns;
-	ctxt->sax->endElementNs = xkl_xml_sax_end_element_ns;
-	ctxt->sax->characters = xkl_xml_sax_characters;
 
 	doc = xkl_config_registry_priv(config, docs[docidx]) =
 	    xmlCtxtReadFile(ctxt, file_name, NULL, XML_PARSE_NOBLANKS);
