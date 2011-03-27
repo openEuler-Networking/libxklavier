@@ -1,24 +1,34 @@
-AC_PREREQ(2.59)
+AC_PREREQ([2.63])
 
-AC_INIT([libxklavier], [5.1])
+AC_INIT([libxklavier],
+        [5.1],
+        [http://bugs.freedesktop.org/enter_bug.cgi?product=libxklavier],
+        [libxklavier])
+
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([libxklavier/xklavier.c])
-AM_INIT_AUTOMAKE([1.10 dist-bzip2])
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([build-aux])
 
-AM_CONFIG_HEADER(config.h)
-AC_CONFIG_MACRO_DIR(m4)
+AM_INIT_AUTOMAKE([1.10 dist-bzip2])
+AM_MAINTAINER_MODE([enable])
 
 dnl for DLL
 dnl http://sources.redhat.com/autobook/autobook/autobook_91.html
 VERSION_INFO=17:0:1
 AC_SUBST(VERSION_INFO)
 
-AM_MAINTAINER_MODE
-
+# Check for programs
 AC_PROG_CC
-AC_ISC_POSIX
-AC_HEADER_STDC
-AM_PROG_LIBTOOL
 AM_ICONV
+
+# Initialize libtool
+LT_PREREQ([2.2])
+LT_INIT
+
+# Gettext stuff, needed by AM_ICONV
+AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_VERSION([0.17])
 
 m4_ifset([GTK_DOC_CHECK], [
 GTK_DOC_CHECK(1.0)
@@ -33,10 +43,10 @@ AC_DEFUN([jm_LANGINFO_CODESET],
   AC_CHECK_FUNCS(nl_langinfo)
 
   AC_CACHE_CHECK([for nl_langinfo and CODESET], jm_cv_langinfo_codeset,
-    [AC_TRY_LINK([#include <langinfo.h>],
-      [char* cs = nl_langinfo(CODESET);],
-      jm_cv_langinfo_codeset=yes,
-      jm_cv_langinfo_codeset=no)
+    [AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <langinfo.h>]],
+                                     [[char* cs = nl_langinfo(CODESET);]])],
+                    [jm_cv_langinfo_codeset=yes],
+                    [jm_cv_langinfo_codeset=no])
     ])
   if test $jm_cv_langinfo_codeset = yes; then
     AC_DEFINE(HAVE_LANGINFO_CODESET, 1,
@@ -171,7 +181,7 @@ fi
 
 AC_DEFINE_UNQUOTED([ISO_CODES_PREFIX],["$iso_codes_prefix"],[ISO codes prefix])
 
-AC_OUTPUT([
+AC_CONFIG_FILES([
 Makefile
 libxklavier/Makefile
 libxklavier.spec
@@ -180,6 +190,7 @@ doc/reference/Makefile
 tests/Makefile
 libxklavier.pc
 ])
+AC_OUTPUT
 
 echo '**********************************************************'
 echo '  Libxklavier is configured with the following backends:'
