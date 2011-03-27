@@ -56,9 +56,9 @@ AC_SUBST(X_CFLAGS)
 
 AC_ARG_WITH( xkb_base,
              [  --with-xkb-base=DIR        XKB base path (by default it is /usr/share/X11/xkb)],
-             xkb_base="$withval", 
+             xkb_base="$withval",
              xorgdata=`$PKG_CONFIG --variable=datarootdir xorg-server`
-             if test -z "$xorgdata" ; then 
+             if test -z "$xorgdata" ; then
                xkb_base="/usr/share/X11/xkb"
              else
                xkb_base="$xorgdata/X11/xkb"
@@ -70,34 +70,34 @@ AC_PATH_PROG(XKBCOMP, xkbcomp, ,$PATH:/usr/X11R6/bin:/usr/bin/X11)
 
 AC_ARG_WITH( xkb_bin_base,
              [  --with-xkb-bin-base=DIR        XKB executables base path],
-             xkb_bin_base="$withval", 
-             if test -z "$XKBCOMP" ; then 
+             xkb_bin_base="$withval",
+             if test -z "$XKBCOMP" ; then
                xkb_bin_base="${xkb_base}"
              else
                xkb_bin_base="`dirname $XKBCOMP`"
              fi )
-			 
+
 AC_DEFINE_UNQUOTED(XKB_BIN_BASE,"${xkb_bin_base}",Base for XKB executables)
 
 AC_ARG_WITH( xkb_default_ruleset,
              [  --with-xkb-default-ruleset=RULES        XKB default set of rules (by default it is base)],
-             xkb_default_ruleset="$withval", 
+             xkb_default_ruleset="$withval",
              xkb_default_ruleset="base" )
 
 AC_DEFINE_UNQUOTED(XKB_DEFAULT_RULESET,"${xkb_default_ruleset}",Default XKB set of rules)
 
 AC_ARG_WITH( xmodmap_default_ruleset,
              [  --with-xmodmap-default-ruleset=RULES        Xmodmap default set of rules (by default it is base)],
-             xmodmap_default_ruleset="$withval", 
+             xmodmap_default_ruleset="$withval",
              xmodmap_default_ruleset="base" )
 
 AC_DEFINE_UNQUOTED(XMODMAP_DEFAULT_RULESET,"${xmodmap_default_ruleset}",Default Xmodmap set of rules)
 
 AC_ARG_WITH( xmodmap_base,
              [  --with-xmodmap-base=DIR        xmodmap base path (by default it is /usr/share/xmodmap)],
-             xmodmap_base="$withval", 
+             xmodmap_base="$withval",
              xmodmap_base="/usr/share/xmodmap" )
-			 
+
 AC_DEFINE_UNQUOTED(XMODMAP_BASE,"${xmodmap_base}",Base for xmodmap configuration)
 
 ac_xkblib_include="\
@@ -112,13 +112,13 @@ AM_CONDITIONAL(LIBXKBFILE_PRESENT, test "$libxkbfile_present" = "yes")
 
 AC_SUBST(libxkbfile_present)
 
-AC_ARG_ENABLE(xkb-support, 
+AC_ARG_ENABLE(xkb-support,
 [  --enable-xkb-support       Enable XKB support],
 , enable_xkb_support=yes)
 
 AM_CONDITIONAL(ENABLE_XKB_SUPPORT, test "$enable_xkb_support" = "yes")
 
-AC_ARG_ENABLE(xmodmap-support, 
+AC_ARG_ENABLE(xmodmap-support,
 [  --enable-xmodmap-support       Enable xmodmap support],
 , enable_xmodmap_support=yes)
 
