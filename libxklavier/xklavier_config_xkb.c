@@ -178,6 +178,55 @@ xkl_xkb_config_native_cleanup(XklEngine * engine,
 	g_free(component_names_ptr->geometry);
 }
 
+static gchar *
+xkl_config_get_current_group_description(XklEngine * engine)
+{
+	XklState state;
+
+	xkl_xkb_get_server_state(engine, &state);
+
+	int group = state.group;
+	if ((group < 0) ||
+	    (group >=
+	     xkl_engine_backend(engine, XklXkb,
+				cached_desc)->ctrls->num_groups))
+		return NULL;
+
+	return g_strdup(xkl_engine_backend(engine, XklXkb, group_names)
+			[group]);
+}
+
+static void
+xkl_config_set_group_by_description(XklEngine * engine, gchar * descr)
+{
+	int group, n_groups;
+	gchar **group_names;
+
+	if (descr == NULL)
+		return;
+
+	// perhaps could be made mode lightweight?
+	xkl_engine_reset_all_info(engine, FALSE,
+				  "Direct reload on activation");
+
+	n_groups =
+	    xkl_engine_backend(engine, XklXkb,
+			       cached_desc)->ctrls->num_groups;
+	group_names = xkl_engine_backend(engine, XklXkb, group_names);
+
+	for (group = 0; group < n_groups; group++, group_names++) {
+		if (!g_ascii_strcasecmp(descr, *group_names)) {
+			xkl_debug(150,
+				  "Found the group with the same description, %d: [%s]\n",
+				  group, *group_names);
+			xkl_engine_lock_group(engine, group);
+			break;
+		}
+	}
+
+	g_free(descr);
+}
+
 static XkbDescPtr
 xkl_config_get_keyboard(XklEngine * engine,
 			XkbComponentNamesPtr component_names_ptr,
@@ -192,6 +241,9 @@ xkl_config_get_keyboard(XklEngine * engine,
 	int xkmloadres;
 
 	Display *display = xkl_engine_get_display(engine);
+
+	gchar *preactivation_group_description = activate ?
+	    xkl_config_get_current_group_description(engine) : NULL;
 
 	if (tmpnam(xkm_fn) != NULL && tmpnam(xkb_fn) != NULL) {
 		pid_t cpid, pid;
@@ -303,8 +355,7 @@ xkl_config_get_keyboard(XklEngine * engine,
 								}
 							} else	/* no activate, just load */
 								xkb =
-								    result.
-								    xkb;
+								    result.xkb;
 						} else {	/* could not load properly */
 
 							xkl_debug(0,
@@ -351,6 +402,10 @@ xkl_config_get_keyboard(XklEngine * engine,
 			XSync(display, False);
 			/* Return to normal X error processing */
 			xkl_engine_priv(engine, criticalSection) = FALSE;
+
+			if (activate)
+				xkl_config_set_group_by_description(engine,
+								    preactivation_group_description);
 
 			xkl_debug(160,
 				  "Unlinking the temporary xkb file %s\n",
@@ -443,15 +498,15 @@ xkl_xkb_activate_config_rec(XklEngine * engine, const XklConfigRec * data)
 		xkl_debug(150, "New layouts: %p\n", data->layouts);
 		for (i = 0; i < g_strv_length(data->layouts); i++)
 			xkl_debug(150, "New layout[%d]: [%s]\n", i,
-				 data->layouts[i]);
+				  data->layouts[i]);
 		xkl_debug(150, "New variants: %p\n", data->variants);
 		for (i = 0; i < g_strv_length(data->variants); i++)
 			xkl_debug(150, "New variant[%d]: [%s]\n", i,
-				 data->variants[i]);
+				  data->variants[i]);
 		xkl_debug(150, "New options: %p\n", data->options);
 		for (i = 0; i < g_strv_length(data->options); i++)
 			xkl_debug(150, "New option[%d]: [%s]\n", i,
-				 data->options[i]);
+				  data->options[i]);
 	}
 #endif
 
