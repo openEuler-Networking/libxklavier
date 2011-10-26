@@ -377,6 +377,10 @@ xkl_engine_load_window_tree(XklEngine * engine)
 							     curr_toplvl_win));
 
 	if (have_toplevel_win) {
+		XklState old_state;
+
+		old_state = xkl_engine_priv (engine, curr_state);
+
 		gboolean have_state =
 		    xkl_engine_get_toplevel_window_state(engine,
 							 xkl_engine_priv
@@ -399,6 +403,11 @@ xkl_engine_load_window_tree(XklEngine * engine)
 			  (have_state ?
 			   xkl_engine_priv(engine,
 					   curr_state).indicators : -1));
+
+		if (old_state.group != xkl_engine_priv (engine, curr_state).group) {
+			xkl_engine_lock_group (engine, xkl_engine_priv (engine, curr_state).group);
+		}
+
 	} else {
 		xkl_debug(160,
 			  "Could not find initial app. "
