@@ -27,6 +27,12 @@
 extern "C" {
 #endif				/* __cplusplus */
 
+        /**
+         * XklConfigRec:
+         * @layouts: (array zero-terminated=1):
+         * @variants: (array zero-terminated=1):
+         * @options: (array zero-terminated=1):
+         */
 	typedef struct _XklConfigRec XklConfigRec;
 	typedef struct _XklConfigRecClass XklConfigRecClass;
 

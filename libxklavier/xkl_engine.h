@@ -167,7 +167,7 @@ extern "C" {
  *
  * Get the instance of the XklEngine. Within a process, there is always once instance.
  *
- * Returns: the singleton instance
+ * Returns: (transfer none): the singleton instance
  */
 	extern XklEngine *xkl_engine_get_instance(Display * display);
 
@@ -433,8 +433,8 @@ extern "C" {
  * xkl_engine_get_groups_names:
  * @engine: the engine
  *
- * Returns: the array of group names for the current XKB configuration 
- * (keyboard).
+ * Returns: (transfer none): the array of group names for the current XKB
+ * configuration (keyboard).
  * This array is static, should not be freed
  */
 	extern const gchar **xkl_engine_get_groups_names(XklEngine *
@@ -444,8 +444,8 @@ extern "C" {
  * xkl_engine_get_indicators_names:
  * @engine: the engine
  *
- * Returns: the array of indicator names for the current XKB configuration 
- * (keyboard).
+ * Returns: (transfer none): the array of indicator names for the current XKB
+ * configuration (keyboard).
  * This array is static, should not be freed
  */
 	extern const gchar **xkl_engine_get_indicators_names(XklEngine *

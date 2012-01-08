@@ -79,7 +79,7 @@ extern "C" {
  *
  * Create new XklConfig
  *
- * Returns: new instance
+ * Returns: (transfer none): new instance
  */
 	extern XklConfigRegistry
 	    * xkl_config_registry_get_instance(XklEngine * engine);
@@ -131,7 +131,7 @@ extern "C" {
 /**
  * xkl_config_registry_foreach_model:
  * @config: the config registry
- * @func: callback to call for every model
+ * @func: (scope call): callback to call for every model
  * @data: anything which can be stored into the pointer
  *
  * Enumerates keyboard models from the XML configuration registry
@@ -144,7 +144,7 @@ extern "C" {
 /**
  * xkl_config_registry_foreach_layout:
  * @config: the config registry
- * @func: callback to call for every layout
+ * @func: (scope call): callback to call for every layout
  * @data: anything which can be stored into the pointer
  *
  * Enumerates keyboard layouts from the XML configuration registry
@@ -159,7 +159,7 @@ extern "C" {
  * xkl_config_registry_foreach_layout_variant:
  * @config: the config registry
  * @layout_name: layout name for which variants will be listed
- * @func: callback to call for every layout variant
+ * @func: (scope call): callback to call for every layout variant
  * @data: anything which can be stored into the pointer
  *
  * Enumerates keyboard layout variants from the XML configuration registry
@@ -175,7 +175,7 @@ extern "C" {
 /**
  * xkl_config_registry_foreach_option_group:
  * @config: the config registry
- * @func: callback to call for every option group
+ * @func: (scope call): callback to call for every option group
  * @data: anything which can be stored into the pointer
  *
  * Enumerates keyboard option groups from the XML configuration registry
@@ -191,7 +191,7 @@ extern "C" {
  * @config: the config registry
  * @option_group_name: option group name for which variants 
  * will be listed
- * @func: callback to call for every option
+ * @func: (scope call): callback to call for every option
  * @data: anything which can be stored into the pointer
  *
  * Enumerates keyboard options from the XML configuration registry
@@ -291,7 +291,7 @@ extern "C" {
 /**
  * xkl_config_registry_foreach_country:
  * @config: the config registry
- * @func: callback to call for every ISO 3166 country code
+ * @func: (scope call): callback to call for every ISO 3166 country code
  * @data: anything which can be stored into the pointer
  *
  * Enumerates countries for which layouts are available,
@@ -307,7 +307,7 @@ extern "C" {
  * xkl_config_registry_foreach_country_variant:
  * @config: the config registry
  * @country_code: country ISO code for which variants will be listed
- * @func: callback to call for every country variant
+ * @func: (scope call): callback to call for every country variant
  * @data: anything which can be stored into the pointer
  *
  * Enumerates keyboard layout variants for the country,
@@ -324,7 +324,7 @@ extern "C" {
 /**
  * xkl_config_registry_foreach_language:
  * @config: the config registry
- * @func: callback to call for every ISO 639-2 country code
+ * @func: (scope call): callback to call for every ISO 639-2 country code
  * @data: anything which can be stored into the pointer
  *
  * Enumerates languages for which layouts are available,
@@ -340,7 +340,7 @@ extern "C" {
  * xkl_config_registry_foreach_language_variant:
  * @config: the config registry
  * @language_code: language ISO code for which variants will be listed
- * @func: callback to call for every country variant
+ * @func: (scope call): callback to call for every country variant
  * @data: anything which can be stored into the pointer
  *
  * Enumerates keyboard layout variants for the language,
@@ -359,7 +359,7 @@ extern "C" {
  * xkl_config_registry_search_by_pattern:
  * @config: the config registry
  * @pattern: pattern to search for (NULL means "all")
- * @func: callback to call for every matching layout/variant
+ * @func: (scope call): callback to call for every matching layout/variant
  * @data: anything which can be stored into the pointer
  *
  * Enumerates keyboard layout/variants that match the pattern.
