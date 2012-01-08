@@ -191,6 +191,30 @@ xkl_config_rec_equals(XklConfigRec * data1, XklConfigRec * data2)
 }
 
 void
+xkl_config_rec_set_layouts(XklConfigRec * data,
+			   const gchar ** new_layouts)
+{
+        g_strfreev (data->layouts);
+	data->layouts = g_strdupv ((gchar**) new_layouts);
+}
+
+void
+xkl_config_rec_set_variants(XklConfigRec * data,
+			   const gchar ** new_variants)
+{
+        g_strfreev (data->variants);
+	data->variants = g_strdupv ((gchar**) new_variants);
+}
+
+void
+xkl_config_rec_set_options(XklConfigRec * data,
+			   const gchar ** new_options)
+{
+        g_strfreev (data->options);
+	data->options = g_strdupv ((gchar**) new_options);
+}
+
+void
 xkl_config_rec_init(XklConfigRec * data)
 {
 	/* clear the structure VarDefsPtr... */

@@ -239,6 +239,48 @@ extern "C" {
 	extern gboolean xkl_config_rec_equals(XklConfigRec * data1,
 					      XklConfigRec * data2);
 
+/**
+ * xkl_config_rec_set_layouts:
+ * @data: record to change
+ * @new_layouts: (array zero-terminated=1) (transfer none): zero terminated
+ * list of new layout names.
+ *
+ * Sets a new layout list. 
+ *
+ * Frees the previous layout list. This is primarily useful for bindings, in C
+ * you can manipulate the @layouts record member directly.
+ */
+	extern void xkl_config_rec_set_layouts(XklConfigRec * data,
+					       const gchar ** new_layouts);
+
+/**
+ * xkl_config_rec_set_variants:
+ * @data: record to change
+ * @new_variants: (transfer none) (array zero-terminated=1): zero terminated
+ * list of new variant names.
+ *
+ * Sets a new variant list. 
+ *
+ * Frees the previous variant list. This is primarily useful for bindings, in C
+ * you can manipulate the @variants record member directly.
+ */
+	extern void xkl_config_rec_set_variants(XklConfigRec * data,
+						const gchar ** new_variants);
+
+/**
+ * xkl_config_rec_set_options:
+ * @data: record to change
+ * @new_options: (transfer none) (array zero-terminated=1): zero terminated
+ * list of new option names.
+ *
+ * Sets a new option list. 
+ *
+ * Frees the previous option list. This is primarily useful for bindings, in C
+ * you can manipulate the @options record member directly.
+ */
+	extern void xkl_config_rec_set_options(XklConfigRec * data,
+					       const gchar ** new_options);
+
 #ifdef __cplusplus
 }
 #endif				/* __cplusplus */
