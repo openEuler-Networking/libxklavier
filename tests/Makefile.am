@@ -8,3 +8,4 @@ AM_CFLAGS=-Wall -I$(top_srcdir) $(X_CFLAGS) $(GLIB_CFLAGS)
 
 LDADD=$(top_builddir)/libxklavier/libxklavier.la $(X_LIBS) $(GLIB_LIBS)
 
+EXTRA_DIST=test_gi.py
