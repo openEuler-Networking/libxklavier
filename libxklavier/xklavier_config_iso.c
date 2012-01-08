@@ -200,7 +200,7 @@ xkl_get_country_name(const gchar * code)
 
 static void
 xkl_config_registry_foreach_iso_code(XklConfigRegistry * config,
-				     ConfigItemProcessFunc func,
+				     XklConfigItemProcessFunc func,
 				     const gchar * xpath_exprs[],
 				     DescriptionGetterFunc dgf,
 				     gboolean to_upper, gpointer data)
@@ -282,7 +282,7 @@ xkl_config_registry_foreach_iso_code(XklConfigRegistry * config,
 void
 xkl_config_registry_foreach_country(XklConfigRegistry *
 				    config,
-				    ConfigItemProcessFunc
+				    XklConfigItemProcessFunc
 				    func, gpointer data)
 {
 	const gchar *xpath_exprs[] = {
@@ -299,7 +299,7 @@ xkl_config_registry_foreach_country(XklConfigRegistry *
 void
 xkl_config_registry_foreach_language(XklConfigRegistry *
 				     config,
-				     ConfigItemProcessFunc
+				     XklConfigItemProcessFunc
 				     func, gpointer data)
 {
 	const gchar *xpath_exprs[] = {
@@ -318,7 +318,7 @@ xkl_config_registry_foreach_iso_variant(XklConfigRegistry *
 					config,
 					const gchar *
 					iso_code,
-					TwoConfigItemsProcessFunc
+					XklTwoConfigItemsProcessFunc
 					func, gpointer data,
 					const gchar * layout_xpath_exprs[],
 					const gboolean
@@ -440,7 +440,7 @@ xkl_config_registry_foreach_country_variant(XklConfigRegistry *
 					    config,
 					    const gchar *
 					    country_code,
-					    TwoConfigItemsProcessFunc
+					    XklTwoConfigItemsProcessFunc
 					    func, gpointer data)
 {
 	const gchar *layout_xpath_exprs[] = {
@@ -477,7 +477,7 @@ xkl_config_registry_foreach_language_variant(XklConfigRegistry *
 					     config,
 					     const gchar *
 					     language_code,
-					     TwoConfigItemsProcessFunc
+					     XklTwoConfigItemsProcessFunc
 					     func, gpointer data)
 {
 	const gchar *layout_xpath_exprs[] = {

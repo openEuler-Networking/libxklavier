@@ -466,14 +466,14 @@ extern void
 xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry * config,
 						const gchar * format,
 						const gchar * value,
-						ConfigItemProcessFunc func,
+						XklConfigItemProcessFunc func,
 						gpointer data);
 
 extern void xkl_config_registry_foreach_in_xpath(XklConfigRegistry *
 						 config,
 						 xmlXPathCompExprPtr
 						 xpath_comp_expr,
-						 ConfigItemProcessFunc
+						 XklConfigItemProcessFunc
 						 func, gpointer data);
 
 extern gboolean xkl_read_config_item(XklConfigRegistry * config,

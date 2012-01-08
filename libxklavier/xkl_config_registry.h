@@ -101,19 +101,19 @@ extern "C" {
 						 if_extras_needed);
 
 /**
- * ConfigItemProcessFunc:
+ * XklConfigItemProcessFunc:
  * @config: the config registry
  * @item: the item from registry
  * @data: anything which can be stored into the pointer
  *
  * Callback type used for enumerating keyboard models, layouts, variants, options
  */
-	typedef void (*ConfigItemProcessFunc) (XklConfigRegistry * config,
-					       const XklConfigItem * item,
-					       gpointer data);
+	typedef void (*XklConfigItemProcessFunc) (XklConfigRegistry * config,
+						  const XklConfigItem * item,
+						  gpointer data);
 
 /**
- * TwoConfigItemsProcessFunc:
+ * XklTwoConfigItemsProcessFunc:
  * @config: the config registry
  * @item: the item from registry
  * @subitem: the item from registry
@@ -121,12 +121,16 @@ extern "C" {
  *
  * Callback type used for enumerating layouts/variants for countries/languages
  */
-	typedef void (*TwoConfigItemsProcessFunc) (XklConfigRegistry *
-						   config,
-						   const XklConfigItem *
-						   item,
-						   const XklConfigItem *
-						   subitem, gpointer data);
+	typedef void (*XklTwoConfigItemsProcessFunc) (XklConfigRegistry *
+					      config,
+						      const XklConfigItem *
+						      item,
+						      const XklConfigItem *
+						      subitem, gpointer data);
+
+/* provide the old names for backwards compatibility */
+	typedef XklConfigItemProcessFunc ConfigItemProcessFunc;
+	typedef XklTwoConfigItemsProcessFunc TwoConfigItemsProcessFunc;
 
 /**
  * xkl_config_registry_foreach_model:
@@ -138,7 +142,7 @@ extern "C" {
  */
 	extern void xkl_config_registry_foreach_model(XklConfigRegistry *
 						      config,
-						      ConfigItemProcessFunc
+						      XklConfigItemProcessFunc
 						      func, gpointer data);
 
 /**
@@ -151,7 +155,7 @@ extern "C" {
  */
 	extern void xkl_config_registry_foreach_layout(XklConfigRegistry *
 						       config,
-						       ConfigItemProcessFunc
+						       XklConfigItemProcessFunc
 						       func,
 						       gpointer data);
 
@@ -169,7 +173,7 @@ extern "C" {
 						    config,
 						    const gchar *
 						    layout_name,
-						    ConfigItemProcessFunc
+						    XklConfigItemProcessFunc
 						    func, gpointer data);
 
 /**
@@ -183,7 +187,7 @@ extern "C" {
 	extern void
 	 xkl_config_registry_foreach_option_group(XklConfigRegistry *
 						  config,
-						  ConfigItemProcessFunc
+						  XklConfigItemProcessFunc
 						  func, gpointer data);
 
 /**
@@ -200,7 +204,7 @@ extern "C" {
 						       config,
 						       const gchar *
 						       option_group_name,
-						       ConfigItemProcessFunc
+						       XklConfigItemProcessFunc
 						       func,
 						       gpointer data);
 
@@ -299,7 +303,7 @@ extern "C" {
  */
 	extern void xkl_config_registry_foreach_country(XklConfigRegistry *
 							config,
-							ConfigItemProcessFunc
+							XklConfigItemProcessFunc
 							func,
 							gpointer data);
 
@@ -318,7 +322,7 @@ extern "C" {
 						     config,
 						     const gchar *
 						     country_code,
-						     TwoConfigItemsProcessFunc
+						     XklTwoConfigItemsProcessFunc
 						     func, gpointer data);
 
 /**
@@ -332,7 +336,7 @@ extern "C" {
  */
 	extern void xkl_config_registry_foreach_language(XklConfigRegistry
 							 * config,
-							 ConfigItemProcessFunc
+							 XklConfigItemProcessFunc
 							 func,
 							 gpointer data);
 
@@ -351,7 +355,7 @@ extern "C" {
 						      config,
 						      const gchar *
 						      language_code,
-						      TwoConfigItemsProcessFunc
+						      XklTwoConfigItemsProcessFunc
 						      func, gpointer data);
 
 
@@ -371,7 +375,7 @@ extern "C" {
 	extern void
 	 xkl_config_registry_search_by_pattern(XklConfigRegistry * config,
 					       const gchar * pattern,
-					       TwoConfigItemsProcessFunc
+					       XklTwoConfigItemsProcessFunc
 					       func, gpointer data);
 
 #ifdef __cplusplus

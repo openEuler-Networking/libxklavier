@@ -50,7 +50,7 @@ enum {
 
 typedef struct {
 	gchar **patterns;
-	TwoConfigItemsProcessFunc func;
+	XklTwoConfigItemsProcessFunc func;
 	gpointer data;
 	gboolean country_matched;
 	gboolean language_matched;
@@ -265,7 +265,7 @@ static void
 xkl_config_registry_foreach_in_nodeset(XklConfigRegistry * config,
 				       GSList ** processed_ids,
 				       gint doc_index, xmlNodeSetPtr nodes,
-				       ConfigItemProcessFunc func,
+				       XklConfigItemProcessFunc func,
 				       gpointer data)
 {
 	gint i;
@@ -297,7 +297,7 @@ void
 xkl_config_registry_foreach_in_xpath(XklConfigRegistry * config,
 				     xmlXPathCompExprPtr
 				     xpath_comp_expr,
-				     ConfigItemProcessFunc func,
+				     XklConfigItemProcessFunc func,
 				     gpointer data)
 {
 	xmlXPathObjectPtr xpath_obj;
@@ -335,7 +335,7 @@ xkl_config_registry_foreach_in_xpath_with_param(XklConfigRegistry
 						format,
 						const gchar *
 						value,
-						ConfigItemProcessFunc
+						XklConfigItemProcessFunc
 						func, gpointer data)
 {
 	char xpath_expr[1024];
@@ -607,7 +607,7 @@ xkl_config_registry_free(XklConfigRegistry * config)
 
 void
 xkl_config_registry_foreach_model(XklConfigRegistry * config,
-				  ConfigItemProcessFunc func,
+				  XklConfigItemProcessFunc func,
 				  gpointer data)
 {
 	xkl_config_registry_foreach_in_xpath(config, models_xpath,
@@ -616,7 +616,7 @@ xkl_config_registry_foreach_model(XklConfigRegistry * config,
 
 void
 xkl_config_registry_foreach_layout(XklConfigRegistry * config,
-				   ConfigItemProcessFunc func,
+				   XklConfigItemProcessFunc func,
 				   gpointer data)
 {
 	xkl_config_registry_foreach_in_xpath(config, layouts_xpath,
@@ -628,7 +628,7 @@ xkl_config_registry_foreach_layout_variant(XklConfigRegistry *
 					   config,
 					   const gchar *
 					   layout_name,
-					   ConfigItemProcessFunc
+					   XklConfigItemProcessFunc
 					   func, gpointer data)
 {
 	xkl_config_registry_foreach_in_xpath_with_param(config,
@@ -641,7 +641,7 @@ xkl_config_registry_foreach_layout_variant(XklConfigRegistry *
 void
 xkl_config_registry_foreach_option_group(XklConfigRegistry *
 					 config,
-					 ConfigItemProcessFunc
+					 XklConfigItemProcessFunc
 					 func, gpointer data)
 {
 	xmlXPathObjectPtr xpath_obj;
@@ -715,7 +715,7 @@ void
 xkl_config_registry_foreach_option(XklConfigRegistry * config,
 				   const gchar *
 				   option_group_name,
-				   ConfigItemProcessFunc func,
+				   XklConfigItemProcessFunc func,
 				   gpointer data)
 {
 	xkl_config_registry_foreach_in_xpath_with_param(config,
@@ -885,7 +885,7 @@ xkl_config_registry_search_by_pattern_in_layout(XklConfigRegistry * config,
 	search_param->layout_item = item;
 
 	xkl_config_registry_foreach_layout_variant(config, item->name,
-						   (ConfigItemProcessFunc)
+						   (XklConfigItemProcessFunc)
 						   xkl_config_registry_search_by_pattern_in_variant,
 						   search_param);
 
@@ -897,7 +897,7 @@ xkl_config_registry_search_by_pattern(XklConfigRegistry
 				      * config,
 				      const gchar *
 				      pattern,
-				      TwoConfigItemsProcessFunc
+				      XklTwoConfigItemsProcessFunc
 				      func, gpointer data)
 {
 	xkl_debug(200, "Searching by pattern: [%s]\n", pattern);
@@ -906,7 +906,7 @@ xkl_config_registry_search_by_pattern(XklConfigRegistry
 	SearchParamType search_param = {
 		patterns, func, data
 	};
-	xkl_config_registry_foreach_layout(config, (ConfigItemProcessFunc)
+	xkl_config_registry_foreach_layout(config, (XklConfigItemProcessFunc)
 					   xkl_config_registry_search_by_pattern_in_layout,
 					   &search_param);
 	g_strfreev(patterns);
