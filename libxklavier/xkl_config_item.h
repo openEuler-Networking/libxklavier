@@ -133,6 +133,43 @@ extern "C" {
 	extern XklConfigItem *xkl_config_item_new(void);
 
 /**
+ * xkl_config_item_set_name:
+ *
+ * @item: the XklConfigItem object to be changed
+ * @name: (transfer none) (allow-none): Name (max. 32 characters); can be NULL.
+ *
+ * Change the @name field of a XklConfigItem. This is mostly useful for
+ * language bindings, in C you can manipulate the member directly.
+ */
+	extern void xkl_config_item_set_name(XklConfigItem * item,
+					     const gchar * name);
+
+/**
+ * xkl_config_item_set_short_description:
+ *
+ * @item: the XklConfigItem object to be changed
+ * @short_description: (transfer none) (allow-none): Short Description (max. 10
+ *        characters); can be NULL.
+ *
+ * Change the @short_description field of a XklConfigItem. This is mostly useful for
+ * language bindings, in C you can manipulate the member directly.
+ */
+	extern void xkl_config_item_set_short_description(XklConfigItem * item,
+							  const gchar * short_description);
+/**
+ * xkl_config_item_set_description:
+ *
+ * @item: the XklConfigItem object to be changed
+ * @description: (transfer none) (allow-none): Description (max. 192
+ *        characters); can be NULL.
+ *
+ * Change the @description field of a XklConfigItem. This is mostly useful for
+ * language bindings, in C you can manipulate the member directly.
+ */
+	extern void xkl_config_item_set_description(XklConfigItem * item,
+						    const gchar * description);
+
+/**
  * xkl_get_country_name:
  * @code: ISO 3166 Alpha 2 code: 2 chars, uppercase (US, RU, FR, ...)
  *

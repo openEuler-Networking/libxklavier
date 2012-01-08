@@ -54,6 +54,36 @@ xkl_config_item_new(void)
 			    (xkl_config_item_get_type(), NULL));
 }
 
+void
+xkl_config_item_set_name(XklConfigItem * item,
+			 const gchar * name)
+{
+	if (name != NULL)
+		strncpy (item->name, name, XKL_MAX_CI_SHORT_DESC_LENGTH-1);
+	else
+		item->name[0] = '\0';
+}
+
+void
+xkl_config_item_set_short_description(XklConfigItem * item,
+				      const gchar * short_description)
+{
+	if (short_description != NULL)
+		strncpy (item->short_description, short_description, XKL_MAX_CI_DESC_LENGTH-1);
+	else
+		item->short_description[0] = '\0';
+}
+
+void
+xkl_config_item_set_description(XklConfigItem * item,
+				const gchar * description)
+{
+	if (description != NULL)
+		strncpy (item->description, description, XKL_MAX_CI_NAME_LENGTH-1);
+	else
+		item->description[0] = '\0';
+}
+
 G_DEFINE_TYPE(XklConfigRec, xkl_config_rec, G_TYPE_OBJECT)
 
 static void
