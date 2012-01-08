@@ -10,7 +10,7 @@ AC_CONFIG_SRCDIR([libxklavier/xklavier.c])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 
-AM_INIT_AUTOMAKE([1.10 dist-bzip2])
+AM_INIT_AUTOMAKE([1.10 dist-bzip2 -Wno-portability])
 AM_MAINTAINER_MODE([enable])
 
 # Support silent build rules, requires at least automake-1.11. Disable
@@ -34,6 +34,9 @@ LT_INIT
 # Gettext stuff, needed by AM_ICONV
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION([0.17])
+
+# Introspection
+GOBJECT_INTROSPECTION_CHECK([1.30.0])
 
 m4_ifset([GTK_DOC_CHECK], [
 GTK_DOC_CHECK(1.0)

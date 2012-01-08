@@ -24,8 +24,8 @@ AM_CFLAGS=-Wall -DDATA_DIR=\"$(datadir)/$(PACKAGE)\" \
 
 lib_LTLIBRARIES = libxklavier.la
 noinst_HEADERS = xklavier_private.h xklavier_private_xkb.h xklavier_private_xmm.h
-xklavier_headers = xklavier.h xkl_config_registry.h xkl_engine.h \
-	xkl_config_rec.h xkl_config_item.h xkl_engine_marshal.h
+xklavier_headers = xkl_engine.h xkl_config_item.h xkl_config_registry.h \
+	xkl_config_rec.h xkl_engine_marshal.h xklavier.h
 
 xklavier_built_headers = xkl-enum-types.h
 xklavier_built_cfiles = xkl-enum-types.c
@@ -80,4 +80,30 @@ xkl-enum-types.c: $(xklavier_headers) xkl-enum-types.h
 	&& rm -f new-xkl-enum-types.c
 
 DISTCLEANFILES=$(xklavier_built_headers) $(xklavier_built_cfiles) stamp-xkl-enum-types.h
+CLEANFILES=
 
+# build intospection typelib
+-include $(INTROSPECTION_MAKEFILE)
+INTROSPECTION_GIRS =
+INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --warn-all
+INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
+
+if HAVE_INTROSPECTION
+# avoid introspecting private headers
+introspection_sources = $(xklavier_headers) $(filter %.c, $(libxklavier_la_SOURCES))
+
+Xkl-1.0.gir: libxklavier.la
+Xkl_1_0_gir_INCLUDES = GObject-2.0 xlib-2.0
+Xkl_1_0_gir_CFLAGS = $(INCLUDES) $(X_CFLAGS) $(XML_CFLAGS) $(GLIB_CFLAGS) $(XINPUT_CFLAGS)
+Xkl_1_0_gir_LIBS = libxklavier.la
+Xkl_1_0_gir_FILES = $(xklavier_headers) $(introspection_sources)
+INTROSPECTION_GIRS += Xkl-1.0.gir
+
+girdir = $(datadir)/gir-1.0
+gir_DATA = $(INTROSPECTION_GIRS)
+
+typelibdir = $(libdir)/girepository-1.0
+typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
+
+CLEANFILES += $(gir_DATA) $(typelib_DATA)
+endif
