@@ -36,6 +36,8 @@ print('indicator names:', engine.get_indicators_names())
 print('group names:', engine.get_groups_names())
 print('default layout:', engine.get_groups_names()[engine.get_default_group()])
 print('features: %X' % engine.get_features())
+st = engine.get_current_state()
+print('current state: group: %i, indicators: %u' % (st.group, st.indicators))
 
 # check ConfigItem ctor with data
 i = Xkl.ConfigItem()

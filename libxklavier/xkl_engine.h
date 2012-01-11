@@ -82,6 +82,10 @@ extern "C" {
 		guint32 indicators;
 	} XklState;
 
+#define XKL_TYPE_STATE (xkl_state_get_type())
+
+        GType xkl_state_get_type (void) G_GNUC_CONST;
+
 /**
  *	The main Xklavier engine class
  */
@@ -326,7 +330,7 @@ extern "C" {
  * xkl_engine_get_current_state:
  * @engine: the engine
  *
- * Returns: current state of the keyboard.
+ * Returns: (transfer none): current state of the keyboard.
  * Returned value is a statically allocated buffer, should not be freed.
  */
 	extern XklState *xkl_engine_get_current_state(XklEngine * engine);

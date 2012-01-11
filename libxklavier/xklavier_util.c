@@ -27,6 +27,20 @@
 #include "xklavier_private.h"
 
 XklState *
+_xkl_state_copy(XklState * state)
+{
+	XklState * copy;
+
+	copy = g_new(XklState, 1);
+	copy->group = state->group;
+	copy->indicators = state->indicators;
+
+	return copy;
+}
+
+G_DEFINE_BOXED_TYPE (XklState, xkl_state, _xkl_state_copy, g_free);
+
+XklState *
 xkl_engine_get_current_state(XklEngine * engine)
 {
 	return &xkl_engine_priv(engine, curr_state);
