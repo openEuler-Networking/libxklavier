@@ -1,7 +1,7 @@
 AC_PREREQ([2.63])
 
 AC_INIT([libxklavier],
-        [5.1],
+        [5.2],
         [http://bugs.freedesktop.org/enter_bug.cgi?product=libxklavier],
         [libxklavier])
 

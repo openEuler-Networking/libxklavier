@@ -1,3 +1,5 @@
+5.2	Optional introspection introduced
+	Some minor fixes (runtime and build-time)
 5.1	Expanding APIs for GNOME 3 needs (bumped soname):
 	- converting ISO codes to translatable names (it was private, now public)
 	- search by pattern
