@@ -6,4 +6,4 @@ Makefile.in
 .deps
 .libs
 *xkl-enum-types.*
-
+Xkl-1.0.*

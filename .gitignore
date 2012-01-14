@@ -37,3 +37,6 @@ libxklavier-*.tar.*
 m4
 *.bak
 *~
+ABOUT-NLS
+po
+build-aux
