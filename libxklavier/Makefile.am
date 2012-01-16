@@ -94,7 +94,7 @@ introspection_sources = $(xklavier_headers) $(filter %.c, $(libxklavier_la_SOURC
 
 Xkl-1.0.gir: libxklavier.la
 Xkl_1_0_gir_INCLUDES = GObject-2.0 xlib-2.0
-Xkl_1_0_gir_CFLAGS = $(INCLUDES) $(X_CFLAGS) $(XML_CFLAGS) $(GLIB_CFLAGS) $(XINPUT_CFLAGS)
+Xkl_1_0_gir_CFLAGS = -I$(top_srcdir) $(INCLUDES) $(X_CFLAGS) $(XML_CFLAGS) $(GLIB_CFLAGS) $(XINPUT_CFLAGS)
 Xkl_1_0_gir_LIBS = libxklavier.la
 Xkl_1_0_gir_FILES = $(xklavier_headers) $(introspection_sources)
 INTROSPECTION_GIRS += Xkl-1.0.gir
