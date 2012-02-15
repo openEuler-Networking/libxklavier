@@ -1,3 +1,4 @@
+5.2.1	Fixed GIR params for introspection (broken build)
 5.2	Optional introspection introduced
 	Some minor fixes (runtime and build-time)
 5.1	Expanding APIs for GNOME 3 needs (bumped soname):
