@@ -453,7 +453,7 @@ xkl_config_rec_set_to_root_window_property(const XklConfigRec * data,
 					   gchar * rules_file,
 					   XklEngine * engine)
 {
-	gint len, rv;
+	gint len;
 	gchar *pval;
 	gchar *next;
 	gchar *all_layouts = xkl_config_rec_merge_layouts(data);
@@ -529,7 +529,7 @@ xkl_config_rec_set_to_root_window_property(const XklConfigRec * data,
 	}
 
 	display = xkl_engine_get_display(engine);
-	rv = XChangeProperty(display, xkl_engine_priv(engine, root_window),
+	XChangeProperty(display, xkl_engine_priv(engine, root_window),
 			     rules_atom, XA_STRING, 8, PropModeReplace,
 			     (unsigned char *) pval, len);
 	XSync(display, False);
@@ -537,8 +537,8 @@ xkl_config_rec_set_to_root_window_property(const XklConfigRec * data,
 	for (i = len - 1; --i >= 0;)
 		if (pval[i] == '\0')
 			pval[i] = '?';
-	XklDebug(150, "Stored [%s] of length %d to [%s] of %X: %d\n", pval,
-		 len, propName, _xklRootWindow, rv);
+	XklDebug(150, "Stored [%s] of length %d to [%s] of %X\n", pval,
+		 len, propName, _xklRootWindow);
 #endif
 	if (all_layouts != NULL)
 		g_free(all_layouts);

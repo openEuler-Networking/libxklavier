@@ -649,9 +649,7 @@ xkl_engine_constructor(GType type,
 
 	{
 		/* Invoke parent constructor. */
-		XklEngineClass *klass;
-		klass =
-		    XKL_ENGINE_CLASS(g_type_class_peek(XKL_TYPE_ENGINE));
+		g_type_class_peek(XKL_TYPE_ENGINE);
 		obj =
 		    parent_class->constructor(type, n_construct_properties,
 					      construct_properties);

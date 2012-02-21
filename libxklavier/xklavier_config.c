@@ -1062,10 +1062,7 @@ xkl_config_registry_constructor(GType type,
 	XklConfigRegistry *config;
 	XklEngine *engine; {
 		/* Invoke parent constructor. */
-		XklConfigRegistryClass *klass;
-		klass =
-		    XKL_CONFIG_REGISTRY_CLASS(g_type_class_peek
-					      (XKL_TYPE_CONFIG_REGISTRY));
+		g_type_class_peek(XKL_TYPE_CONFIG_REGISTRY);
 		obj =
 		    parent_class->constructor(type,
 					      n_construct_properties,
