@@ -37,13 +37,13 @@ libxklavier_la_SOURCES = $(xklavier_built_cfiles) xklavier.c xklavier_evt.c xkla
 	xklavier_xmm.c xklavier_xmm_opts.c xklavier_evt_xmm.c xklavier_config_xmm.c \
 	xklavier_util.c xklavier_props.c xklavier_dump.c xkl_engine_marshal.c \
 	$(noinst_HEADERS) $(xklavierinc_HEADERS) 
-libxklavier_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
+libxklavier_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined -export-symbols $(srcdir)/libxklavier.public
 libxklavier_la_LIBADD = \
  $(XML_LIBS) $(GLIB_LIBS) $(XINPUT_LIBS) \
  $(LIBXKBFILE_PRESENT_LDFLAGS) \
  $(X_LIBS) -lX11 $(LIBICONV) 
 
-EXTRA_DIST=marshal.list
+EXTRA_DIST=marshal.list libxklavier.public
 
 GLIB_GENMARSHAL = `$PKG_CONFIG --variable=glib_genmarshal glib-2.0`
 
