@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 #
 # Test GI binding of libxklavier
 # Copyright (C) 2011 Martin Pitt <martin.pitt@ubuntu.com>
@@ -54,7 +54,7 @@ if not registry.load(False):
 
 print('\n== Available Layouts ==')
 def layout_iter(registry, item, data):
-    print('[%s] %s, ' % (item_str(item.name), item_str(item.description)), end='')
+    print('[%s] %s, ' % (item_str(item.name), item_str(item.description)))
 
 registry.foreach_layout(layout_iter, None)
 print()
