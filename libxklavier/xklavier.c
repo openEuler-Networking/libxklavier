@@ -804,12 +804,6 @@ xkl_engine_finalize(GObject * obj)
 static void
 xkl_engine_class_init(XklEngineClass * klass)
 {
-	static GEnumValue state_change_values[] = {
-		{GROUP_CHANGED, "GROUP_CHANGED", NULL},
-		{INDICATORS_CHANGED, "INDICATORS_CHANGED", NULL},
-		{0, NULL, NULL}
-	};
-
 	GObjectClass *object_class;
 	GParamSpec *display_param_spec;
 	GParamSpec *backend_name_param_spec;
@@ -819,7 +813,6 @@ xkl_engine_class_init(XklEngineClass * klass)
 	GParamSpec *default_group_param_spec;
 	GParamSpec *secondary_groups_mask_param_spec;
 	GParamSpec *indicators_handling_param_spec;
-	GType state_change_type;
 
 	const gchar *sdl;
 
@@ -842,10 +835,6 @@ xkl_engine_class_init(XklEngineClass * klass)
 						      "Backend name",
 						      NULL,
 						      G_PARAM_READABLE);
-
-	state_change_type =
-	    g_enum_register_static("XklEngineStateChangeType",
-				   state_change_values);
 
 	features_param_spec = g_param_spec_flags("features",
 						 "Features",
@@ -923,8 +912,8 @@ xkl_engine_class_init(XklEngineClass * klass)
 		     G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET(XklEngineClass,
 							state_notify),
 		     NULL, NULL,
-		     xkl_engine_VOID__FLAGS_INT_BOOLEAN,
-		     G_TYPE_NONE, 3, state_change_type, G_TYPE_INT,
+		     xkl_engine_VOID__ENUM_INT_BOOLEAN,
+		     G_TYPE_NONE, 3, XKL_TYPE_ENGINE_STATE_CHANGE, G_TYPE_INT,
 		     G_TYPE_BOOLEAN);
 
 	/* static stuff initialized */

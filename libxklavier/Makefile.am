@@ -45,7 +45,7 @@ libxklavier_la_LIBADD = \
 
 EXTRA_DIST=marshal.list libxklavier.public
 
-GLIB_GENMARSHAL = `$PKG_CONFIG --variable=glib_genmarshal glib-2.0`
+GLIB_GENMARSHAL = `$(PKG_CONFIG) --variable=glib_genmarshal glib-2.0`
 
 xkl_engine_marshal.h: marshal.list
 	$(GLIB_GENMARSHAL) --prefix=xkl_engine marshal.list --header > xkl_engine_marshal.h
@@ -90,7 +90,7 @@ INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 
 if HAVE_INTROSPECTION
 # avoid introspecting private headers
-introspection_sources = $(xklavier_headers) $(filter %.c, $(libxklavier_la_SOURCES))
+introspection_sources = $(xklavier_headers) $(xklavier_built_headers) $(filter %.c, $(libxklavier_la_SOURCES))
 
 Xkl-1.0.gir: libxklavier.la
 Xkl_1_0_gir_INCLUDES = GObject-2.0 xlib-2.0
