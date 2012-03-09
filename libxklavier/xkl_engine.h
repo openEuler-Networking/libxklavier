@@ -297,7 +297,7 @@ extern "C" {
 /**
  * xkl_engine_filter_events:
  * @engine: the engine
- * @evt: delivered X event
+ * @evt: (skip): delivered X event
  *
  * Processes X events. Should be included into the main event cycle of an
  * application. One of the most important functions. 
