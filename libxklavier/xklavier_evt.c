@@ -536,7 +536,7 @@ xkl_process_error(Display * dpy, XErrorEvent * evt)
 			  (int) evt->error_code, buf,
 			  (int) evt->request_code, (int) evt->minor_code);
 		if (engine != NULL)
-			if (!xkl_engine_priv(engine, criticalSection))
+			if (!xkl_engine_priv(engine, critical_section))
 				(*xkl_engine_priv
 				 (engine, default_error_handler))
 				    (dpy, evt);

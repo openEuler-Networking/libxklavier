@@ -77,7 +77,7 @@ struct _XklEnginePrivate {
 
 	XklState curr_state;
 
-	gboolean criticalSection;
+	gboolean critical_section;
 
 	Atom atoms[TOTAL_ATOMS];
 

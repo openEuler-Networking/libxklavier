@@ -286,7 +286,7 @@ xkl_config_get_keyboard(XklEngine * engine,
 
 			XSync(display, False);
 			/* From this point, ALL errors should be intercepted only by libxklavier */
-			xkl_engine_priv(engine, criticalSection) = TRUE;
+			xkl_engine_priv(engine, critical_section) = TRUE;
 
 			cpid = fork();
 			switch (cpid) {
@@ -401,7 +401,7 @@ xkl_config_get_keyboard(XklEngine * engine,
 			}
 			XSync(display, False);
 			/* Return to normal X error processing */
-			xkl_engine_priv(engine, criticalSection) = FALSE;
+			xkl_engine_priv(engine, critical_section) = FALSE;
 
 			if (activate)
 				xkl_config_set_group_by_description(engine,
