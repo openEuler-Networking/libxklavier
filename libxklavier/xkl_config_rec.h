@@ -281,6 +281,19 @@ extern "C" {
 	extern void xkl_config_rec_set_options(XklConfigRec * data,
 					       const gchar ** new_options);
 
+/**
+ * xkl_config_rec_set_model:
+ * @data: record to change
+ * @new_model: (transfer none): new keyboard name.
+ *
+ * Sets a new model. 
+ *
+ * Frees the previous model. This is primarily useful for bindings, in C
+ * you can manipulate the @model record member directly.
+ */
+	extern void xkl_config_rec_set_model(XklConfigRec * data,
+					     const gchar * new_model);
+
 #ifdef __cplusplus
 }
 #endif				/* __cplusplus */

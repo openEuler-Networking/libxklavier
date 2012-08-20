@@ -215,6 +215,14 @@ xkl_config_rec_set_options(XklConfigRec * data,
 }
 
 void
+xkl_config_rec_set_model(XklConfigRec * data,
+			 const gchar * new_model)
+{
+        g_free (data->model);
+	data->model = g_strdup (new_model);
+}
+
+void
 xkl_config_rec_init(XklConfigRec * data)
 {
 	/* clear the structure VarDefsPtr... */
