@@ -103,3 +103,30 @@ print('  Layouts:', rec.layouts)
 print('  Variants:', rec.variants)
 print('  Options:', rec.options)
 
+print('Changing model to "pc105"...')
+original_model = rec.model
+rec.set_model("pc105")
+
+print('Curent configuration:')
+rec = Xkl.ConfigRec()
+if not rec.get_from_server(engine):
+    print('Failed to get configuration from server')
+    sys.exit(1)
+print('  Model:', rec.model)
+print('  Layouts:', rec.layouts)
+print('  Variants:', rec.variants)
+print('  Options:', rec.options)
+
+print('Changing back to original model...')
+rec.set_model(original_model)
+
+print('Curent configuration:')
+rec = Xkl.ConfigRec()
+if not rec.get_from_server(engine):
+    print('Failed to get configuration from server')
+    sys.exit(1)
+print('  Model:', rec.model)
+print('  Layouts:', rec.layouts)
+print('  Variants:', rec.variants)
+print('  Options:', rec.options)
+
