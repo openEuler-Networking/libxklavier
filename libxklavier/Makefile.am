@@ -48,10 +48,10 @@ EXTRA_DIST=marshal.list libxklavier.public
 GLIB_GENMARSHAL = `$(PKG_CONFIG) --variable=glib_genmarshal glib-2.0`
 
 xkl_engine_marshal.h: marshal.list
-	$(GLIB_GENMARSHAL) --prefix=xkl_engine marshal.list --header > xkl_engine_marshal.h
+	$(GLIB_GENMARSHAL) --prefix=xkl_engine $(srcdir)/marshal.list --header > xkl_engine_marshal.h
 
 xkl_engine_marshal.c: xkl_engine_marshal.h
-	$(GLIB_GENMARSHAL) --prefix=xkl_engine marshal.list --body > xkl_engine_marshal.c
+	$(GLIB_GENMARSHAL) --prefix=xkl_engine $(srcdir)/marshal.list --body > xkl_engine_marshal.c
 
 xkl-enum-types.h: stamp-xkl-enum-types.h
 	@true
