@@ -16,6 +16,7 @@ xkl_config_rec_set_layouts
 xkl_config_rec_set_options
 xkl_config_rec_set_to_root_window_property
 xkl_config_rec_set_variants
+xkl_config_rec_set_model
 xkl_config_rec_write_to_file
 xkl_config_registry_find_layout
 xkl_config_registry_find_model
