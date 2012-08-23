@@ -79,7 +79,11 @@ xkl-enum-types.c: $(xklavier_headers) xkl-enum-types.h
 	&& cp new-xkl-enum-types.c $(@F) \
 	&& rm -f new-xkl-enum-types.c
 
-DISTCLEANFILES=$(xklavier_built_headers) $(xklavier_built_cfiles) stamp-xkl-enum-types.h
+DISTCLEANFILES=$(xklavier_built_headers) \
+		$(xklavier_built_cfiles) \
+		stamp-xkl-enum-types.h \
+		xkl_engine_marshal.c \
+		xkl_engine_marshal.h
 CLEANFILES=
 
 # build intospection typelib
