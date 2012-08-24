@@ -27,6 +27,8 @@ noinst_HEADERS = xklavier_private.h xklavier_private_xkb.h xklavier_private_xmm.
 xklavier_headers = xkl_engine.h xkl_config_item.h xkl_config_registry.h \
 	xkl_config_rec.h xkl_engine_marshal.h xklavier.h
 
+BUILT_SOURCES = $(xklavier_built_headers) $(xklavier_built_cfiles)
+
 xklavier_built_headers = xkl-enum-types.h
 xklavier_built_cfiles = xkl-enum-types.c
 xklavierincdir = $(includedir)/libxklavier
