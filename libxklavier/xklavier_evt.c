@@ -498,6 +498,7 @@ xkl_process_error(Display * dpy, XErrorEvent * evt)
 	case BadAccess:
 	case BadDrawable:
 	case BadWindow:
+	case BadMatch:
 		{
 			XGetErrorText(evt->display, evt->error_code, buf,
 				      sizeof(buf));
