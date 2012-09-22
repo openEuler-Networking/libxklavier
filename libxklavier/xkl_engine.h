@@ -59,7 +59,7 @@ extern "C" {
  *                                   xkl_start_listen(engine,XKLL_MANAGE_LAYOUTS);
  *   @XKLF_DEVICE_DISCOVERY: Backend supports device discovery, can notify
  */
-	typedef enum {
+	typedef enum { /*< flags >*/
 		XKLF_CAN_TOGGLE_INDICATORS = 1 << 0,
 		XKLF_CAN_OUTPUT_CONFIG_AS_ASCII = 1 << 1,
 		XKLF_CAN_OUTPUT_CONFIG_AS_BINARY = 1 << 2,
