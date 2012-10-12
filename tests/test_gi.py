@@ -122,3 +122,43 @@ print('  Layouts:', rec.layouts)
 print('  Variants:', rec.variants)
 print('  Options:', rec.options)
 
+print
+original_options = rec.options[:]
+if not any("toggle" in opt for opt in rec.options):
+    print('Adding Alt+Shift as an option for switching layouts...')
+    rec.set_options(rec.options + ["grp:alt_shift_toggle"])
+    if not rec.activate(engine):
+        print('Failed to activate new configuration')
+
+original_layouts = rec.layouts[:]
+original_variants = rec.variants[:]
+if len(rec.layouts) == 1:
+    print('Adding Danish layout...')
+    rec.set_layouts(rec.layouts + ['dk'])
+    rec.set_variants(rec.variants + [''])
+    if not rec.activate(engine):
+        print('Failed to activate new configuration')
+
+engine.start_listen(Xkl.EngineListenModes.TRACK_KEYBOARD_STATE)
+groups_names = engine.get_groups_names()
+state = engine.get_current_state()
+engine.start_listen(Xkl.EngineListenModes.TRACK_KEYBOARD_STATE)
+curent_layout = groups_names[state.group]
+
+print('Curent active layout: %s' % curent_layout)
+raw_input('Please change your layout and hit ENTER')
+
+engine.start_listen(Xkl.EngineListenModes.TRACK_KEYBOARD_STATE)
+groups_names = engine.get_groups_names()
+state = engine.get_current_state()
+engine.start_listen(Xkl.EngineListenModes.TRACK_KEYBOARD_STATE)
+curent_layout = groups_names[state.group]
+
+print('Curent active layout: %s' % curent_layout)
+
+print('Restoring original configuration...')
+rec.set_layouts(original_layouts)
+rec.set_variants(original_variants)
+rec.set_options(original_options)
+if not rec.activate(engine):
+    print('Failed to activate new configuration')
