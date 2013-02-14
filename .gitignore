@@ -12,9 +12,11 @@ config.sub
 configure
 gtk-doc.make
 libtool
+libxklavier.deps
 libxklavier.prj
 libxklavier.pws
 libxklavier.spec
+libxklavier.vapi
 ltmain.sh
 stamp-h
 stamp-h.in
@@ -34,7 +36,9 @@ libxklavier-*.tar.*
 .anjuta
 .anjuta_sym_db.db
 .tm_project2.cache
-m4
+m4/*
+!m4/introspection.m4
+!m4/vapigen.m4
 *.bak
 *~
 ABOUT-NLS

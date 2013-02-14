@@ -103,6 +103,8 @@ Xkl_1_0_gir_INCLUDES = GObject-2.0 xlib-2.0
 Xkl_1_0_gir_CFLAGS = -I$(top_srcdir) -I$(top_builddir) $(INCLUDES) $(X_CFLAGS) $(XML_CFLAGS) $(GLIB_CFLAGS) $(XINPUT_CFLAGS)
 Xkl_1_0_gir_LIBS = libxklavier.la
 Xkl_1_0_gir_FILES = $(xklavier_headers) $(introspection_sources)
+Xkl_1_0_gir_EXPORT_PACKAGES = libxklavier
+Xkl_1_0_gir_SCANNERFLAGS = --c-include="libxklavier/xklavier.h"
 INTROSPECTION_GIRS += Xkl-1.0.gir
 
 girdir = $(datadir)/gir-1.0
@@ -112,4 +114,23 @@ typelibdir = $(libdir)/girepository-1.0
 typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
 
 CLEANFILES += $(gir_DATA) $(typelib_DATA)
+
+if ENABLE_VAPIGEN
+-include $(VAPIGEN_MAKEFILE)
+
+libxklavier.vapi: Xkl-1.0.gir libxklavier.deps
+
+VAPIGEN_VAPIS = libxklavier.vapi
+
+libxklavier_vapi_DEPS = x11
+libxklavier_vapi_FILES = Xkl-1.0.gir
+
+libxklavier.deps:
+	$(AM_V_GEN) for pkg in $(libxklavier_vapi_DEPS); do \
+		echo $$pkg >> $@; \
+	done
+
+vapidir = $(datadir)/vala/vapi
+vapi_DATA = $(VAPIGEN_VAPIS) $(VAPIGEN_VAPIS:.vapi=.deps)
+endif
 endif
