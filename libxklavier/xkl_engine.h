@@ -31,6 +31,7 @@ extern "C" {
 	typedef struct _XklEngine XklEngine;
 	typedef struct _XklEnginePrivate XklEnginePrivate;
 	typedef struct _XklEngineClass XklEngineClass;
+	typedef struct _XklState XklState;
 
 #define XKL_TYPE_ENGINE             (xkl_engine_get_type ())
 #define XKL_ENGINE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), XKL_TYPE_ENGINE, XklEngine))
@@ -40,9 +41,11 @@ extern "C" {
 #define XKL_ENGINE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_ENGINE, XklEngineClass))
 
 /**
- * The type of the keyboard state change
+ * XklEngineStateChange:
  *   @GROUP_CHANGED: Group was changed
  *   @INDICATORS_CHANGED: Indicators were changed
+ *
+ * The type of the keyboard state change
  */
 	typedef enum {
 		GROUP_CHANGED,
@@ -50,7 +53,7 @@ extern "C" {
 	} XklEngineStateChange;
 
 /**
- * A set of flags used to indicate the capabilities of the active backend
+ * XklEngineFeatures:
  *   @XKLF_CAN_TOGGLE_INDICATORS: Backend allows to toggls indicators on/off
  *   @XKLF_CAN_OUTPUT_CONFIG_AS_ASCII: Backend allows writing ASCII representation of the configuration
  *   @XKLF_CAN_OUTPUT_CONFIG_AS_BINARY: Backend allows writing binary representation of the configuration
@@ -58,6 +61,9 @@ extern "C" {
  *   @XKLF_REQUIRES_MANUAL_LAYOUT_MANAGEMENT: Backend requires manual configuration, some daemon should do 
  *                                   xkl_start_listen(engine,XKLL_MANAGE_LAYOUTS);
  *   @XKLF_DEVICE_DISCOVERY: Backend supports device discovery, can notify
+ *
+ * A set of flags used to indicate the capabilities of the active backend
+ *
  */
 	typedef enum { /*< flags >*/
 		XKLF_CAN_TOGGLE_INDICATORS = 1 << 0,
@@ -69,44 +75,40 @@ extern "C" {
 	} XklEngineFeatures;
 
 /**
+ * _XklState:
+ * @group: selected group 
+ * @indicators: set of active indicators
+ *
  * XKB state. Can be global or per-window
  */
-	typedef struct {
-/** 
- * selected group 
- */
+	struct _XklState {
 		gint32 group;
-/**
- * set of active indicators
- */
 		guint32 indicators;
-	} XklState;
+	};
 
 #define XKL_TYPE_STATE (xkl_state_get_type())
 
         GType xkl_state_get_type (void) G_GNUC_CONST;
 
 /**
- *	The main Xklavier engine class
+ * _XklEngine:
+ * @parent: The superclass object
+ *
+ * The main Xklavier engine class
  */
 	struct _XklEngine {
-/**
- * The superclass object
- */
 		GObject parent;
-/**
- * Private data
- */
+                /*< private >*/
 		XklEnginePrivate *priv;
 	};
 
 /**
+ * _XklEngineClass:
+ * @parent_class: The superclass
+ *
  * The XklEngine class, derived from GObject
  */
 	struct _XklEngineClass {
-/**
- * The superclass
- */
 		GObjectClass parent_class;
 
 /**
@@ -131,7 +133,7 @@ extern "C" {
 		 gint(*new_window_notify) (XklEngine * engine, Window win,
 					   Window parent);
 /**
- * XklEngine::state_notify
+ * XklEngine::state_notify:
  * @engine: the object on which the signal is emitted
  * @change_type: mask of changes
  * @group: new group
@@ -145,7 +147,7 @@ extern "C" {
 				      gint group, gboolean restore);
 
 /**
- * XklEngine::new_device_notify
+ * XklEngine::new_device_notify:
  * @engine: the object on which the signal is emitted
  *
  * Used for notifying application of the new keyboard attached
@@ -211,12 +213,14 @@ extern "C" {
 	extern guint xkl_engine_get_max_num_groups(XklEngine * engine);
 
 /**
- * The listener action modes:
+ * XklEngineListenModes:
  *   @XKLL_MANAGE_WINDOW_STATES: The listener process should handle the per-window states 
  *                       and all the related activity
  *   @XKLL_TRACK_KEYBOARD_STATE: Just track the state and pass it to the application above.
  *   @XKLL_MANAGE_LAYOUTS: The listener process should help backend to maintain the configuration
  *                  (manually switch layouts etc).
+ *
+ * The listener action modes:
  */
 	typedef enum {
 		XKLL_MANAGE_WINDOW_STATES = 0x01,

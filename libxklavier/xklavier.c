@@ -348,7 +348,7 @@ xkl_engine_is_window_transparent(XklEngine * engine, Window win)
 							 toplevel_win);
 }
 
-/**
+/*
  * Loads the tree recursively.
  */
 gboolean
@@ -443,7 +443,7 @@ xkl_default_log_appender(const gchar file[], const gchar function[],
 	vfprintf(stdout, format, args);
 }
 
-/**
+/*
  * Just selects some events from the window.
  */
 void
@@ -551,7 +551,7 @@ xkl_engine_reset_all_info(XklEngine * engine, gboolean force,
 			  "NOT Resetting the cache: same configuration\n");
 }
 
-/**
+/*
  * Calling through vtable
  */
 const gchar **

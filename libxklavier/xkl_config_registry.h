@@ -40,25 +40,25 @@ extern "C" {
 #define XKL_CONFIG_REGISTRY_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_CONFIG_REGISTRY, XklConfigRegistryClass))
 
 /**
+ * _XklConfigRegistry:
+ * @parent: The superclass object
+ *
  * The configuration manager. Corresponds to XML element "configItem".
  */
 	struct _XklConfigRegistry {
-/**
- * The superclass object
- */
 		GObject parent;
-
+		/*< private >*/
 		XklConfigRegistryPrivate *priv;
 	};
 
 
 /**
+ * _XklConfigRegistryClass:
+ * @parent_class: The superclass
+ *
  * The XklConfigRegistry class, derived from GObject
  */
 	struct _XklConfigRegistryClass {
-    /**
-     * The superclass
-     */
 		GObjectClass parent_class;
 	};
 

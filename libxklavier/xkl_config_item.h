@@ -56,67 +56,66 @@ extern "C" {
 #define XKL_CONFIG_ITEM_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), XKL_TYPE_CONFIG_ITEM, XklConfigItemClass))
 
 /**
+ * _XklConfigItem:
+ * @parent: The superclass object
+ * @name: The configuration item name. Corresponds to XML element "name".
+ * @short_description: The configuration item short description. Corresponds to XML element "shortDescription".
+ * @description: The configuration item description. Corresponds to XML element "description".
+ *
  * The configuration item. Corresponds to XML element "configItem".
  */
 	struct _XklConfigItem {
-/**
- * The superclass object
- */
 		GObject parent;
-/**
- * The configuration item name. Corresponds to XML element "name".
- */
+
 		gchar name[XKL_MAX_CI_NAME_LENGTH];
 
-/**
- * The configuration item short description. Corresponds to XML element "shortDescription".
- */
 		gchar short_description[XKL_MAX_CI_DESC_LENGTH];
 
-/**
- * The configuration item description. Corresponds to XML element "description".
- */
 		gchar description[XKL_MAX_CI_DESC_LENGTH];
 	};
 
 /**
+ * XCI_PROP_ALLOW_MULTIPLE_SELECTION:
  * Extra property for the XklConfigItem, defining whether the group allows multiple selection
  */
 #define XCI_PROP_ALLOW_MULTIPLE_SELECTION "allowMultipleSelection"
 
 /**
+ * XCI_PROP_VENDOR:
  * Extra property for the XklConfigItem, defining the vendor (used for models)
  */
 #define XCI_PROP_VENDOR "vendor"
 
 /**
+ * XCI_PROP_COUNTRY_LIST:
  * Extra property for the XklConfigItem, defining the list of countries (used for layouts/variants)
  */
 #define XCI_PROP_COUNTRY_LIST "countryList"
 
 /**
+ * XCI_PROP_LANGUAGE_LIST:
  * Extra property for the XklConfigItem, defining the list of languages (used for layouts/variants)
  */
 #define XCI_PROP_LANGUAGE_LIST "languageList"
 
 /**
+ * XCI_PROP_EXTRA_ITEM:
  * Extra property for the XklConfigItem, defining whether that item is exotic(extra)
  */
 #define XCI_PROP_EXTRA_ITEM "extraItem"
 
 /**
+ * _XklConfigItemClass:
+ * @parent_class: The superclass
  * The XklConfigItem class, derived from GObject
  */
 	struct _XklConfigItemClass {
-    /**
-     * The superclass
-     */
 		GObjectClass parent_class;
 	};
 
 /**
  * xkl_config_item_get_type:
- * 
+ *
  * Get type info for XklConfigItem
  *
  * Returns: GType for XklConfigItem
@@ -134,7 +133,6 @@ extern "C" {
 
 /**
  * xkl_config_item_set_name:
- *
  * @item: the XklConfigItem object to be changed
  * @name: (transfer none) (allow-none): Name (max. 32 characters); can be NULL.
  *
@@ -146,7 +144,6 @@ extern "C" {
 
 /**
  * xkl_config_item_set_short_description:
- *
  * @item: the XklConfigItem object to be changed
  * @short_description: (transfer none) (allow-none): Short Description (max. 10
  *        characters); can be NULL.
@@ -158,7 +155,6 @@ extern "C" {
 							  const gchar * short_description);
 /**
  * xkl_config_item_set_description:
- *
  * @item: the XklConfigItem object to be changed
  * @description: (transfer none) (allow-none): Description (max. 192
  *        characters); can be NULL.

@@ -77,7 +77,7 @@ extern "C" {
 					va_list args);
 
 /**
- * xkl_default_log_appender: (skip):
+ * xkl_default_log_appender:
  * @file: name of the source file. 
  * Preprocessor symbol__FILE__ should be used here
  * @function: name of the function
@@ -95,7 +95,7 @@ extern "C" {
 					     va_list args);
 
 /**
- * xkl_set_log_appender: (skip):
+ * xkl_set_log_appender:
  * @fun: new log appender
  *
  * Installs the custom log appender.function

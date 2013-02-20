@@ -261,7 +261,7 @@ xkl_engine_get_registered_parent(XklEngine * engine, Window win)
 	    Success ? parent : (Window) NULL;
 }
 
-/**
+/*
  * Make sure about the result. Origial XQueryTree is pretty stupid beast:)
  */
 Status
