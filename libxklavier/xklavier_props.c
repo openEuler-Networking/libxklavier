@@ -54,6 +54,12 @@ xkl_config_item_new(void)
 			    (xkl_config_item_get_type(), NULL));
 }
 
+const gchar *
+xkl_config_item_get_name(XklConfigItem * item)
+{
+	return item->name;
+}
+
 void
 xkl_config_item_set_name(XklConfigItem * item,
 			 const gchar * name)
@@ -64,6 +70,12 @@ xkl_config_item_set_name(XklConfigItem * item,
 		item->name[0] = '\0';
 }
 
+const gchar *
+xkl_config_item_get_short_description(XklConfigItem * item)
+{
+	return item->short_description;
+}
+
 void
 xkl_config_item_set_short_description(XklConfigItem * item,
 				      const gchar * short_description)
@@ -72,6 +84,12 @@ xkl_config_item_set_short_description(XklConfigItem * item,
 		strncpy (item->short_description, short_description, XKL_MAX_CI_DESC_LENGTH-1);
 	else
 		item->short_description[0] = '\0';
+}
+
+const gchar *
+xkl_config_item_get_description(XklConfigItem * item)
+{
+	return item->description;
 }
 
 void

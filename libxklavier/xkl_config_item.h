@@ -132,6 +132,15 @@ extern "C" {
 	extern XklConfigItem *xkl_config_item_new(void);
 
 /**
+ * xkl_config_item_get_name:
+ * @item: the XklConfigItem object
+ *
+ * Returns: The @name field of a XklConfigItem. This is mostly useful for
+ * language bindings, in C you can manipulate the member directly.
+ */
+extern const gchar * xkl_config_item_get_name(XklConfigItem * item);
+
+/**
  * xkl_config_item_set_name:
  * @item: the XklConfigItem object to be changed
  * @name: (transfer none) (allow-none): Name (max. 32 characters); can be NULL.
@@ -141,6 +150,15 @@ extern "C" {
  */
 	extern void xkl_config_item_set_name(XklConfigItem * item,
 					     const gchar * name);
+
+/**
+ * xkl_config_item_get_short_description:
+ * @item: the XklConfigItem object
+ *
+ * Returns: The @short_description field of a XklConfigItem. This is mostly useful for
+ * language bindings, in C you can manipulate the member directly.
+ */
+extern const gchar * xkl_config_item_get_short_description(XklConfigItem * item);
 
 /**
  * xkl_config_item_set_short_description:
@@ -153,6 +171,15 @@ extern "C" {
  */
 	extern void xkl_config_item_set_short_description(XklConfigItem * item,
 							  const gchar * short_description);
+/**
+ * xkl_config_item_get_description:
+ * @item: the XklConfigItem object
+ *
+ * Returns: The @description field of a XklConfigItem. This is mostly useful for
+ * language bindings, in C you can manipulate the member directly.
+ */
+extern const gchar * xkl_config_item_get_description(XklConfigItem * item);
+
 /**
  * xkl_config_item_set_description:
  * @item: the XklConfigItem object to be changed

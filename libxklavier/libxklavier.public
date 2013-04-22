@@ -1,7 +1,10 @@
 xkl_config_item_get_type
 xkl_config_item_new
+xkl_config_item_get_description
 xkl_config_item_set_description
+xkl_config_item_get_name
 xkl_config_item_set_name
+xkl_config_item_get_short_description
 xkl_config_item_set_short_description
 xkl_config_rec_activate
 xkl_config_rec_dump
