@@ -298,6 +298,6 @@ xkl_xmm_term
 <FILE>xkl_engine_marshal</FILE>
 xkl_engine_VOID__VOID
 xkl_engine_INT__LONG_LONG
-xkl_engine_VOID__FLAGS_INT_BOOLEAN
+xkl_engine_VOID__ENUM_INT_BOOLEAN
 </SECTION>
 
