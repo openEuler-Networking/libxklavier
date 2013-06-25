@@ -20,7 +20,7 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 dnl for DLL
 dnl http://sources.redhat.com/autobook/autobook/autobook_91.html
-VERSION_INFO=20:0:4
+VERSION_INFO=17:0:0
 AC_SUBST(VERSION_INFO)
 
 # Check for programs
